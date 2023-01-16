@@ -4,6 +4,7 @@ import kotlinx.serialization.json.*
 import ru.xmagi.pool.main.JSONRPC
 // import ru.xmagi.pool.main.PoolServer.RPCClient
 import ru.xmagi.pool.main.PoolServer.defTXFee
+import ru.xmagi.pool.main.PoolServer.deleteSquares
 import java.math.BigDecimal
 
 class ElectrumRPC : JSONRPC.worker {
@@ -23,7 +24,19 @@ class ElectrumRPC : JSONRPC.worker {
     fun getfeerate() = this.doCall("getfeerate") // fee; 1 satoshi = 0.00000001; 1013 satoshi ~ 0.00001013 satoshi
 
     // maybe abstract/open/... but for now is ok
-    override fun getbalance() = this.doCall("getbalance", buildJsonArray {  })
-    override fun getaddressbalance(adr: String) = this.doCall("getaddressbalance", buildJsonArray { add(adr) } )
+    fun satoshiToBTC(satoshi: Double): BigDecimal {
+        return satoshiToBTC(satoshi.toString())
+    }
+    fun satoshiToBTC(satoshi: String): BigDecimal {
+        return satoshi.toBigDecimal() * BigDecimal("0.00000001")
+    }
+    override fun getbalance() = super.getbalance()?.jsonObject?.get("confirmed")
+    override fun getaddressbalance(adr: String) = this.doCall("getaddressbalance", buildJsonArray { add(adr) } )?.jsonObject?.toMap()?.get("result")
     override fun createnewaddress( ) = this.doCall("createnewaddress" )
+    fun broadcast(tx: String) = this.doCall("broadcast", buildJsonArray { add(tx) } )
+    override fun sendMoney(outAddr: String, cMoney: BigDecimal, optionalString: String ): JsonElement{
+            val tx_ = this.doCall("payto",  buildJsonArray { add(outAddr); add(  cMoney  );})
+            val tx = tx_.jsonObject.toMap()["result"].toString().deleteSquares()
+            return broadcast( tx )
+    }
 }

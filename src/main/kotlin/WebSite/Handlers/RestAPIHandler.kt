@@ -13,6 +13,7 @@ import ru.xmagi.pool.main.CryptoCurrencies.ElectrumRPC
 import ru.xmagi.pool.main.PoolServer.DB
 import ru.xmagi.pool.main.PoolServer.RPC
 import ru.xmagi.pool.main.PoolServer.RPCClient
+import ru.xmagi.pool.main.PoolServer.deleteSquares
 import ru.xmagi.pool.main.WebSite.JSONBooleanAnswer
 import ru.xmagi.pool.main.WebSite.defRPCTXFee
 import kotlin.concurrent.thread
@@ -71,20 +72,22 @@ class RESTHandler : AbstractHandler() {
                             var txFee = defRPCTXFee.toBigDecimal() // magicNumber
                             println("Okey now get tx")
                             if (CryptoCoins.coins[coinname]!!.getisElectrum()) {
-                                val tx_ = (CryptoCoins.coins["coinname"]!! as ElectrumRPC).getfeerate().jsonObject.toMap()["result"]!!.jsonPrimitive.toString()
-                                txFee = tx_.toBigDecimal() //?: defRPCTXFee.toBigDecimal() // 0.01 is very big for Electrum. so
+                                val tx_ = (CryptoCoins.coins[coinname]!! as ElectrumRPC).getfeerate().jsonObject.toMap()["result"]!!.jsonPrimitive.toString()
+                                txFee = (CryptoCoins.coins[coinname]!! as ElectrumRPC).satoshiToBTC(tx_) //tx_.toBigDecimal() //?: defRPCTXFee.toBigDecimal() // 0.01 is very big for Electrum. so
                             } else {
                                 (CryptoCoins.coins[coinname]!! as RPC).settxfee(txFee.toString()) // TODO: change the value? from nethowrk
                             }
                             if (cMoney.toBigDecimal() + txFee > UserBalanceOfCoin?.balance?.toBigDecimal() ?: 0.0.toBigDecimal() || cMoney.toBigDecimal() < txFee) {
                                 // println("Returns error")
-                                DB.addToBalance(acc, 5.0, coinname) // for test only!
+                                // DB.addToBalance(acc, 5.0, coinname) // for test only!
+                                println("txFee: $txFee")
+                                println(cMoney.toBigDecimal() < txFee)
                                 return response.getWriter()
-                                    .print( Json.encodeToString(JSONBooleanAnswer(false, "Not correct count of money ${cMoney.toBigDecimal()} and ${DB.getLoginBalance(acc)?.get(coinname)?.balance}")) )
+                                    .print( Json.encodeToString(JSONBooleanAnswer(false, "Not correct count of money ${cMoney.toBigDecimal() + txFee} and ${UserBalanceOfCoin?.balance}")) )
                             }
                             println("Tx fee $txFee")
                             RPC.lockOutput = true
-                            RPCClient.sendMoney(oAdr, (cMoney.toBigDecimal()), "$acc from pool")
+                            CryptoCoins.coins[coinname]!!.sendMoney(oAdr, (cMoney.toBigDecimal()), "$acc from pool")
                             DB.addToBalance(acc, -(cMoney.toBigDecimal() + txFee))
                             RPC.lockOutput = false
                             return response.getWriter()
@@ -92,11 +95,18 @@ class RESTHandler : AbstractHandler() {
                         }
                 }
             }
+            "BitcoinBroadcast" ->
+            {
+                if (CryptoCoins.coins.get("bitcoin") == null) {
+                    return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, "Bitcoin disabled")))
+                }
+                (CryptoCoins.coins.get("bitcoin") as ElectrumRPC).broadcast(request.getParameter("tx"))
+            }
             "ReserveGet" -> {
                 val oStr = buildString {
                     for (coin in CryptoCoins.coins) {
                         append(coin.key + "\n")
-                        append(coin.value.getbalance().jsonObject.toString() + "\n")
+                        append(coin.value.getbalance().toString().deleteSquares() + "\n")
                         if (coin.value.getisElectrum()) {
                             val eRPC = coin.value as ElectrumRPC
 

@@ -3,6 +3,7 @@ package ru.xmagi.pool.main.PoolServer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 import ru.xmagi.pool.main.JSONRPC
+import java.math.BigDecimal
 import java.util.ArrayList
 
 const val defTXFee = 0.01

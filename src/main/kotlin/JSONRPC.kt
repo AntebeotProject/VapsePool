@@ -10,6 +10,10 @@ import java.util.*
 
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
+import org.litote.kmongo.json
+import ru.xmagi.pool.main.PoolServer.RPCClient
+import ru.xmagi.pool.main.PoolServer.deleteSquares
+import java.math.BigDecimal
 
 typealias login_pair = Pair<String,String>
 @Serializable
@@ -78,11 +82,25 @@ object JSONRPC {
             printIfDebug("Map is: $map")
             return  map
         }
-
+        fun JsonElement.primitiveToString() {
+            this?.jsonPrimitive.toString().deleteSquares()
+        }
+        fun JsonElement.toString_() {
+            this?.toString()?.deleteSquares()
+        }
         // open things
-        open fun getbalance() = this.doCall("getbalance")
-        open fun getaddressbalance(adr: String) = this.doCall("getbalance", buildJsonArray { add(adr) } )
+        open fun getbalance() = this.doCall("getbalance")?.jsonObject?.toMap()?.get("result")//.toString().deleteSquares()
+        open fun getaddressbalance(adr: String) = this.doCall("getbalance", buildJsonArray { add(adr) } )?.jsonObject?.toMap()?.get("result")
         open fun createnewaddress( ) = this.doCall("getnewaddress" )
+        // WILL BE CALLed WITH SYNCHRONIZED DATABASE AND ANOTHER STUFF
+        open fun sendMoney(outAddr: String, cMoney: BigDecimal, optionalString: String = "From pool" ): JsonElement {
+            synchronized(this) {
+                return this.doCall(
+                    "sendtoaddress",
+                    buildJsonArray { add(outAddr); add( cMoney  ); add(optionalString) })
+            }
+        }
+
 
     }
 

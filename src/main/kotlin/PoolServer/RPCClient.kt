@@ -1,8 +1,15 @@
 package ru.xmagi.pool.main.PoolServer
 
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import java.math.BigDecimal
+import kotlinx.serialization.*
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.json.internal.*
 
 object RPCClient {
     // there is main RPC Client for POOL
@@ -15,12 +22,4 @@ object RPCClient {
             Settings.m_propetries.getOrDefault("pool_rpcpass", PoolServer.defPass).toString() // ?:
         )
     }  // m_cl is RPC JSon part. So rename it
-    // WILL BE CALLed WITH SYNCHRONIZED DATABASE AND ANOTHER STUFF
-    public fun sendMoney(outAddr: String, cMoney: BigDecimal, optionalString: String = "From pool" ) {
-        synchronized(RPCClient.m_cl) {
-            RPCClient.m_cl.doCall(
-                "sendtoaddress",
-                buildJsonArray { add(outAddr); add(cMoney); add(optionalString) })
-        }
-    }
 }
