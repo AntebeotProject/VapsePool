@@ -170,8 +170,8 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
         }
         fun foundUnusedAddress(bRPC: RPC): String? {
             bRPC.listreceivedbyaddress().forEach() {
-                if (!DB.isUsedAddress(it)) {
-                    return it
+                if (!DB.isUsedAddress(it.address)) {
+                    return it.address
                 }
             }
 

@@ -66,12 +66,34 @@ class RPC : JSONRPC.worker {
         }
         return block
     }
-    public fun listreceivedbyaddress(): List<String> {
+    fun getConfirmationsOfTX(tx: String): Int {
+        val res = getTransaction(tx)
+        if (res == null) return -1
+        return res.jsonObject.toMap()["confirmations"].toString().toInt()
+    }
+    fun getTransaction(tx: String): JsonElement? {
+        val res = this.doCall("gettransaction", buildJsonArray { add(tx) }).jsonObject.toMap()["result"]
+        return res
+    }
+    fun getTransactionDetail(tx: String): JsonElement? {
+        return getTransaction(tx)?.jsonObject?.toMap()?.get("details")
+    }
+    data class listreceiveddata(val address: String, val account: String, val amount:String, val confirmations: Int, val txids: List<String>)
+    public fun listreceivedbyaddress(): List<listreceiveddata> {
         val json = this.doCall("listreceivedbyaddress").jsonObject.toMap()["result"]!!.jsonArray
-        val rList = mutableListOf<String>()
+        val rList = mutableListOf<listreceiveddata>()
         for(i in json) {
-            val adr = i.jsonObject.toMap()["address"]
-            if (adr != null) rList.add(adr.jsonPrimitive.toString().deleteSquares())
+            // println(i.jsonObject.toMap())
+            val m = i.jsonObject.toMap()
+            val adr = m?.get("address")
+            if (adr != null) {
+                val real_adr = adr.jsonPrimitive.toString().deleteSquares()
+                val account = m["account"].toString()
+                val amount = m["amount"].toString()
+                val confirmations = m["confirmations"].toString().toInt()
+                val txids = m["txids"]!!.jsonArray!!.map { it.toString().deleteSquares() }
+                rList.add(listreceiveddata(real_adr, account, amount, confirmations, txids))
+            }
         }
         return rList
     }

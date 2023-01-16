@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
@@ -41,19 +42,27 @@ class UserHandler : AbstractHandler() {
         }
         val doings = request?.getParameter("w")
         val rValue = when (doings) {
+            "getowninput" ->
+            {
+                val coin = request?.getParameter("cryptocoin")
+                Json.encodeToString(JsonPrimitive(DB.getLoginInputAddress(session.owner, coin!!)))
+            }
             "genAddress" -> {
                 val coin = request?.getParameter("cryptocoin")
-                val rpc = CryptoCoins.coins[coin]
+                val rpc = CryptoCoins.coins.get(coin)
+
                 if (rpc == null && coin == null) {
                     Json{encodeDefaults=true}.encodeToString(JSONBooleanAnswer(false, "Not found cryptocurence. use /api?w=getallowcoins"))
                 } else {
                     val nadr = JettyServer.Users.genNewAddrForUser(session.owner, coin, search_unused = true)
-                    Json.encodeToString(JSONBooleanAnswer(true, "Your new address is ${nadr}"))
+                    Json.encodeToString(JSONBooleanAnswer(true, "Your new address is ${nadr}")).also { DB.setLoginInputAddress(session.owner, nadr!!, coin!!) }
                 }
             }
             else -> Json{encodeDefaults=true}.encodeToString(r)
         }
+
         // println("return value $rValue")
+
         response.getWriter().print(rValue)
     }
 }

@@ -74,7 +74,13 @@ object DB {
     // val uBalances = mutableMapOf<String, BigDecimal>  // Coin Balance Address
     // TODO: maybe disable private
     // userBalance = balances!
-    private data class userBalance(val Login: String, val Balance: BigDecimal, val inputAddress: String? = null, val coinname: String, val outputBlocked: Boolean = false, @BsonId val key: Id<userBalance> = newId())
+    private data class userBalance(val Login: String,
+                                   val Balance: BigDecimal,
+                                   val inputAddress: String? = null,
+                                   val coinname: String,
+                                   val outputBlocked: Boolean = false,
+                                   @BsonId val key: Id<userBalance> = newId()
+    )
     private fun createUserBalanceIfNotExists(Login: String, coinname: String, col: MongoCollection<userBalance>) {
         if (getLoginBalance(Login)?.get(coinname) == null) {
             col.insertOne(userBalance(Login, 0.0.toBigDecimal(), null, coinname) )
@@ -86,6 +92,7 @@ object DB {
         createUserBalanceIfNotExists(Login, coinname, col = col)
         col.updateOne(Filters.and(userBalance::Login eq Login, userBalance::coinname eq coinname), setValue(userBalance::Balance, Balance))
     }
+
     public fun changeLoginBalance(Login: String, Balance: Double, coinName: String) = DB.changeLoginBalance(Login, Balance.toBigDecimal(), coinName)
     public fun addToBalance(l: String, b: BigDecimal, coinName: String = defCoinName) {
         val cur_balance = getLoginBalance(l)?.get(coinName)?.balance?.toBigDecimal() ?: 0.0.toBigDecimal()
@@ -95,6 +102,22 @@ object DB {
     // TODO: Double of code? refactor all code maybe
     @Serializable
     data class UserCoinBalance(val owner: String, val CoinName: String, val inputAddress: String, val balance: String, val isBlocked: Boolean = false)
+    // key from the list not equal to real key value
+    fun getBalancesByCoinName(coinname: String): List<UserCoinBalance> {
+        createCollection("balances")
+        val col = mongoDB.getCollection<Document>("balances")
+        val l = col.find(userBalance::coinname eq coinname).toList()
+        val r = mutableListOf<UserCoinBalance>()
+        for (e in l) {
+            val owner = e.get("Login").toString()
+            val CoinName = e.get("coinname").toString()
+            val inputAddress = e.get("inputAddress").toString()
+            val balance = e.get("Balance").toString()
+            val isBlocked = e.get("outputBlocked").toString().toBoolean()
+            r.add(UserCoinBalance(owner = owner, CoinName = CoinName, inputAddress = inputAddress, balance = balance, isBlocked = isBlocked ))
+        }
+        return r
+    }
     // Return Login balances with input adddresses. TODO: create another for just get addresses maybe
     public fun getLoginBalance(Login: String): Map<String,UserCoinBalance>? {
         createCollection("balances")
@@ -117,12 +140,12 @@ object DB {
             return null;
         }
     }
-    fun filerByUsernameAndCoinname(Login: String, coinname: String) = Filters.and(Filters.eq(userBalance::Login eq Login), userBalance::coinname eq coinname)
+    fun filerByUsernameAndCoinname(Login: String, coinname: String) = Filters.and(userBalance::Login eq Login, userBalance::coinname eq coinname)
     fun getOwnerOfAddress(adr: String): String? {
         val filter = (userBalance::inputAddress eq adr)
         createCollection("balances")
         val col = mongoDB.getCollection<Document>("balances")
-        val list: List<Document> = col.find( filter  ).toList()
+        val list: List<Document> = col.find(  filter  ).toList()
         if (list.size == 0) return null
         return list.first().get("Login").toString()
     }
@@ -141,14 +164,19 @@ object DB {
     }
     public fun setLoginInputAddress(Login: String, inputAddress: String, coinname: String) {
         createCollection("balances")
-        val col = mongoDB.getCollection<userBalance>("balances")
-        createUserBalanceIfNotExists(Login, coinname, col = col)
+        val col = mongoDB.getCollection<Document>("balances")
+        createUserBalanceIfNotExists(Login, coinname, col = col as MongoCollection<userBalance>)
+       // println("$Login:$inputAddress:$coinname")
+       // col.find(filerByUsernameAndCoinname(Login, coinname)).toList().forEach() {
+       //     println("FILTER" + it)
+       // }
         col.updateOne(filerByUsernameAndCoinname(Login, coinname), setValue(userBalance::inputAddress, inputAddress))
     }
+
     public fun setLoginOutputBlocked(Login: String, coinname: String, isBlocked: Boolean = false) {
         createCollection("balances")
-        val col = mongoDB.getCollection<userBalance>("balances")
-        createUserBalanceIfNotExists(Login, coinname, col = col)
+        val col = mongoDB.getCollection<Document>("balances")
+        createUserBalanceIfNotExists(Login, coinname, col = col as MongoCollection<userBalance>)
         col.updateOne(filerByUsernameAndCoinname(Login, coinname), setValue(userBalance::outputBlocked, isBlocked))
     }
     // User Methods + Sessions methods
@@ -222,9 +250,25 @@ object DB {
         return false
     }
 
+    // @Serializable
+    data class tx(val owner: String, val coinname: String, val hash: String, val firstFound: Long = System.currentTimeMillis())
+    public fun getTX(hash: String): tx? {
+        createCollection("transactions")
+        val col = mongoDB.getCollection<Document>("sessions")
+        val list : List<Document> = col.find(tx::hash eq hash).toList()
+        if (list.size == 0) return null
+        val owner = list.first().get("owner").toString()
+        val coinname = list.first().get("coinname").toString()
+        val hash = list.first().get("hash").toString()
+        val firstFound = list.first().get("firstFound").toString().toLong()
+        return tx(owner,coinname, hash, firstFound)
+    }
 
-
-
+    public fun addTX(t: tx) {
+        createCollection("transactions")
+        val col = mongoDB.getCollection<tx>("sessions")
+        col.insertOne(t)
+    }
 
 
 }

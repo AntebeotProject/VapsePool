@@ -21,8 +21,9 @@ class ElectrumRPC : JSONRPC.worker {
     fun gettransaction(tx: String) = this.doCall("gettransaction", buildJsonArray { add(tx) })
     fun getseed() = this.doCall("getseed")
     fun listaddresses() = this.doCall("listaddresses")
+    fun onchain_history() = this.doCall("onchain_history")
     fun getfeerate() = this.doCall("getfeerate") // fee; 1 satoshi = 0.00000001; 1013 satoshi ~ 0.00001013 satoshi
-
+    fun getaddresshistory(adr: String) = this.doCall("getaddresshistory", buildJsonArray { add(adr) })
     // maybe abstract/open/... but for now is ok
     fun satoshiToBTC(satoshi: Double): BigDecimal {
         return satoshiToBTC(satoshi.toString())
@@ -30,6 +31,7 @@ class ElectrumRPC : JSONRPC.worker {
     fun satoshiToBTC(satoshi: String): BigDecimal {
         return satoshi.toBigDecimal() * BigDecimal("0.00000001")
     }
+    fun get_tx_status(tx: String) = this.doCall("get_tx_status", buildJsonArray { add(tx) }).jsonObject.toMap()?.get("result")?.jsonObject?.toMap()?.get("confirmations").toString().toIntOrNull() ?: -1
     override fun getbalance() = super.getbalance()?.jsonObject?.get("confirmed")
     override fun getaddressbalance(adr: String) = this.doCall("getaddressbalance", buildJsonArray { add(adr) } )?.jsonObject?.toMap()?.get("result")
     override fun createnewaddress( ) = this.doCall("createnewaddress" )

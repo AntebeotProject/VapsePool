@@ -80,15 +80,16 @@ class RESTHandler : AbstractHandler() {
                             if (cMoney.toBigDecimal() + txFee > UserBalanceOfCoin?.balance?.toBigDecimal() ?: 0.0.toBigDecimal() || cMoney.toBigDecimal() < txFee) {
                                 // println("Returns error")
                                 // DB.addToBalance(acc, 5.0, coinname) // for test only!
-                                println("txFee: $txFee")
+                               // println("txFee: $txFee")
                                 println(cMoney.toBigDecimal() < txFee)
                                 return response.getWriter()
                                     .print( Json.encodeToString(JSONBooleanAnswer(false, "Not correct count of money ${cMoney.toBigDecimal() + txFee} and ${UserBalanceOfCoin?.balance}")) )
                             }
-                            println("Tx fee $txFee")
+                            // println("Tx fee $txFee")
                             RPC.lockOutput = true
                             CryptoCoins.coins[coinname]!!.sendMoney(oAdr, (cMoney.toBigDecimal()), "$acc from pool")
-                            DB.addToBalance(acc, -(cMoney.toBigDecimal() + txFee))
+                            DB.addToBalance(acc, -(cMoney.toBigDecimal() + txFee), coinname)
+                            // println("Balance was changed")
                             RPC.lockOutput = false
                             return response.getWriter()
                                 .print(Json.encodeToString(JSONBooleanAnswer(true, "${cMoney.toBigDecimal() + txFee} with fee was send on address $oAdr")))//"Money was send! <meta http-equiv=\"refresh\" content=\"5; url=/\">")

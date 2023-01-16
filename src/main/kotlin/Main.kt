@@ -1,6 +1,7 @@
 package ru.xmagi.pool.main;
 
 import ru.xmagi.pool.AsyncServer
+import ru.xmagi.pool.main.CryptoCurrencies.CryptoCoins
 import ru.xmagi.pool.main.PoolServer.*
 import ru.xmagi.pool.main.WebSite.JettyServer
 
@@ -17,7 +18,7 @@ fun main(args: Array<String>) {
     MinerData.Companion.startThreadForClean()
     // DB.addUser("gostcoinrpc", "123")
     // println( DB.checkUserPassword("gostcoinrpc", "123") )//DB.getLoginBalance("gostcoinrpc"))
-
+    CryptoCoins.CheckerOfInputTransacations.runUpdaterOfTransactions()
     while(true) {
         try {
             var updates = s.update()

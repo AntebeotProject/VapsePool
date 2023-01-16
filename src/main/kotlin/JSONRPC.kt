@@ -92,6 +92,11 @@ object JSONRPC {
         open fun getbalance() = this.doCall("getbalance")?.jsonObject?.toMap()?.get("result")//.toString().deleteSquares()
         open fun getaddressbalance(adr: String) = this.doCall("getbalance", buildJsonArray { add(adr) } )?.jsonObject?.toMap()?.get("result")
         open fun createnewaddress( ) = this.doCall("getnewaddress" )
+
+        // private fun listtransactions(count: Int, account: String = "*", skip: Int? = null) = this.doCall("listtransactions", buildJsonArray { add(account); add(count); if(skip != null) add(skip) })
+        //open fun getaddresshistory(adr: String) {
+
+        //}
         // WILL BE CALLed WITH SYNCHRONIZED DATABASE AND ANOTHER STUFF
         open fun sendMoney(outAddr: String, cMoney: BigDecimal, optionalString: String = "From pool" ): JsonElement {
             synchronized(this) {
@@ -133,7 +138,7 @@ object JSONRPC {
 
         {"method": "getwork", "params": [], "id":0}
          */
-        println("$data")
+        // println("$data")
         return try {
             //Create connection
             val (l,p) = log
