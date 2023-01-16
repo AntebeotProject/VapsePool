@@ -119,7 +119,7 @@ class CryptoCoins {
                                     for(tx in d.txids) {
                                         val confirmations = rpc.getConfirmationsOfTX(tx)
                                         val amount = rpc.getTransaction(tx)?.jsonObject?.toMap()?.get("amount").toString().toBigDecimal()
-                                        if (confirmations > 1 && DB.getTX(tx) == null) {
+                                        if (confirmations > 1 && amount > 0.toBigDecimal() && DB.getTX(tx) == null) {
                                             wDebug("Add not electrum tx $tx $coinname")
                                             DB.addTX(DB.tx(balance.owner, coinname, tx))
                                             DB.addToBalance(balance.owner, amount, coinname)
