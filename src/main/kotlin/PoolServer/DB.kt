@@ -109,10 +109,10 @@ object DB {
         val l = col.find(userBalance::coinname eq coinname).toList()
         val r = mutableListOf<UserCoinBalance>()
         for (e in l) {
-            val owner = e.get("Login").toString()
+            val owner = e.get("login").toString() // is broken some time
             val CoinName = e.get("coinname").toString()
             val inputAddress = e.get("inputAddress").toString()
-            val balance = e.get("Balance").toString()
+            val balance = e.get("balance").toString()
             val isBlocked = e.get("outputBlocked").toString().toBoolean()
             r.add(UserCoinBalance(owner = owner, CoinName = CoinName, inputAddress = inputAddress, balance = balance, isBlocked = isBlocked ))
         }
@@ -254,7 +254,7 @@ object DB {
     data class tx(val owner: String, val coinname: String, val hash: String, val firstFound: Long = System.currentTimeMillis())
     public fun getTX(hash: String): tx? {
         createCollection("transactions")
-        val col = mongoDB.getCollection<Document>("sessions")
+        val col = mongoDB.getCollection<Document>("transactions")
         val list : List<Document> = col.find(tx::hash eq hash).toList()
         if (list.size == 0) return null
         val owner = list.first().get("owner").toString()
@@ -266,7 +266,7 @@ object DB {
 
     public fun addTX(t: tx) {
         createCollection("transactions")
-        val col = mongoDB.getCollection<tx>("sessions")
+        val col = mongoDB.getCollection<tx>("transactions")
         col.insertOne(t)
     }
 

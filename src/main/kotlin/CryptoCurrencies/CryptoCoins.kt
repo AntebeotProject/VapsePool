@@ -101,9 +101,10 @@ class CryptoCoins {
                                         val isIncoming = h.jsonObject.toMap()["incoming"].toString().deleteSquares().toBoolean()
                                         val bc_value = h.jsonObject.toMap()["bc_value"].toString().deleteSquares().toBigDecimal()
                                         val confirmations = (rpc.get_tx_status(txid))
-                                        wDebug("Found tx of addr: $tx_hash is incoming $isIncoming val: $bc_value confirmations $confirmations")
+                                        // wDebug("Found tx of addr: $tx_hash is incoming $isIncoming val: $bc_value confirmations $confirmations")
+                                        // if (isIncoming) println(DB.getTX(tx_hash))
                                         if (confirmations > 1 && isIncoming && DB.getTX(tx_hash) == null) {
-                                            wDebug("Add it tx")
+                                            wDebug("Add it tx ${balance.owner}, ${coinname}")
                                                 DB.addTX(DB.tx(balance.owner, coinname, tx_hash))
                                                 DB.addToBalance(balance.owner, bc_value, coinname)
                                         }
@@ -120,7 +121,7 @@ class CryptoCoins {
                                         val confirmations = rpc.getConfirmationsOfTX(tx)
                                         val amount = rpc.getTransaction(tx)?.jsonObject?.toMap()?.get("amount").toString().toBigDecimal()
                                         if (confirmations > 1 && amount > 0.toBigDecimal() && DB.getTX(tx) == null) {
-                                            wDebug("Add not electrum tx $tx $coinname")
+                                            wDebug("Add not electrum tx $tx ${balance.owner}, ${coinname}")
                                             DB.addTX(DB.tx(balance.owner, coinname, tx))
                                             DB.addToBalance(balance.owner, amount, coinname)
                                         }
