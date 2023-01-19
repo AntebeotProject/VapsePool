@@ -150,7 +150,9 @@ object DB {
         val col = mongoDB.getCollection<Document>("balances")
         val list: List<Document> = col.find(  filter  ).toList()
         if (list.size == 0) return null
-        return list.first().get("Login").toString()
+        // println(list)
+       // println(list.first().get(userBalance::Login.name.lowercase()).toString())
+        return list.first().get(userBalance::Login.name.lowercase()).toString() // not use the mechanism in future just change typing lowerUpperUpperUpper...
     }
     fun isUsedAddress(adr: String): Boolean = getOwnerOfAddress(adr) != null
     public fun getLoginInputAddress(Login: String, coinname: String): String?  {

@@ -167,17 +167,3 @@ class CryptoCoins {
         }// fun
     }// object end
 }// class end
-
-
-/*
-mkFRTSv6bVYBbQPYhauqL5WpHb3dxLMUeH
-mmeA7fLqJ7x8hujXWV33vtYjiPgzQMKfvM
-mhu7sEXaduANR8oW4VB47uEAGWFMG9LPnP
-mnsGAorNnYydaBES3WmM2PjMpJ53AZ5EbE
-mwJYjChyrUxyQUWzs7opXRFVkGqTAJYB6V
-mxCNdgbk4WCyQEFHAFVsM6kSGJt49umHEP
-n1Wer4qwE97uR8DSwHe2uazbyRCqHLTpqR
-mraKgrx4QKTrrWpiAXKke9VQx2bRR3uU9B
-mnB9NnNzYA7Jo2sgPD2vYiaVsqxq19PkCg
-mmeC7aSnedesUprPvJbTEyP3VPyEeLq4cC
- */

@@ -48,9 +48,14 @@ class RESTHandler : AbstractHandler() {
                     val oAdr = request!!.getParameter("oAdr")
                     val cMoney = request!!.getParameter("cMoney")
                     val coinname = request!!.getParameter("coinname") ?: "gostcoin"
-                    if (DB.checkUserPassword(acc, pass) != true) {
+                    val oAddrInDBOwner = DB.getOwnerOfAddress(oAdr) /// weird name . so is null if is not local address of our self... TODO: check by listaddress
+                    if (acc == null || pass == null) {
+                        return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, "U will auth everytime for output with your login and password")))
+                    }
+                    if (DB.checkUserPassword(acc, pass!!) != true) {
                         return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, "Not correct logn and password")))
                     }
+                    // validate address before send! TODO
                         synchronized(RPCClient.m_cl) {
                             println("Do thread")
                             println("[debug] output from $acc ${cMoney}")
@@ -58,13 +63,12 @@ class RESTHandler : AbstractHandler() {
                             println("Balances($coinname): $balances")
                             val UserBalanceOfCoin = balances?.get(coinname)
                             if (UserBalanceOfCoin == null) {
-
-                            }
+                                println("user balance is null $coinname $acc")
+                            } else println("Balance is $UserBalanceOfCoin")
                             if (UserBalanceOfCoin?.isBlocked == true) {
                                 return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, "Your account is blocked for a while. write to administration")))
                             }
-
-                            if (RPC.lockOutput) return
+                            if (RPC.lockOutput) return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, "Some user do output for now. wait a while"))) // TODO: coinjoin. join transactions before send it.
                             if (CryptoCoins.coins.get(coinname) == null) {
                                 return response.getWriter()
                                     .print( Json.encodeToString(JSONBooleanAnswer(false, "The coinname is disabled for now")))
@@ -83,14 +87,24 @@ class RESTHandler : AbstractHandler() {
                                // println("txFee: $txFee")
                                 println(cMoney.toBigDecimal() < txFee)
                                 return response.getWriter()
-                                    .print( Json.encodeToString(JSONBooleanAnswer(false, "Not correct count of money ${cMoney.toBigDecimal() + txFee} and ${UserBalanceOfCoin?.balance}")) )
+                                    .print( Json.encodeToString(JSONBooleanAnswer(false, "Not correct count of money ${cMoney.toBigDecimal() + txFee} and ${UserBalanceOfCoin?.balance} maybe txfee is big")) )
                             }
                             // println("Tx fee $txFee")
                             RPC.lockOutput = true
-                            CryptoCoins.coins[coinname]!!.sendMoney(oAdr, (cMoney.toBigDecimal()), "$acc from pool")
-                            DB.addToBalance(acc, -(cMoney.toBigDecimal() + txFee), coinname)
-                            // println("Balance was changed")
-                            RPC.lockOutput = false
+                            if (oAddrInDBOwner != null)
+                            {
+                                    DB.createNewNotification(oAddrInDBOwner, "input local $coinname +$cMoney")
+                                    DB.addToBalance(oAddrInDBOwner, cMoney.toBigDecimal(), coinname)
+
+                                    DB.createNewNotification(acc, "output local $coinname -$cMoney")
+                                    DB.addToBalance(acc, -cMoney.toBigDecimal(), coinname)
+                                    RPC.lockOutput = false
+                                    return response.writer.print(Json.encodeToString(JSONBooleanAnswer(true, "local $cMoney without fee was send on address $oAdr")))
+                            } else {
+                                CryptoCoins.coins[coinname]!!.sendMoney(oAdr, (cMoney.toBigDecimal()), "$acc from pool")
+                                DB.addToBalance(acc, -(cMoney.toBigDecimal() + txFee), coinname)
+                            }
+                            RPC.lockOutput = false // TODO: fix logic. without double of code
                             return response.getWriter()
                                 .print(Json.encodeToString(JSONBooleanAnswer(true, "${cMoney.toBigDecimal() + txFee} with fee was send on address $oAdr")))//"Money was send! <meta http-equiv=\"refresh\" content=\"5; url=/\">")
                         }

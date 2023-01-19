@@ -246,6 +246,11 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
         notifyContx.handler = NotifyHandler()
         m_contextCollection.addHandler(notifyContx)
     }
+    private fun addTradeHander() {
+        val exchangeContx = ContextHandler("/exchange")
+        exchangeContx.handler = TradeHandler()
+        m_contextCollection.addHandler(exchangeContx)
+    }
     private fun addStaticDirectoriesHandler() {
         val directories = ResourceCollection()
         directories.setResources(defaultPathOfHTTPFiles)
@@ -292,6 +297,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
         addDashBoardHandler()
         addUserHandler()
         addNotifyHander()
+        addTradeHander()
         EnableGzip()
     }
     private fun addDashBoardHandler()  {
