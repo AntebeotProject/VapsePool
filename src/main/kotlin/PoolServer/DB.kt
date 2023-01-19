@@ -350,15 +350,18 @@ object DB {
         col.deleteOne(notification::key eq key)
     }*/
     // Will to delele notifications that less by time than tLimit
-    public fun dropNotificationByTime(tLimit: Long) {
+    public fun dropNotificationByTimeAndOwner(o: String, tLimit: Long) {
         createCollection("notifications")
         val col = mongoDB.getCollection<notification>("notifications")
-        col.deleteOne(notification::time lt tLimit)
+        col.deleteOne(Filters.and(notification::time lt tLimit, notification::owner eq o))
     }
-    fun getNotificationByOwner(o: String): MutableList<notification> {
+    /*
+        Return notifications that more than tLimit. so if you
+     */
+    fun getNotificationsByOwnerAndTimestamp(o: String, tLimit: Long): List<notification> {
         createCollection("notifications")
         val col = mongoDB.getCollection<Document>("notifications")
-        val l = col.find(notification::owner eq o).toList()
+        val l = col.find(notification::owner eq o, notification::time gt tLimit).toList()
         val r = mutableListOf<notification>()
         for(n in l) {
             val owner = n.get("owner").toString()
@@ -369,4 +372,5 @@ object DB {
         }
         return r
     }
+
 }

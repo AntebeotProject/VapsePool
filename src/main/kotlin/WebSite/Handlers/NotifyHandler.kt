@@ -30,14 +30,24 @@ class NotifyHandler : AbstractHandler() {
         }
 
         val own = r.Login
-        val notifications = DB.getNotificationByOwner(own)// .toList()
+        val notifications = DB.getNotificationsByOwnerAndTimestamp(own, System.currentTimeMillis() - (24*60*60)) // less then one day
        // for(not in notifications)
        // {
        //     println(not)
        // }
         val doings = request?.getParameter("w")
         val rValue = when (doings) {
-            else -> Json{encodeDefaults=true}.encodeToString(notifications)
+            "clean" -> {
+                // TODO: drop notification is will be vuln?
+                // DB.dropNotificationByTimeAndOwner(own, System.currentTimeMillis())
+                Json{encodeDefaults=true}.encodeToString(JSONBooleanAnswer(false, "Is vulnerability. is disabled. use getByTime"))
+            }
+            "getByTime" ->
+            {
+                val t = request.getParameter("t").toString().toLongOrNull() ?: System.currentTimeMillis()
+                Json{encodeDefaults=true}.encodeToString(DB.getNotificationsByOwnerAndTimestamp(own, t))
+            }
+            else -> Json{encodeDefaults=true}.encodeToString(DB.getNotificationsByOwnerAndTimestamp(own,  System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000) )) // 1 day
         }
         response.getWriter().print(rValue)
     }

@@ -30,7 +30,6 @@ class TradeHandler : AbstractHandler() {
         }
 
         val own = r.Login
-        val notifications = DB.getNotificationByOwner(own)// .toList()
        // for(not in notifications)
        // {
        //     println(not)
