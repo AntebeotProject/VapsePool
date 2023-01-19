@@ -289,6 +289,11 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
         gzipHandler.handler = m_contextCollection
 
     }
+    private fun addCaptchaHandler() {
+        val captchaContx = ContextHandler("/captcha")
+        captchaContx.handler = CaptchaHandler()
+        m_contextCollection.addHandler(captchaContx)
+    }
     private fun EnableHandlers() {
         addRegisterHandler()
         addSignInHandler()
@@ -298,6 +303,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
         addUserHandler()
         addNotifyHander()
         addTradeHander()
+        addCaptchaHandler()
         EnableGzip()
     }
     private fun addDashBoardHandler()  {
