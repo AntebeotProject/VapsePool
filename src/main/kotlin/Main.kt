@@ -11,14 +11,11 @@ import ru.xmagi.pool.main.WebSite.JettyServer
 
 fun main(args: Array<String>) {
     AsyncServer.DebugEnabled = true
-    var s = AsyncServer("0.0.0.0", 3334)
-
+    var s = AsyncServer("0.0.0.0", 3334) // async
     Settings.load_propetries()
-    val myServ = JettyServer("0.0.0.0", 8081)
-    MinerData.Companion.startThreadForClean()
-    // DB.addUser("gostcoinrpc", "123")
-    // println( DB.checkUserPassword("gostcoinrpc", "123") )//DB.getLoginBalance("gostcoinrpc"))
-    CryptoCoins.CheckerOfInputTransacations.runUpdaterOfTransactions()
+    val myServ = JettyServer("0.0.0.0", 8081) // thread
+    MinerData.Companion.startThreadForClean() // thread
+    CryptoCoins.CheckerOfInputTransacations.runUpdaterOfTransactions() // thread
     while(true) {
         try {
             var updates = s.update()

@@ -27,7 +27,7 @@ data class MinerData(var LastActiveTimeSec: Long, val Login: String, var IdleTri
         }
 
         fun deleteMiner(Miner: MinerData) {
-            println("remove miner")
+            // println("remove miner")
             // currentMiners.removeIf() {Miner.Login == it.Login}
             val it = currentMiners.iterator()
             while(it.hasNext()) {
@@ -44,7 +44,7 @@ data class MinerData(var LastActiveTimeSec: Long, val Login: String, var IdleTri
 
         fun startThreadForClean() {
                 thread {
-                        println("thread for clean not works miners")
+                        // println("thread for clean not works miners")
                         if (maxIdleSecond <= 0) maxIdleSecond = PoolServer.defMaxIdleSecond
                         Thread.sleep(maxIdleSecond.toLong() * 1000)
                         cleanNotWorksMiners()

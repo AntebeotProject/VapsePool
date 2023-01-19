@@ -100,7 +100,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                     if (encrypt) {
                         val b64ToByteArray = Base64.getDecoder().decode(c.value)
                         val d = Encryption.decryptData(b64ToByteArray)
-                        println("d = $d")
+                        // println("d = $d")
                         return d
                     }
                     return c.value
@@ -159,8 +159,25 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
             }
             return UserData(owner, mp)
         }
+        fun getSession(response: HttpServletResponse, request: Request): String?
+        {
+            val UsernameSession = JettyServer.Cookie.getCookie(JettyServer.Cookie.userSessionCookieName, request)
+
+            val _session = request?.getParameter("session")
+            var session_raw = ""
+            println("Username session like to got now check")
+            if (UsernameSession == null && _session == null) {
+                response!!.setStatus(401);
+                return null
+            } else if (_session != null) {
+                session_raw = _session
+            } else {
+                session_raw = UsernameSession!!
+            }
+            return session_raw
+        }
         fun foundUnusedAddress(eRpc: ElectrumRPC): String? {
-            eRpc.listaddresses().jsonObject.toMap()["result"]?.jsonArray?.forEach() {
+            eRpc.listaddresses().jsonObject.toMap()["result"]?.jsonArray?.shuffled()?.forEach() {
                 val adr = it.jsonPrimitive.toString().deleteSquares()
                 if (!DB.isUsedAddress(adr)) {
                     return adr
@@ -169,7 +186,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
             return null
         }
         fun foundUnusedAddress(bRPC: RPC): String? {
-            bRPC.listreceivedbyaddress().forEach() {
+            bRPC.listreceivedbyaddress().shuffled().forEach() {
                 if (!DB.isUsedAddress(it.address)) {
                     return it.address
                 }
@@ -224,6 +241,11 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
         sigIntContx.handler = SignInHandler()
         m_contextCollection.addHandler(sigIntContx)
     }
+    private fun addNotifyHander() {
+        val notifyContx = ContextHandler("/notify")
+        notifyContx.handler = NotifyHandler()
+        m_contextCollection.addHandler(notifyContx)
+    }
     private fun addStaticDirectoriesHandler() {
         val directories = ResourceCollection()
         directories.setResources(defaultPathOfHTTPFiles)
@@ -269,6 +291,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
         addApiHandler()
         addDashBoardHandler()
         addUserHandler()
+        addNotifyHander()
         EnableGzip()
     }
     private fun addDashBoardHandler()  {

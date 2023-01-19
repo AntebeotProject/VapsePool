@@ -105,15 +105,4 @@ class RPC : JSONRPC.worker {
             "settxfee",
             buildJsonArray { add(fee) } )
     }
-    // abstract
-
-    // [[deprecated part. have to be deleted]]
-    private fun RPCJSONTest(): Nothing {
-        throw Exception("Is only for test [[deprecated]]")
-        var arr = ArrayList<String>()
-        arr.add("cpuminer/2.3.2")
-        val data = RPCJSON(1, "mining.subscribe", arr)
-        val string = Json.encodeToString(data)
-        println(string)
-    }
 }

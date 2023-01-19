@@ -21,7 +21,7 @@ import java.util.*
 object PrevWorkData {
     var prevHashes = mutableSetOf<String>()
 }
-const val coinname = "gostcoin"
+const val PoolCoinname = "gostcoin"
 // TODO: to class
 object HTTPServer {
 
@@ -55,12 +55,12 @@ object HTTPServer {
                 DB.addShare(Login, found_block)
                 PrevWorkData.prevHashes.add(prevHash)
                 if (PrevWorkData.prevHashes.size > 10) PrevWorkData.prevHashes.clear() // TODO: magic number
-                DB.addToBalance(Login, 1.2, coinname)
+                DB.addToBalance(Login, 1.2, PoolCoinname)
                 return true
             }
         } while (false);
         if (System.currentTimeMillis() / 1000 - lastBlockTime < 60) {
-            DB.addToBalance(Login, 0.25, coinname) // TODO: magic numbers
+            DB.addToBalance(Login, 0.25, PoolCoinname) // TODO: magic numbers
         }
 
         DB.addShare(Login, found_block, isGoodShare = false)
@@ -170,11 +170,11 @@ object HTTPServer {
                 Miner.IdleTries = 0
                 // Miner.shares -= 660;
             }
-            println("[DEBUG DIFFICULTY WAS CHANGED TO ZEROS]")
+            // println("[DEBUG DIFFICULTY WAS CHANGED TO ZEROS]")
         }
         //println("block: ${block}")
-        println("new work: \n$newWork")
-        println(Json.encodeToString(w) == newWork)
+        // println("new work: \n$newWork")
+        // println(Json.encodeToString(w) == newWork)
         //val block = BlockWorker.toBlock(data.jsonObject.toString())
         //println("data $data")
 

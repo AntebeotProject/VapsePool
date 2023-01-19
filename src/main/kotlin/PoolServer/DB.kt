@@ -7,7 +7,9 @@ import org.bitcoinj.core.Coin
 import org.bouncycastle.crypto.generators.BCrypt
 import org.bson.Document
 import org.bson.codecs.pojo.annotations.BsonId
+import org.bson.types.ObjectId
 import org.litote.kmongo.*
+import org.litote.kmongo.id.toId
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
@@ -15,6 +17,7 @@ import java.util.*
 /*
     WARNING USE synchronized EVERYWHERE WHERE (possible) IS CHANGES OF THE DB
  */
+// https://mongodb.github.io/mongo-java-driver/3.5/javadoc/com/mongodb/client/model/Filters.html
 const val defCoinName = "GST"
 object DB {
 
@@ -42,12 +45,12 @@ object DB {
     private data class share(
         val Login: String,
         val Block: String,
-        @BsonId val key: Id<share> = newId(),
+        // @BsonId val key: Id<share> = newId(),
         val isBadShare: Boolean = false
     )
-    private class min_diff_share(val Login: String, val Data: String, @BsonId val key: Id<share> = newId())
+    private class min_diff_share(val Login: String, val Data: String) //, @BsonId val key: Id<share> = newId())
     public fun addShareWithMinimalDifficulty(Login: String, Data: String) {
-        println("add SHARE with MINIMAL")
+        // println("add SHARE with MINIMAL")
         if (isMongoDB) {
             try {
                 mongoDB.createCollection("min_diff_share")
@@ -79,7 +82,7 @@ object DB {
                                    val inputAddress: String? = null,
                                    val coinname: String,
                                    val outputBlocked: Boolean = false,
-                                   @BsonId val key: Id<userBalance> = newId()
+                                   // @BsonId val key: Id<userBalance> = newId() // key for future. not for now.  https://litote.org/kmongo/object-mapping/
     )
     private fun createUserBalanceIfNotExists(Login: String, coinname: String, col: MongoCollection<userBalance>) {
         if (getLoginBalance(Login)?.get(coinname) == null) {
@@ -89,7 +92,7 @@ object DB {
     public fun changeLoginBalance(Login: String, Balance: BigDecimal, coinname: String) {
         createCollection("balances")
         val col = mongoDB.getCollection<userBalance>("balances")
-        createUserBalanceIfNotExists(Login, coinname, col = col)
+        createUserBalanceIfNotExists(Login, coinname, col = col as MongoCollection<userBalance>)
         col.updateOne(Filters.and(userBalance::Login eq Login, userBalance::coinname eq coinname), setValue(userBalance::Balance, Balance))
     }
 
@@ -164,7 +167,7 @@ object DB {
     }
     public fun setLoginInputAddress(Login: String, inputAddress: String, coinname: String) {
         createCollection("balances")
-        val col = mongoDB.getCollection<Document>("balances")
+        val col = mongoDB.getCollection<userBalance>("balances")
         createUserBalanceIfNotExists(Login, coinname, col = col as MongoCollection<userBalance>)
        // println("$Login:$inputAddress:$coinname")
        // col.find(filerByUsernameAndCoinname(Login, coinname)).toList().forEach() {
@@ -175,13 +178,13 @@ object DB {
 
     public fun setLoginOutputBlocked(Login: String, coinname: String, isBlocked: Boolean = false) {
         createCollection("balances")
-        val col = mongoDB.getCollection<Document>("balances")
+        val col = mongoDB.getCollection<userBalance>("balances")
         createUserBalanceIfNotExists(Login, coinname, col = col as MongoCollection<userBalance>)
         col.updateOne(filerByUsernameAndCoinname(Login, coinname), setValue(userBalance::outputBlocked, isBlocked))
     }
     // User Methods + Sessions methods
-    private data class users(val Login: String, val Password: String)
-    public data class UserSession(val id: String, val owner: String, val createTimeStamp: Long = System.currentTimeMillis())
+    data class users(val Login: String, val Password: String)
+    data class UserSession(val id: String, val owner: String, val createTimeStamp: Long = System.currentTimeMillis())
     private fun hashString(p: String) = BCrypt.generate(p.toByteArray(), verysecretsalt.toByteArray(), 4).toHexString()
     // change to ur value. better use m_propetries
     val verysecretsalt = Settings.m_propetries.getOrDefault("SecretSalt", "123456789ABCDEF-").toString() //"123456789ABCDEF-"
@@ -205,6 +208,15 @@ object DB {
         col.insertOne(users(l, Password = hashedPass))
     }
 
+    /*
+        * Not was tested. will be deleted maybe.
+     */
+    fun modifyUser(l: String, user: users) {
+            createCollection("users")
+            val col = mongoDB.getCollection("users")
+            col.updateOne(users::Login eq l, user) // https://stackoverflow.com/questions/47400942/what-does-mean-in-kotlin
+    }
+
     fun addSession(l: String, p: String): String? {
         if(checkUserPassword(l,p) != true) return null
         createCollection("sessions")
@@ -214,6 +226,11 @@ object DB {
         val Session = Base64.getEncoder().encode(hashString("$l:$p:${System.currentTimeMillis()}").toByteArray()).toHexString()
         col.insertOne(UserSession(Session, l))
         return Session
+    }
+    fun updateSession(id: String) {
+        createCollection("sessions")
+        val col = mongoDB.getCollection<UserSession>("sessions")
+        col.updateOne(UserSession::id eq id, setValue(UserSession::createTimeStamp, System.currentTimeMillis()))
     }
     fun getOwnerSessions(owner: String): List<UserSession> {
         createCollection("sessions")
@@ -251,7 +268,7 @@ object DB {
     }
 
     // @Serializable
-    data class tx(val owner: String, val coinname: String, val hash: String, val firstFound: Long = System.currentTimeMillis())
+    data class tx(val owner: String, val coinname: String, val hash: String, val firstFound: Long = System.currentTimeMillis(), val isConfirmed: Boolean = false)
     public fun getTX(hash: String): tx? {
         createCollection("transactions")
         val col = mongoDB.getCollection<Document>("transactions")
@@ -261,14 +278,93 @@ object DB {
         val coinname = list.first().get("coinname").toString()
         val hash = list.first().get("hash").toString()
         val firstFound = list.first().get("firstFound").toString().toLong()
-        return tx(owner,coinname, hash, firstFound)
+        val isConfirmed = list.first().get("isConfirmed").toString().toBoolean()
+        return tx(owner,coinname, hash, firstFound, isConfirmed)
+    }
+    fun userHaveNotConfirmedTXOnCoinName(o: String, cn: String): Boolean {
+        val col = mongoDB.getCollection<Document>("transactions")
+        val list : List<Document> = col.find(Filters.and(tx::owner eq o, tx::isConfirmed eq false, tx::coinname eq cn)).toList()
+        return list.size > 0
+    }
+    // not tested too. will be deleted in future realisations. not need in future
+    fun getTXsByConfirm(status: Boolean = false): List<tx>
+    {
+        val col = mongoDB.getCollection<Document>("transactions")
+        val list : List<Document> = col.find(tx::isConfirmed eq status).toList()
+        if (list.size == 0) return return listOf<tx>()
+        val r = mutableListOf<tx>()
+        for(i in list) {
+            val owner = list.first().get("owner").toString()
+            val coinname = list.first().get("coinname").toString()
+            val hash = list.first().get("hash").toString()
+            val firstFound = list.first().get("firstFound").toString().toLong()
+            val isConfirmed = list.first().get("isConfirmed").toString().toBoolean()
+            r.add(tx(owner,coinname, hash, firstFound, isConfirmed))
+        }
+        return r
+    }
+    /*
+    * Not was tested. will be deleted maybe.
+ */
+    public fun deleteTX(hash: String) {
+        createCollection("transactions")
+        val col = mongoDB.getCollection<Document>("transactions")
+        col.deleteOne(tx::hash eq hash)
     }
 
+    public fun setTXConfirmed(hash: String, status: Boolean) {
+        createCollection("transactions")
+        val col = mongoDB.getCollection("transactions")
+        // col.updateOne(Filters.and(userBalance::Login eq Login, userBalance::coinname eq coinname), setValue(userBalance::Balance, Balance))
+        col.updateOne(tx::hash eq hash, setValue(tx::isConfirmed, status))
+    }
+    /*
+        * Not was tested. will be deleted maybe.
+     */
+    public fun modifyTX(hash: String, tx: tx) {
+        createCollection("transactions")
+        val col = mongoDB.getCollection("transactions")
+        // col.updateOne(Filters.and(userBalance::Login eq Login, userBalance::coinname eq coinname), setValue(userBalance::Balance, Balance))
+        col.updateOne(tx::hash eq hash, tx)
+    }
     public fun addTX(t: tx) {
         createCollection("transactions")
         val col = mongoDB.getCollection<tx>("transactions")
         col.insertOne(t)
     }
+    @Serializable
+    data class notification(val owner: String, val msg: String, val time: Long) // , @BsonId val key: Id<notification> = newId()
 
+    public fun createNewNotification(o: String, m: String, t: Long = System.currentTimeMillis())
+    {
+        createCollection("notifications")
+        val col = mongoDB.getCollection<notification>("notifications")
+        col.insertOne(notification(o, m, t))
 
+    }
+   /* public fun dropNotificationByKey(@BsonId key: Id<notification>) {
+        createCollection("notifications")
+        val col = mongoDB.getCollection<notification>("notifications")
+        col.deleteOne(notification::key eq key)
+    }*/
+    // Will to delele notifications that less by time than tLimit
+    public fun dropNotificationByTime(tLimit: Long) {
+        createCollection("notifications")
+        val col = mongoDB.getCollection<notification>("notifications")
+        col.deleteOne(notification::time lt tLimit)
+    }
+    fun getNotificationByOwner(o: String): MutableList<notification> {
+        createCollection("notifications")
+        val col = mongoDB.getCollection<Document>("notifications")
+        val l = col.find(notification::owner eq o).toList()
+        val r = mutableListOf<notification>()
+        for(n in l) {
+            val owner = n.get("owner").toString()
+            val msg = n.get("msg").toString()
+            val time = n.get("time").toString().toLong()
+            // val key = ObjectId(n.get("_id").toString()).toId<notification>()
+            r.add(notification(owner,msg,time)) //,key))
+        }
+        return r
+    }
 }

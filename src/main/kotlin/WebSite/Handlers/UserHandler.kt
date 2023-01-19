@@ -17,24 +17,12 @@ import ru.xmagi.pool.main.WebSite.JettyServer
 class UserHandler : AbstractHandler() {
     override fun handle(target: String?, baseRequest: Request, request: HttpServletRequest?, response: HttpServletResponse?) {
         baseRequest.setHandled(true)
-
         response!!.setContentType("application/json; charset=UTF-8");
-        println("get username session")
-        val UsernameSession = JettyServer.Cookie.getCookie(JettyServer.Cookie.userSessionCookieName, baseRequest)
-
-        val _session = request?.getParameter("session")
-        var session_raw = ""
-        println("Username session like to got now check")
-        if (UsernameSession == null && _session == null) {
-            response!!.setStatus(401);
-            return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, "undefined session")))
-        } else if (_session != null) {
-            session_raw = _session
-        } else {
-            session_raw = UsernameSession!!
-        }
+        // println("get username session")
+        val session_raw = JettyServer.Users.getSession(response,baseRequest)
+        if (session_raw == null) return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, "undefined session")))
         response!!.setStatus(200);
-        println("Search userdata by session $session_raw")
+        // println("Search userdata by session $session_raw")
         val session = DB.getSession(session_raw)
         val r = JettyServer.Users.getBySession(session_raw, response) // returns UserData data class
         if (r == null || session == null) {
@@ -50,13 +38,21 @@ class UserHandler : AbstractHandler() {
             "genAddress" -> {
                 val coin = request?.getParameter("cryptocoin")
                 val rpc = CryptoCoins.coins.get(coin)
-
-                if (rpc == null && coin == null) {
+                if (rpc == null || coin == null) {
                     Json{encodeDefaults=true}.encodeToString(JSONBooleanAnswer(false, "Not found cryptocurence. use /api?w=getallowcoins"))
                 } else {
-                    val nadr = JettyServer.Users.genNewAddrForUser(session.owner, coin, search_unused = true)
-                    Json.encodeToString(JSONBooleanAnswer(true, "Your new address is ${nadr}")).also { DB.setLoginInputAddress(session.owner, nadr!!, coin!!) }
+                    if(DB.userHaveNotConfirmedTXOnCoinName(session.owner, coin)) {
+                        Json.encodeToString(JSONBooleanAnswer(false, "You have not confirmed transactions for the address"))
+                    } else {
+                        val nadr = JettyServer.Users.genNewAddrForUser(session.owner, coin, search_unused = true)
+                        Json.encodeToString(JSONBooleanAnswer(true, "Your new address is ${nadr}"))
+                            .also { DB.setLoginInputAddress(session.owner, nadr!!, coin!!) }
+                    }
                 }
+            }
+            "updateSession" -> {
+                DB.updateSession(session_raw)
+                Json.encodeToString(JSONBooleanAnswer(true, "sessions was updated"))
             }
             else -> Json{encodeDefaults=true}.encodeToString(r)
         }
