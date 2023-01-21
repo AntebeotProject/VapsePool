@@ -4,10 +4,7 @@ import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletResponse
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.*
 import org.eclipse.jetty.server.Connector
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
@@ -23,6 +20,7 @@ import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
 import org.antibiotic.pool.main.CryptoCurrencies.ElectrumRPC
 import org.antibiotic.pool.main.PoolServer.*
 import org.antibiotic.pool.main.WebSite.Handlers.*
+import java.math.BigDecimal
 import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
@@ -41,7 +39,9 @@ const val defRPCTXFee = 0.01
 data class JSONBooleanAnswer(val result: Boolean, val reason: String? = null)
 
 class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
-    private val m_cl = RPCClient.m_cl
+    companion object {
+        private fun sendJSONAnswer(res: Boolean, text: String, response: HttpServletResponse) = response.writer.print(Json.encodeToString(JSONBooleanAnswer(res, text)))
+    }
     object Encryption {
         // maybe change key fun?
         private val KeyAESForCookie = Settings.m_propetries.getOrDefault("SecretAESKeyForCookie", "123456789ABCDEF-").toString()
@@ -56,11 +56,11 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
         }
         fun getCipher(mode: Int = Cipher.ENCRYPT_MODE): Cipher {
             val cipher: Cipher = Cipher.getInstance(defCipherInstance)
-           // var KEY = KeyAESForCookie
-           // if (KEY.size != 16) {
-           //     if (KEY.size < 16) {
-           //     }
-           // }
+            // var KEY = KeyAESForCookie
+            // if (KEY.size != 16) {
+            //     if (KEY.size < 16) {
+            //     }
+            // }
             val secretKey: SecretKey = strToKey(KeyAESForCookie) //SecretKeySpec(KeyAESForCookie, defCipherKeyAlgo)
 
             // println("Init cipher with $mode and secretKey $secretKey")
@@ -128,6 +128,81 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
 
     } // obj Cookie
     object Users {
+        object cryptocoins
+        {
+            fun sendMoney(acc: String, oAdr: String, coinname: String, cMoney: String, response: HttpServletResponse) {
+                synchronized(DB) {
+                    val oAddrInDBOwner =
+                        DB.getOwnerOfAddress(oAdr) /// weird name . so is null if is not local address of our self... TODO: check by listaddress
+                    // validate address before send! TODO
+                    if (isValidAddress(oAdr=oAdr, coinname = coinname) == false) {
+                        return sendJSONAnswer(false, "Is not valid address for the coin", response)
+                    }
+                    synchronized(CryptoCoins.coins[coinname]!!) {
+                        // do User not blocked. output is enabled. coinname is enabled?
+                        val balances = DB.getLoginBalance(acc)
+                        val UserBalanceOfCoin = balances?.get(coinname)
+                        if (UserBalanceOfCoin?.isBlocked == true) return sendJSONAnswer(false, "Your account is blocked for a while. write to administration", response)
+                        if (RPC.lockOutput) return sendJSONAnswer(false, "Some user do output for now. wait a while", response)
+                        if (CryptoCoins.coins.get(coinname) == null) return sendJSONAnswer(false, "The coinname is disabled for now", response)
+                        // get TX Fee or set.
+                        val txFee = getTXFee(coinname)
+                        // Do user have enough money?
+                        val sendMoneyCount = cMoney.toBigDecimal()
+                        val userBalance = UserBalanceOfCoin?.balance?.toBigDecimal() ?: 0.0.toBigDecimal()
+                        val isUserNotHaveEnoughMoney = if (oAddrInDBOwner != null) {
+                            sendMoneyCount > userBalance
+                        } else {
+                            sendMoneyCount + txFee > userBalance || userBalance < txFee
+                        }
+                        if (isUserNotHaveEnoughMoney)
+                            return sendJSONAnswer(false, "Not correct count of money ${cMoney.toBigDecimal() + txFee} and ${UserBalanceOfCoin?.balance} maybe txfee is big", response)
+                        // send money
+                        RPC.lockOutput = true
+                        val result = if (oAddrInDBOwner != null) {
+                            // if local transaction
+                            DB.createNewNotification(oAddrInDBOwner, "input local $coinname +$cMoney")
+                            DB.addToBalance(oAddrInDBOwner, cMoney.toBigDecimal(), coinname)
+
+                            DB.createNewNotification(acc, "output local $coinname -$cMoney")
+                            DB.addToBalance(acc, -cMoney.toBigDecimal(), coinname)
+                            Pair(true, "local $cMoney without fee was send on address $oAdr")
+                        } else {
+                            // if not local transaction
+                            CryptoCoins.coins[coinname]!!.sendMoney(oAdr, (cMoney.toBigDecimal()), "$acc from pool")
+                            DB.addToBalance(acc, -(cMoney.toBigDecimal() + txFee), coinname)
+                            Pair(true, "${cMoney.toBigDecimal() + txFee} with fee was send on address $oAdr")
+                        }
+                        RPC.lockOutput = false // TODO: fix logic. without double of code
+                        val (res, text) = result
+                        return sendJSONAnswer(res, text, response)
+                        //"Money was send! <meta http-equiv=\"refresh\" content=\"5; url=/\">")
+                    } // synchronized(RPC) CryptoCoins.coins[coinname]!!
+                }// synchronized(DB)
+            }// FUN
+            fun getTXFee(coinname: String): BigDecimal {
+                var txFee = defRPCTXFee.toBigDecimal() // magicNumber
+                if (CryptoCoins.coins[coinname]!!.getisElectrum()) {
+                    val tx_ =
+                        (CryptoCoins.coins[coinname]!! as ElectrumRPC).getfeerate().jsonObject.toMap()["result"]!!.jsonPrimitive.toString()
+                    txFee =
+                        (CryptoCoins.coins[coinname]!! as ElectrumRPC).satoshiToBTC(tx_) //tx_.toBigDecimal() //?: defRPCTXFee.toBigDecimal() // 0.01 is very big for Electrum. so
+                } else {
+                    (CryptoCoins.coins[coinname]!! as RPC).settxfee(txFee.toString()) // TODO: change the value? from nethowrk
+                }
+                return txFee
+            }
+            // we also can to check ismine.
+            fun isValidAddress(coinname: String, oAdr: String): Boolean {
+                if (CryptoCoins!!.coins!!.get(coinname)!!.getisElectrum()) {
+                    val rpc = CryptoCoins!!.coins!!.get(coinname)!! as ElectrumRPC
+                    return rpc.validateaddress(oAdr).jsonObject.toMap()["isvalid"].toString().deleteSquares().toBoolean()
+                } else {
+                    val rpc = CryptoCoins!!.coins!!.get(coinname)!! as RPC
+                    return rpc.validateaddress(oAdr).jsonObject.toMap()["isvalid"].toString().deleteSquares().toBoolean()
+                }
+            }
+        }
         @Serializable
         data class UserData(val Login: String, val Balances: Map<String, DB.UserCoinBalance>)
         const val sessionLifeLimitSec = 43200 // 12 hours
