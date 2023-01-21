@@ -1,15 +1,4 @@
-package ru.xmagi.pool.main.PoolServer
-
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.buildJsonArray
-import java.math.BigDecimal
-import kotlinx.serialization.*
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.json.internal.*
+package org.antibiotic.pool.main.PoolServer
 
 object RPCClient {
     // there is main RPC Client for POOL

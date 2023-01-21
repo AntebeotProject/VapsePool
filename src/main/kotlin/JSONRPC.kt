@@ -1,4 +1,4 @@
-package ru.xmagi.pool.main
+package org.antibiotic.pool.main
 
 import java.io.BufferedReader
 import java.io.DataOutputStream
@@ -10,9 +10,7 @@ import java.util.*
 
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
-import org.litote.kmongo.json
-import ru.xmagi.pool.main.PoolServer.RPCClient
-import ru.xmagi.pool.main.PoolServer.deleteSquares
+import org.antibiotic.pool.main.PoolServer.deleteSquares
 import java.math.BigDecimal
 
 typealias login_pair = Pair<String,String>

@@ -1,11 +1,10 @@
-package ru.xmagi.pool.main.PoolServer
+package org.antibiotic.pool.main.PoolServer
 
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
-import ru.xmagi.pool.AsyncServer
-import ru.xmagi.pool.main.BlockWorker
-import java.io.File
+import org.antibiotic.pool.AsyncServer
+import org.antibiotic.pool.main.BlockWorker
 import java.util.*
 
 /*

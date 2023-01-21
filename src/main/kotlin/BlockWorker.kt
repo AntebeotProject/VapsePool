@@ -1,5 +1,5 @@
-package ru.xmagi.pool.main
-import ru.xmagi.pool.main.PoolServer.toHexString
+package org.antibiotic.pool.main
+import org.antibiotic.pool.main.PoolServer.toHexString
 import java.nio.*
 // @author Roland
 class BlockWorker {

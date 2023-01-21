@@ -1,4 +1,4 @@
-package ru.xmagi.pool.main.PoolServer
+package org.antibiotic.pool.main.PoolServer
 
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -6,7 +6,7 @@ import kotlinx.serialization.json.*
 import org.bitcoinj.core.*
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.script.ScriptBuilder
-import ru.xmagi.pool.AsyncServer
+import org.antibiotic.pool.AsyncServer
 import kotlin.concurrent.thread
 import kotlin.random.Random
 

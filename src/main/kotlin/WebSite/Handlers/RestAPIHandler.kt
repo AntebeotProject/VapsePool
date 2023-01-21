@@ -1,4 +1,4 @@
-package ru.xmagi.pool.main.WebSite.Handlers
+package org.antibiotic.pool.main.WebSite.Handlers
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -8,15 +8,14 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
-import ru.xmagi.pool.main.CryptoCurrencies.CryptoCoins
-import ru.xmagi.pool.main.CryptoCurrencies.ElectrumRPC
-import ru.xmagi.pool.main.PoolServer.DB
-import ru.xmagi.pool.main.PoolServer.RPC
-import ru.xmagi.pool.main.PoolServer.RPCClient
-import ru.xmagi.pool.main.PoolServer.deleteSquares
-import ru.xmagi.pool.main.WebSite.JSONBooleanAnswer
-import ru.xmagi.pool.main.WebSite.defRPCTXFee
-import kotlin.concurrent.thread
+import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
+import org.antibiotic.pool.main.CryptoCurrencies.ElectrumRPC
+import org.antibiotic.pool.main.PoolServer.DB
+import org.antibiotic.pool.main.PoolServer.RPC
+import org.antibiotic.pool.main.PoolServer.RPCClient
+import org.antibiotic.pool.main.PoolServer.deleteSquares
+import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
+import org.antibiotic.pool.main.WebSite.defRPCTXFee
 
 class RESTHandler : AbstractHandler() {
 

@@ -1,4 +1,4 @@
-package ru.xmagi.pool.main.WebSite.Handlers
+package org.antibiotic.pool.main.WebSite.Handlers
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -6,14 +6,17 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
-import ru.xmagi.pool.main.PoolServer.DB
-import ru.xmagi.pool.main.WebSite.Captcha
-import ru.xmagi.pool.main.WebSite.JSONBooleanAnswer
-import ru.xmagi.pool.main.WebSite.JettyServer
+import org.antibiotic.pool.main.PoolServer.DB
+import org.antibiotic.pool.main.WebSite.Captcha
+import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
+import org.antibiotic.pool.main.WebSite.JettyServer
 import javax.imageio.ImageIO
 
 
 class CaptchaHandler : AbstractHandler() {
+    companion object {
+        // val last_captchas =
+    }
     override fun handle(target: String?, baseRequest: Request, request: HttpServletRequest?, response: HttpServletResponse) {
         baseRequest.setHandled(true)
 
@@ -37,6 +40,7 @@ class CaptchaHandler : AbstractHandler() {
         val mc = Captcha(200, 150)
         val text = mc.RandText()
         mc.drawTextLight(text)
+        JettyServer.Cookie.addCookie("cookie_id", "", response, encrypt = false)
         try {
             response!!.setContentType("image/png; charset=UTF-8");
             ImageIO.write(mc.m_bufferedImage, "png", response.outputStream)
@@ -46,6 +50,7 @@ class CaptchaHandler : AbstractHandler() {
             response.writer.print(e.toString())
         }
         val doings = request?.getParameter("w")
+
         //val rValue = when (doings) {
         //    else -> TODO("not implemented yet ")// Json{encodeDefaults=true}.encodeToString(notifications)
        // }

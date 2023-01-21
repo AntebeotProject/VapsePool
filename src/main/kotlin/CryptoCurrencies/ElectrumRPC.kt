@@ -1,10 +1,10 @@
-package ru.xmagi.pool.main.CryptoCurrencies
+package org.antibiotic.pool.main.CryptoCurrencies
 
 import kotlinx.serialization.json.*
-import ru.xmagi.pool.main.JSONRPC
-// import ru.xmagi.pool.main.PoolServer.RPCClient
-import ru.xmagi.pool.main.PoolServer.defTXFee
-import ru.xmagi.pool.main.PoolServer.deleteSquares
+import org.antibiotic.pool.main.JSONRPC
+// import org.antibiotic.pool.main.PoolServer.RPCClient
+import org.antibiotic.pool.main.PoolServer.defTXFee
+import org.antibiotic.pool.main.PoolServer.deleteSquares
 import java.math.BigDecimal
 
 class ElectrumRPC : JSONRPC.worker {

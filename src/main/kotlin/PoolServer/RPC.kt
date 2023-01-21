@@ -1,10 +1,7 @@
-package ru.xmagi.pool.main.PoolServer
+package org.antibiotic.pool.main.PoolServer
 
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
-import ru.xmagi.pool.main.JSONRPC
-import java.math.BigDecimal
-import java.util.ArrayList
+import org.antibiotic.pool.main.JSONRPC
 
 const val defTXFee = 0.01
 // TODO: Change default name of RPC

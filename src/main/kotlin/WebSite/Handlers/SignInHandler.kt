@@ -1,4 +1,4 @@
-package ru.xmagi.pool.main.WebSite.Handlers
+package org.antibiotic.pool.main.WebSite.Handlers
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -6,9 +6,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
-import ru.xmagi.pool.main.PoolServer.DB
-import ru.xmagi.pool.main.WebSite.JSONBooleanAnswer
-import ru.xmagi.pool.main.WebSite.JettyServer
+import org.antibiotic.pool.main.PoolServer.DB
+import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
+import org.antibiotic.pool.main.WebSite.JettyServer
 
 class SignInHandler : AbstractHandler() {
     override fun handle(target: String?, baseRequest: Request, request: HttpServletRequest?, response: HttpServletResponse?) {

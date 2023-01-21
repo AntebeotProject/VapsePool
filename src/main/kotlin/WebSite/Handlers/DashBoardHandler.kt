@@ -1,12 +1,12 @@
-package ru.xmagi.pool.main.WebSite.Handlers
+package org.antibiotic.pool.main.WebSite.Handlers
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
-import ru.xmagi.pool.main.PoolServer.DB
-import ru.xmagi.pool.main.PoolServer.MinerData
-import ru.xmagi.pool.main.PoolServer.PoolServer
+import org.antibiotic.pool.main.PoolServer.DB
+import org.antibiotic.pool.main.PoolServer.MinerData
+import org.antibiotic.pool.main.PoolServer.PoolServer
 import java.util.*
 
 

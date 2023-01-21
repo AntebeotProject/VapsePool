@@ -1,9 +1,9 @@
-package ru.xmagi.pool.main;
+package org.antibiotic.pool.main;
 
-import ru.xmagi.pool.AsyncServer
-import ru.xmagi.pool.main.CryptoCurrencies.CryptoCoins
-import ru.xmagi.pool.main.PoolServer.*
-import ru.xmagi.pool.main.WebSite.JettyServer
+import org.antibiotic.pool.AsyncServer
+import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
+import org.antibiotic.pool.main.PoolServer.*
+import org.antibiotic.pool.main.WebSite.JettyServer
 
 // import com.github.jleskovar.*
 

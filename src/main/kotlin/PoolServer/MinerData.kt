@@ -1,6 +1,6 @@
-package ru.xmagi.pool.main.PoolServer
+package org.antibiotic.pool.main.PoolServer
 
-import ru.xmagi.pool.main.PoolServer.PoolServer.maxIdleSecond
+import org.antibiotic.pool.main.PoolServer.PoolServer.maxIdleSecond
 import kotlin.concurrent.thread
 
 data class MinerData(var LastActiveTimeSec: Long, val Login: String, var IdleTries: Int = 0, val isHTTPMiner: Boolean = true) {

@@ -6,7 +6,7 @@ plugins {
     application
 }
 
-group = "ru.xmagi.pool"
+group = "org.antibiotic.pool"
 version = "1.0-SNAPSHOT"
 
 repositories {

@@ -1,4 +1,4 @@
-package ru.xmagi.pool.main.PoolServer
+package org.antibiotic.pool.main.PoolServer
 
 import java.io.File
 

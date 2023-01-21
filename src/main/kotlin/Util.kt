@@ -1,8 +1,4 @@
-package ru.xmagi.pool.main
-
-import java.math.BigInteger
-
-
+package org.antibiotic.pool.main
 
 
 object  Util {

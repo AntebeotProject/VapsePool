@@ -1,17 +1,12 @@
-package ru.xmagi.pool.main.PoolServer
+package org.antibiotic.pool.main.PoolServer
 
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Filters
 import kotlinx.serialization.Serializable
-import org.bitcoinj.core.Coin
 import org.bouncycastle.crypto.generators.BCrypt
 import org.bson.Document
-import org.bson.codecs.pojo.annotations.BsonId
-import org.bson.types.ObjectId
 import org.litote.kmongo.*
-import org.litote.kmongo.id.toId
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.util.*
 
 /*

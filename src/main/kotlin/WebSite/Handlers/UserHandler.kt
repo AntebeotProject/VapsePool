@@ -1,17 +1,16 @@
-package ru.xmagi.pool.main.WebSite.Handlers
+package org.antibiotic.pool.main.WebSite.Handlers
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.jsonObject
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
-import ru.xmagi.pool.main.CryptoCurrencies.CryptoCoins
-import ru.xmagi.pool.main.PoolServer.DB
-import ru.xmagi.pool.main.WebSite.JSONBooleanAnswer
-import ru.xmagi.pool.main.WebSite.JettyServer
+import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
+import org.antibiotic.pool.main.PoolServer.DB
+import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
+import org.antibiotic.pool.main.WebSite.JettyServer
 
 // https://kotlinlang.org/docs/nested-classes.html not need internal for now
 class UserHandler : AbstractHandler() {

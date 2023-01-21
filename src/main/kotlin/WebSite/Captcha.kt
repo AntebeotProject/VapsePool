@@ -1,4 +1,4 @@
-package ru.xmagi.pool.main.WebSite
+package org.antibiotic.pool.main.WebSite
 
 import java.awt.Color
 import java.awt.Font

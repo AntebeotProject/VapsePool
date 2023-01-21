@@ -1,13 +1,11 @@
-package ru.xmagi.pool.main.CryptoCurrencies
+package org.antibiotic.pool.main.CryptoCurrencies
 
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
-import ru.xmagi.pool.main.JSONRPC
-import ru.xmagi.pool.main.PoolServer.*
+import org.antibiotic.pool.main.JSONRPC
+import org.antibiotic.pool.main.PoolServer.*
 import java.io.File
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.util.*
 import kotlin.concurrent.thread
 

@@ -1,4 +1,4 @@
-package ru.xmagi.pool.main.WebSite
+package org.antibiotic.pool.main.WebSite
 
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletResponse
@@ -19,17 +19,14 @@ import org.eclipse.jetty.server.handler.gzip.GzipHandler
 import org.eclipse.jetty.util.Callback
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.util.resource.ResourceCollection
-import ru.xmagi.pool.main.CryptoCurrencies.CryptoCoins
-import ru.xmagi.pool.main.CryptoCurrencies.ElectrumRPC
-import ru.xmagi.pool.main.PoolServer.*
-import ru.xmagi.pool.main.WebSite.Handlers.*
-import java.security.SecureRandom
+import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
+import org.antibiotic.pool.main.CryptoCurrencies.ElectrumRPC
+import org.antibiotic.pool.main.PoolServer.*
+import org.antibiotic.pool.main.WebSite.Handlers.*
 import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
-import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 
