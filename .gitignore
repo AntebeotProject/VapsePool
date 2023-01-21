@@ -1,0 +1,10 @@
+# Project exclude paths
+/.gradle/
+/AsyncServer/build/
+/AsyncServer/build/classes/java/main/
+/build/
+/build/classes/java/main/
+logs.txt
+out/
+out/artifacts
+out/artifacts/VAPSEPOOL_*
