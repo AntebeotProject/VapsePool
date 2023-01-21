@@ -14,6 +14,7 @@ import org.antibiotic.pool.main.PoolServer.DB
 import org.antibiotic.pool.main.PoolServer.RPC
 import org.antibiotic.pool.main.PoolServer.RPCClient
 import org.antibiotic.pool.main.PoolServer.deleteSquares
+import org.antibiotic.pool.main.WebSite.Captcha
 import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
 import org.antibiotic.pool.main.WebSite.JettyServer
 import org.antibiotic.pool.main.WebSite.defRPCTXFee
@@ -48,7 +49,10 @@ class RESTHandler : AbstractHandler() {
                     val oAdr = request!!.getParameter("oAdr")
                     val cMoney = request!!.getParameter("cMoney")
                     val coinname = request!!.getParameter("coinname") ?: "gostcoin"
-
+                    val answ = Captcha.checkCaptcha("captchaText", baseRequest, request, response, delCaptchaAfter = true)
+                    if (answ == false) {
+                        return JettyServer.sendJSONAnswer(false, "not correct captcha", response)
+                    }
                     if (acc == null || pass == null) {
                         return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, "U will auth everytime for output with your login and password")))
                     }

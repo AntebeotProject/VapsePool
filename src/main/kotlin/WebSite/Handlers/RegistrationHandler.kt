@@ -7,6 +7,7 @@ import kotlinx.serialization.json.Json
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.antibiotic.pool.main.PoolServer.DB
+import org.antibiotic.pool.main.WebSite.Captcha
 import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
 import org.antibiotic.pool.main.WebSite.JettyServer
 
@@ -18,8 +19,14 @@ class RegistrationHandler : AbstractHandler() {
         synchronized(DB) {
             response!!.setStatus(200);
             response!!.setContentType("application/json; charset=UTF-8");
+            val answ = Captcha.checkCaptcha("captchaText", baseRequest, request, response, delCaptchaAfter = true)
+            if (answ == false) {
+                return JettyServer.sendJSONAnswer(false, "not correct captcha", response)
+            }
             val workname = request!!.getParameter("workname")
             val workpass = request!!.getParameter("workpass")
+            val workpass2 = request!!.getParameter("workpass2")
+            if (!workpass.equals(workpass2)) return JettyServer.sendJSONAnswer(false, "workpass 1 not equal to workpass 2", response)
             val answer =
                 if (workname == null || workpass == null || !(workname.length > 0 && workpass.length > 0)) {
                     Json.encodeToString(JSONBooleanAnswer(false, "Workpass and WorkLogin will be correct size. more than 1.")) //

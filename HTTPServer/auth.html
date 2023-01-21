@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration</title>
+</head>
+<body>
+<script>
+    function reloadCaptcha() {
+            console.log("captcha reload")
+            let captcha = document.getElementById("catpcha")
+            captcha.src="/captcha?w=get&" + new Date().getTime();
+    }
+</script>
+<center>
+  <p>Auth:</p>
+  <form action="/signin" method="GET">
+    WorkName: <input type=textarea name="workname"></br>
+    Password: <input type=password name="workpass"></br>
+    Captcha text: <input type=text name="captchaText"></br>
+    <input type=submit value=auth>
+  </form></br>
+  <img src="/captcha?w=get" alt="captcha" id="catpcha" > <br/>
+    <button onclick="reloadCaptcha()">reload captcha</button>
+</center>
+</body>
+</html>

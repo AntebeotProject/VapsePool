@@ -17,28 +17,13 @@
 </ul>
 </ol>
 <p><a href="ApiReference.html">Api reference</a></p>
-<li>Register:</li>
-<form action="/registration" method="GET">
-	WorkName: <input type=textarea name="workname"></br>
-	Password: <input type=password name="workpass"></br>
-	<input type=submit value=register>
-</form>
-<li>Auth:</li>
-<form action="/signin" method="GET">
-	WorkName: <input type=textarea name="workname"></br>
-	Password: <input type=password name="workpass"></br>
-	<input type=submit value=auth>
-</form>
-<li>OutPut: </li>
-<form action="/api" method="GET">
-	<input type="hidden" name="w" value="output" />
-	WorkName: <input type=textarea name="acc" /></br>
-	Password: <input type=password name="pass" /></br>
-	outputAdr: <input type=textarea name="oAdr" /></br>
-	outputMoney: <input type=textarea name="cMoney" value="1.0" /></br>
-	coin: <input type=textarea value=gostcoin name=coinname /></br>
-	<input type=submit value=outputfrombalance>
-</form>
+
+<ol>
+	<li><a href="reg.html">registration</a></li>
+	<li><a href="auth.html">sign in</a></li>
+	<li><a href="output.html">output</a></li>
+</ol>
+
 <li>GetBalance: </li>
 <form action="/api" method="GET">
 	<input type="hidden" name="w" value="getbalance" />
