@@ -40,7 +40,8 @@ data class JSONBooleanAnswer(val result: Boolean, val reason: String? = null)
 
 class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
     companion object {
-        private fun sendJSONAnswer(res: Boolean, text: String, response: HttpServletResponse) = response.writer.print(Json.encodeToString(JSONBooleanAnswer(res, text)))
+        public fun sendJSONAnswer(res: Boolean, text: String, response: HttpServletResponse) = response.writer.print(Json.encodeToString(JSONBooleanAnswer(res, text)))
+        fun pWarning(m: String) = System.err.println("[WARNING OF PART OF JETTY SERVER] $m")
     }
     object Encryption {
         // maybe change key fun?
@@ -297,6 +298,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
         it.host = host
         it
     }
+    // Handlers starts there
     private val m_contextCollection = ContextHandlerCollection()
     private fun addRegisterHandler()  {
         val regContext = ContextHandler("/registration")
@@ -365,6 +367,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
         val captchaContx = ContextHandler("/captcha")
         captchaContx.handler = CaptchaHandler()
         m_contextCollection.addHandler(captchaContx)
+        Captcha.runThreadToCleanLastCaptches()
     }
     private fun EnableHandlers() {
         addRegisterHandler()

@@ -5,7 +5,8 @@ import kotlin.concurrent.thread
 
 data class MinerData(var LastActiveTimeSec: Long, val Login: String, var IdleTries: Int = 0, val isHTTPMiner: Boolean = true) {
     companion object {
-        val currentMiners = mutableListOf<MinerData>()
+        private var threadForCleanWorks = false
+        val currentMiners = mutableListOf<MinerData>() // warning. open access.
         fun getMinerIDX(Login: String): Int {
             for (minerIDX in 0 until currentMiners.size) {
                 if (currentMiners[minerIDX].Login.equals(Login)) return minerIDX
@@ -41,14 +42,21 @@ data class MinerData(var LastActiveTimeSec: Long, val Login: String, var IdleTri
                 currentMiners.removeIf() { it.idleMoreThan(maxIdleSecond) }
             }
         }
-
+        // TODO: the style to interface
+        fun stopThreadForClean() {
+            threadForCleanWorks = false
+        }
         fun startThreadForClean() {
+                if (threadForCleanWorks) return
+                threadForCleanWorks = true
                 thread {
                         // println("thread for clean not works miners")
-                        if (maxIdleSecond <= 0) maxIdleSecond = PoolServer.defMaxIdleSecond
-                        Thread.sleep(maxIdleSecond.toLong() * 1000)
-                        cleanNotWorksMiners()
-                        startThreadForClean()
+                        while(threadForCleanWorks) {
+                            if (maxIdleSecond <= 0) maxIdleSecond = PoolServer.defMaxIdleSecond
+                            Thread.sleep(maxIdleSecond.toLong() * 1000)
+                            cleanNotWorksMiners()
+                        }
+                        // startThreadForClean() // maybe while? because stack overflow is really
                     }
         }
     }

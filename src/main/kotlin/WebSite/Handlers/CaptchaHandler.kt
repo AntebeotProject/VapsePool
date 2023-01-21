@@ -37,20 +37,43 @@ class CaptchaHandler : AbstractHandler() {
        // {
        //     println(not)
        // }
-        val mc = Captcha(200, 150)
-        val text = mc.RandText()
-        mc.drawTextLight(text)
-        JettyServer.Cookie.addCookie("cookie_id", "", response, encrypt = false)
-        try {
-            response!!.setContentType("image/png; charset=UTF-8");
-            ImageIO.write(mc.m_bufferedImage, "png", response.outputStream)
-           // response.getWriter().print(mc.getBuffer().)
-        } catch (e: Exception) {
-            response!!.setContentType("text; charset=UTF-8");
-            response.writer.print(e.toString())
-        }
-        val doings = request?.getParameter("w")
 
+
+        val doings = request?.getParameter("w")
+        when(doings)
+        {
+            "get" ->
+            {
+                // TODO: 150 is can be 150 users. in future version is will be more than 150. change it in future version. increase the limit
+                if (Captcha.serverOnFloodThoughCaptcha()) { return JettyServer.sendJSONAnswer(false, "Big requests in last time though captcha. wait a while please", response) }
+                val mc = Captcha(200, 150)
+                val text = mc.RandText()
+                val id = Captcha.genCaptchaID()
+                Captcha.addLastCaptcha(id, text)
+                mc.drawTextLight(text)
+                val befCaptcha = JettyServer.Cookie.getCookie("cookie_id", baseRequest, encrypt = false)
+                if (befCaptcha != null) Captcha.delCaptchaById(befCaptcha) // can be vuln in some theory... but is hard for real
+                JettyServer.Cookie.addCookie("cookie_id", id, response, encrypt = false)
+                try {
+                    response!!.setContentType("image/png; charset=UTF-8");
+                    ImageIO.write(mc.m_bufferedImage, "png", response.outputStream)
+                    // response.getWriter().print(mc.getBuffer().)
+                } catch (e: Exception) {
+                    response!!.setContentType("text; charset=UTF-8");
+                    response.writer.print(e.toString())
+                }
+            }
+            "answerTest" ->
+            {
+                val answ = Captcha.checkCaptcha("a", baseRequest, request, response, delCaptchaAfter = true)
+                if (answ)
+                {
+                    response.writer.print("{\"result\":\"test pass\"}")
+                } else {
+                    response.writer.print("{\"result\":\"test not (or not correct answer) pass\"}")
+                }
+            }
+        }
         //val rValue = when (doings) {
         //    else -> TODO("not implemented yet ")// Json{encodeDefaults=true}.encodeToString(notifications)
        // }

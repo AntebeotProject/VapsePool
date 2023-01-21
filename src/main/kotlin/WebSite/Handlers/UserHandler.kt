@@ -53,6 +53,18 @@ class UserHandler : AbstractHandler() {
                 DB.updateSession(session_raw)
                 Json.encodeToString(JSONBooleanAnswer(true, "sessions was updated"))
             }
+            "changePassword" ->
+            {
+                val new_pass = request.getParameter("new_pass")
+                val last_pass = request.getParameter("last_pass")
+                if (DB.checkUserPassword(session.owner, last_pass) == true) {
+                        DB.changeUserPassword(session.owner, new_pass);
+                        Json.encodeToString(JSONBooleanAnswer(true, "Password was changed"))
+                } else {
+                    Json.encodeToString(JSONBooleanAnswer(false, "not correct lass password"))
+                }
+
+            }
             else -> Json{encodeDefaults=true}.encodeToString(r)
         }
 

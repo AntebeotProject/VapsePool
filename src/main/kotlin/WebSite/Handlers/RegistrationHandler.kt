@@ -22,7 +22,7 @@ class RegistrationHandler : AbstractHandler() {
             val workpass = request!!.getParameter("workpass")
             val answer =
                 if (workname == null || workpass == null || !(workname.length > 0 && workpass.length > 0)) {
-                    Json.encodeToString(JSONBooleanAnswer(false, "Workpass and WorkLogin will be correct size. more than 0."))
+                    Json.encodeToString(JSONBooleanAnswer(false, "Workpass and WorkLogin will be correct size. more than 1.")) //
                 } else if (DB.checkUserPassword(workname) != null) { //maybe weird logic.
                     Json.encodeToString(JSONBooleanAnswer(false, "The user already registered"))
                 } else {

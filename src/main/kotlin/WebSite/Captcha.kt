@@ -1,15 +1,89 @@
 package org.antibiotic.pool.main.WebSite
 
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import org.antibiotic.pool.main.PoolServer.MinerData
+import org.antibiotic.pool.main.PoolServer.PoolServer
+import org.antibiotic.pool.main.PoolServer.toHexString
+import org.eclipse.jetty.server.Request
 import java.awt.Color
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.lang.StringBuilder
+import java.util.Base64
+import kotlin.concurrent.thread
 import kotlin.random.Random
 
 const val DotSize = 5
 const val DotsCountRand = 250
 const val LinesCountRand = 250
+// typealias CaptchaID = Pair<String, Long> // text ID and timemilliseconds
 class Captcha(width: Int, height: Int, type: Int = BufferedImage.TYPE_INT_RGB) {
+    companion object {
+        data class CaptchaData(val id: String, val answer: String, val timemillis: Long = System.currentTimeMillis())
+        const val maxCaptchaLifeTimeMillis = 60_000L * 5 // 1 minute
+        const val maxCaptches = 150; // in 5 minutes. more is can be flood to server for now. in future maybe nope
+        private var floodDetected = false
+        fun serverOnFloodThoughCaptcha() = floodDetected
+        private val lastCatches = mutableSetOf<CaptchaData>()
+        private var threadForCleanWorks = false
+        fun checkCaptcha(par: String, baseRequest: Request, request: HttpServletRequest?, response: HttpServletResponse, delCaptchaAfter: Boolean = true): Boolean {
+            val cookie_id = JettyServer.Cookie.getCookie("cookie_id", baseRequest, encrypt = false)
+            if (cookie_id == null) JettyServer.sendJSONAnswer(false, "Not found cookie_id. ask before though ?w=get", response)
+            val answer = request?.getParameter(par)
+            val isCorrect = Captcha.isCaptchaCorrect(cookie_id!!, answer = answer!!, delCaptchaAfter = delCaptchaAfter)
+            return isCorrect
+        }
+        fun runThreadToCleanLastCaptches() {
+            if (threadForCleanWorks) return
+            threadForCleanWorks = true
+            thread {
+                while (threadForCleanWorks) {
+                    synchronized(lastCatches)
+                    {
+                        lastCatches.removeIf({ System.currentTimeMillis() - it.timemillis > maxCaptchaLifeTimeMillis })
+                    }
+                    Thread.sleep(maxCaptchaLifeTimeMillis)
+                }
+            }
+        }
+        fun stopThreadForClean() {
+            threadForCleanWorks = false
+        }
+        fun addLastCaptcha(id: String, answer: String) {
+            synchronized(lastCatches)
+            {
+                if (lastCatches.size + 1 >= maxCaptches)
+                {
+                    JettyServer.pWarning("like to flood on server though captcha")
+                    floodDetected = true
+                } else floodDetected = false
+                lastCatches.add(CaptchaData(id, answer))
+            }
+        }
+        fun isCaptchaCorrect(id: String, answer: String, delCaptchaAfter: Boolean): Boolean
+        {
+            var found = false
+            lastCatches.forEach() {
+                if (it.id == id) {
+                    found = true// it.answer == answer
+                    return@forEach
+                }
+            }
+            if (found && delCaptchaAfter)
+            {
+                delCaptchaById(id)
+            }
+            return found
+        }
+        fun delCaptchaById(id: String) {
+            synchronized(lastCatches)
+            {
+                lastCatches.removeIf() {it.id == id}
+            }
+        }
+        fun genCaptchaID(bS: Int = 6) = String(Base64.getEncoder().encode(Random.nextBytes(bS)))
+    }
     val m_width = width
     val m_height = height
     val m_type = type

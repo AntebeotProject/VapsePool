@@ -204,6 +204,18 @@ object DB {
         val hashedPass = hashString(p)
         col.insertOne(users(l, Password = hashedPass))
     }
+    // for administrations
+    fun dropUserByLogin(l: String) {
+        createCollection("users")
+        val col = mongoDB.getCollection<users>("users") as MongoCollection<users>
+        col.deleteOne(users::Login eq l)
+    }
+    fun changeUserPassword(l: String, np: String)
+    {
+        createCollection("users")
+        val col = mongoDB.getCollection<users>("users") as MongoCollection<users>
+        col.updateOne(users::Login eq l, setValue(users::Password, np))
+    }
 
     /*
         * Not was tested. will be deleted maybe.
