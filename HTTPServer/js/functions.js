@@ -11,7 +11,7 @@ function reloadCaptcha() {
             let captcha = document.getElementById("catpcha")
             captcha.src="/captcha?w=get&" + new Date().getTime();
 }
-function showAlertBox(msg, title="ERROR", color = "grey")
+function showAlertBox(msg, title="ERROR", color = "#202020")
 {
 /*
 	if ($("#alert").length == 0)
@@ -55,7 +55,7 @@ function doAuth()
 		if (data.result === false)
 		{
 			showAlertBox(data.reason)	
-		}else showAlertBox("You are succesfully signin. go to main page now", "Info", "snow")
+		}else showAlertBox("Succesfully. Reload the page", "Info", "snow")
 	});
 	$("#captchaText").val("")
 	reloadCaptcha()
@@ -75,7 +75,7 @@ function doRegistration()
 		if (data.result === false)
 		{
 			showAlertBox(data.reason)	
-		}else showAlertBox("You are succesfully signin. go to main page now", "Info", "snow")
+		}else showAlertBox("Succesfully. Reload the page", "Info", "snow")
 	});
 	$("#captchaText").val("")
 	reloadCaptcha()

@@ -1,8 +1,19 @@
 #alertBox {
-	text-align:center;
 	width: 250px;
 	position:fixed;
 	left:50%;
 	right:50%;
+	top: 50%;
 	transform: translate(-50%, -50%);
+	background-color: #202020;
+	text-align:center;
+}
+#alertBox .uk-alert-close {
+	left: auto;
+	top: 5px;
+	right: 5px;
+}
+#content {
+	/*text-align: center;*/
+	padding: 25px;
 }
