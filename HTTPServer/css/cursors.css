@@ -1,0 +1,11 @@
+.pointer { /* Set cursor location */
+  position: absolute;
+  height: 480px; top: 100px;
+  width: 480px; left: 50%;
+  z-index: 9999; /* Put cursor on top of everything */
+  pointer-events: none; /* Make sure cursor doesn't change */
+}
+.pointer img { /* Set cursor size constraints if desired */
+  height: 50px;
+  width: auto;
+}
