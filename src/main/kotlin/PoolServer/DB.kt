@@ -214,7 +214,8 @@ object DB {
     {
         createCollection("users")
         val col = mongoDB.getCollection<users>("users") as MongoCollection<users>
-        col.updateOne(users::Login eq l, setValue(users::Password, np))
+        val hashedPass = hashString(np)
+        col.updateOne(users::Login eq l, setValue(users::Password, hashedPass))
     }
 
     /*

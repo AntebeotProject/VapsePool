@@ -10,6 +10,7 @@ import org.antibiotic.pool.main.PoolServer.DB
 import org.antibiotic.pool.main.WebSite.Captcha
 import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
 import org.antibiotic.pool.main.WebSite.JettyServer
+import org.antibiotic.pool.main.WebSite.defCaptchaCookie
 import javax.imageio.ImageIO
 
 
@@ -31,9 +32,9 @@ class CaptchaHandler : AbstractHandler() {
                 val id = Captcha.genCaptchaID()
                 Captcha.addLastCaptcha(id, text)
                 mc.drawTextLight(text)
-                val befCaptcha = JettyServer.Cookie.getCookie("cookie_id", baseRequest, encrypt = false)
+                val befCaptcha = JettyServer.Cookie.getCookie(defCaptchaCookie, baseRequest, encrypt = false)
                 if (befCaptcha != null) Captcha.delCaptchaById(befCaptcha) // can be vuln in some theory... but is hard for real
-                JettyServer.Cookie.addCookie("cookie_id", id, response, encrypt = false)
+                JettyServer.Cookie.addCookie(defCaptchaCookie, id, response, encrypt = false)
                 try {
                     response!!.setContentType("image/png; charset=UTF-8");
                     ImageIO.write(mc.m_bufferedImage, "png", response.outputStream)

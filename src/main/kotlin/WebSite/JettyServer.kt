@@ -34,7 +34,7 @@ const val defCipherKeyAlgo = "AES"
 const val defCipherInstance = "AES/CBC/PKCS5Padding"
 const val defaultPathOfHTTPFiles = "HTTPServer"
 
-const val defRPCTXFee = 0.01
+const val defRPCTXFee = 0.01 // I think is ok. for now.
 @Serializable
 data class JSONBooleanAnswer(val result: Boolean, val reason: String? = null)
 
@@ -154,7 +154,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                         val isUserNotHaveEnoughMoney = if (oAddrInDBOwner != null) {
                             sendMoneyCount > userBalance
                         } else {
-                            sendMoneyCount + txFee > userBalance || userBalance < txFee
+                            (sendMoneyCount + txFee) > userBalance || userBalance < txFee || sendMoneyCount < txFee
                         }
                         if (isUserNotHaveEnoughMoney)
                             return sendJSONAnswer(false, "Not correct count of money ${cMoney.toBigDecimal() + txFee} and ${UserBalanceOfCoin?.balance} maybe txfee is big", response)

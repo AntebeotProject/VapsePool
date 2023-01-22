@@ -92,3 +92,51 @@ function userIsSigned()
 {
 	return $.cookie("usession") != undefined 
 }
+
+// User Data
+let userData = function (w) {
+    var tmp = null;
+    let reqdata = w
+    $.ajax({
+        'async': false,
+        'type': "GET",
+        'global': false,
+        'dataType': 'json',
+        'url': "/user/",
+        'data': reqdata,
+        'success': function (data) {
+            tmp = data;
+        }
+    });
+    return tmp;
+    };
+let genNewAddress = function (cryptocoin) { return userData ({'w':"genAddress", 'cryptocoin': cryptocoin}) };
+let updateSession = function () { return userData ({'w':"updateSession"}) };
+let changePassword = function (last_pass, new_pass) { return userData ({'w':"changePassword", 'last_pass':last_pass, 'new_pass':new_pass}) };
+let getowninput  = function (cryptocoin) { return userData ({'w':"getowninput", 'cryptocoin': cryptocoin}) };
+function GetUserInfo(w = {}) {
+   return userData(w)
+}
+// api // TODO: var apiFunctional = {....}
+let apiData = function (w) {
+    var tmp = null;
+    let reqdata = w
+    $.ajax({
+        'async': false,
+        'type': "GET",
+        'global': false,
+        'dataType': 'json',
+        'url': "/api/",
+        'data': reqdata,
+        'success': function (data) {
+            tmp = data;
+        }
+    });
+    return tmp;
+    };
+function getAllowCoins() {
+ return apiData({'w':"getallowcoins"})
+}
+function outputMoney(login,password, output_address, count_of_money, coin_name, captchaData) {
+ return apiData({'w':"output", 'acc': login, 'pass': password, 'oAdr': output_address, 'cMoney': count_of_money, 'coinname': coin_name, 'captchaText':captchaData})
+}

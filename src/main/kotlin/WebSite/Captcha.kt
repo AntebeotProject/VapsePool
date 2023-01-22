@@ -17,6 +17,7 @@ import kotlin.random.Random
 const val DotSize = 5
 const val DotsCountRand = 250
 const val LinesCountRand = 250
+const val defCaptchaCookie = "captcha_id"
 // typealias CaptchaID = Pair<String, Long> // text ID and timemilliseconds
 class Captcha(width: Int, height: Int, type: Int = BufferedImage.TYPE_INT_RGB) {
     companion object {
@@ -28,7 +29,7 @@ class Captcha(width: Int, height: Int, type: Int = BufferedImage.TYPE_INT_RGB) {
         private val lastCatches = mutableSetOf<CaptchaData>()
         private var threadForCleanWorks = false
         fun checkCaptcha(par: String, baseRequest: Request, request: HttpServletRequest?, response: HttpServletResponse, delCaptchaAfter: Boolean = true): Boolean {
-            val cookie_id = JettyServer.Cookie.getCookie("cookie_id", baseRequest, encrypt = false)
+            val cookie_id = JettyServer.Cookie.getCookie(defCaptchaCookie, baseRequest, encrypt = false)
             if (cookie_id == null) JettyServer.sendJSONAnswer(false, "Not found cookie_id. ask before though ?w=get", response)
             val answer = request?.getParameter(par)
             val isCorrect = Captcha.isCaptchaCorrect(cookie_id!!, answer = answer!!, delCaptchaAfter = delCaptchaAfter)
@@ -66,7 +67,7 @@ class Captcha(width: Int, height: Int, type: Int = BufferedImage.TYPE_INT_RGB) {
             var found = false
             lastCatches.forEach() {
                 if (it.id == id) {
-                    found = true// it.answer == answer
+                    found = answer.equals(it.answer)// it.answer == answer
                     return@forEach
                 }
             }
