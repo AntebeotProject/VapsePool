@@ -5,7 +5,10 @@ import com.mongodb.client.model.Filters
 import kotlinx.serialization.Serializable
 import org.bouncycastle.crypto.generators.BCrypt
 import org.bson.Document
+import org.bson.codecs.pojo.annotations.BsonId
+import org.bson.types.ObjectId
 import org.litote.kmongo.*
+import org.litote.kmongo.id.toId
 import java.math.BigDecimal
 import java.util.*
 
@@ -379,6 +382,131 @@ object DB {
             r.add(notification(owner,msg,time)) //,key))
         }
         return r
+    }
+    // Orders
+    class notAllowedOrder(w: String): Exception("Not allowed order. $w");
+    data class toSellStruct(val name: String, val price: BigDecimal)
+    data class order(val owner: String, val whatSell: toSellStruct, val whatBuy: toSellStruct,
+                     val isCoin2CoinTrade: Boolean = false, val isFiat2CoinTrade: Boolean = false, val ownerIsBuyer: Boolean = false,
+                     val isActive: Boolean = false, @BsonId val key: Id<order> = newId()
+    ) {
+        init {
+            if ((!isFiat2CoinTrade && !isCoin2CoinTrade) || isCoin2CoinTrade == isFiat2CoinTrade) throw notAllowedOrder("Is will be coin2tocointrade or coin2fiatrade")
+        }
+    }
+    fun addOrder(owner: String, toSell: toSellStruct, toBuy: toSellStruct, isCoin2CoinTrade: Boolean = false, ownerIsBuyer: Boolean = false)
+    {
+        createCollection("orders")
+        val col = mongoDB.getCollection<order>("orders")
+        col.insertOne(order(owner, toSell, toBuy, isCoin2CoinTrade, ownerIsBuyer))
+    }
+
+    // http://mongodb.github.io/mongo-java-driver/3.4/javadoc/org/bson/types/ObjectId.html
+    /*
+        toHexString() Converts this instance into a 24-byte hexadecimal string representation.
+        ObjectId(byte[] bytes) Constructs a new instance from the given byte array
+     */
+    fun remOrder(oID: ObjectId)
+    {
+        // val id = ObjectId(idInHex)
+        val col = mongoDB.getCollection<order>("orders")
+        col.deleteOne(order::key eq oID.toId())
+    }
+
+    fun changeOrderActivityByIdAndOwner(owner: String, id: Id<order>, activity: Boolean)
+    {
+        val col = mongoDB.getCollection<order>("orders")
+        col.updateOne(Filters.and(order::owner eq owner, order::key eq id), setValue(order::isActive, activity))
+    }
+    fun getOrdersByActivity(s: Boolean = true): List<DB.order>
+    {
+        val col = mongoDB.getCollection<order>("orders")
+        val act = col.find(order::isActive eq s)
+        val it = act.iterator()
+        val r = mutableListOf<DB.order>()
+        while(it.hasNext())
+        {
+            val i = it.next()
+            r.add(i)
+        }
+        return r.toList()
+    }
+    // trade_stata
+    // use forum on phpbb for reviews maybe?
+    data class review(val reviewer: String, val about: String, val text: String, val isPositive: Boolean, @BsonId val key: Id<review> = newId())
+    //
+    fun addReview(reviewer: String, about: String, text: String, isPositive: Boolean = false)
+    {
+        synchronized(DB)
+        {
+            createCollection("traderStatsReview")
+            val col = mongoDB.getCollection<review>("traderStatsReview")
+            col.insertOne(review(reviewer, about, text, isPositive))
+        }
+    }
+    fun remReview(oID: ObjectId)
+    {
+        // val id = ObjectId(idInHex)
+        val col = mongoDB.getCollection<review>("traderStatsReview")
+        col.deleteOne(review::key eq oID.toId<review>())
+    }
+    fun getReviewsByReviewer(r: String): List<review>
+    {
+        val col = mongoDB.getCollection<review>("traderStatsReview")
+        val s = col.find(review::reviewer eq r)
+        val id  = s.iterator()
+        val r = mutableListOf<review>()
+        while(id.hasNext())
+        {
+            r.add(id.next())
+        }
+        return r.toList()
+    }
+    fun getReviewsByAbot(r: String): List<review>
+    {
+        val col = mongoDB.getCollection<review>("traderStatsReview")
+        val s = col.find(review::about eq r)
+        val id  = s.iterator()
+        val r = mutableListOf<review>()
+        while(id.hasNext())
+        {
+            r.add(id.next())
+        }
+        return r.toList()
+    }
+    data class traderStatsStruct(val successfullyTrade: Int = 0, val wrongTrade: Int = 0)
+    {
+        fun addSuccesfully(x: Int = 1) = traderStatsStruct(this.successfullyTrade + x, this.wrongTrade)
+        fun addWrong(x: Int = 1) = traderStatsStruct(this.successfullyTrade, this.wrongTrade + x)
+    }
+    data class traderStats(val owner: String, val stats: traderStatsStruct = traderStatsStruct())
+    fun initTraderStats(o: String)
+    {
+        createCollection("traderStats")
+        val col = mongoDB.getCollection<traderStats>("traderStats")
+        col.insertOne(traderStats(o))
+    }
+    fun getTraderStatsByOwner(o: String): traderStats
+    {
+        synchronized(DB)
+        {
+            createCollection("traderStats")
+            val col = mongoDB.getCollection<traderStats>("traderStats")
+            val s = col.find(traderStats::owner eq o)
+            if (!s.iterator().hasNext()) {
+                initTraderStats(o)
+                return getTraderStatsByOwner(o)
+            }
+            val it = s.iterator()
+            return it.next()
+            // todo: if trader have more statts then is there is bug.
+        }
+    }
+    fun changeTraderStatsByOwner(o: String, stats: traderStatsStruct)
+    {
+        createCollection("traderStats")
+        val col = mongoDB.getCollection<traderStats>("traderStats")
+        col.updateOne(traderStats::owner eq o, setValue(traderStats::stats, stats))
     }
 
 }
