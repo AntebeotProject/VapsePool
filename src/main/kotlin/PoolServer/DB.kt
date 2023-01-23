@@ -2,7 +2,9 @@ package org.antibiotic.pool.main.PoolServer
 
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Filters
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
 import org.bouncycastle.crypto.generators.BCrypt
 import org.bson.Document
 import org.bson.codecs.pojo.annotations.BsonId
@@ -385,20 +387,61 @@ object DB {
     }
     // Orders
     class notAllowedOrder(w: String): Exception("Not allowed order. $w");
-    data class toSellStruct(val name: String, val price: BigDecimal)
-    data class order(val owner: String, val whatSell: toSellStruct, val whatBuy: toSellStruct,
+    // zero limit is not limits.
+    @Serializable
+    data class toSellStruct(val name: String, val price: String, val lmin: String, val lmax: String, val isCrypto: Boolean = true)
+    {
+        init
+        {
+            if (isCrypto && !CryptoCoins.coins.contains(name))
+            {
+                throw notAllowedOrder("cryptocurrency is not allowed")
+            }
+            if (price.toBigDecimal() <= BigDecimal.ZERO)
+            {
+                throw notAllowedOrder("not correct coin price")
+            }
+            if (lmin.toBigDecimal() == BigDecimal.ZERO && lmax.toBigDecimal() == BigDecimal.ZERO || lmax.toBigDecimal() < BigDecimal.ZERO || lmin.toBigDecimal() < BigDecimal.ZERO)
+                throw notAllowedOrder("bad limits")
+        }
+    }
+    @Serializable
+    data class order(val owner: String, val whatSell: toSellStruct, val whatBuy: toSellStruct, val orderMSG: String?,
                      val isCoin2CoinTrade: Boolean = false, val isFiat2CoinTrade: Boolean = false, val ownerIsBuyer: Boolean = false,
-                     val isActive: Boolean = false, @BsonId val key: Id<order> = newId()
+                     val isActive: Boolean = false, val key: String = (ObjectId().toHexString())
     ) {
         init {
             if ((!isFiat2CoinTrade && !isCoin2CoinTrade) || isCoin2CoinTrade == isFiat2CoinTrade) throw notAllowedOrder("Is will be coin2tocointrade or coin2fiatrade")
         }
+        // not factic equals. but equals by some parameters
+        override fun equals(other: Any?): Boolean {
+            val sEq =  super.equals(other)
+            if (other == null) return false
+            if (other.javaClass != this.javaClass) return false //instanceof
+            val o = other as order
+            return o.owner == this.owner &&
+                    o.orderMSG == o.orderMSG &&
+                    this.isCoin2CoinTrade == o.isCoin2CoinTrade &&
+                    this.isFiat2CoinTrade == o.isFiat2CoinTrade &&
+                    this.ownerIsBuyer == o.ownerIsBuyer
+                    && this.whatBuy.isCrypto == o.whatBuy.isCrypto
+                    && this.whatBuy.name == o.whatBuy.name
+                    && this.whatBuy.price == o.whatBuy.price
+
+                    && this.whatSell.isCrypto == o.whatSell.isCrypto
+                    && this.whatSell.name == o.whatSell.name
+                    && this.whatSell.price == o.whatSell.price
+            // this.key == o.key
+            // return  sEq
+        }
     }
-    fun addOrder(owner: String, toSell: toSellStruct, toBuy: toSellStruct, isCoin2CoinTrade: Boolean = false, ownerIsBuyer: Boolean = false)
+    fun addOrder(owner: String, toSell: toSellStruct, toBuy: toSellStruct, orderMSG: String? = null, isCoin2CoinTrade: Boolean = false, isFiat2CoinTrade: Boolean = false, ownerIsBuyer: Boolean = false)
     {
         createCollection("orders")
         val col = mongoDB.getCollection<order>("orders")
-        col.insertOne(order(owner, toSell, toBuy, isCoin2CoinTrade, ownerIsBuyer))
+        val ord = order(owner, toSell, toBuy, orderMSG, isCoin2CoinTrade, isFiat2CoinTrade, ownerIsBuyer)
+        if (ordersExistsForOwner(owner,ord)) throw notAllowedOrder("simillar order exists already. try without another settings")
+        col.insertOne(ord)
     }
 
     // http://mongodb.github.io/mongo-java-driver/3.4/javadoc/org/bson/types/ObjectId.html
@@ -406,22 +449,36 @@ object DB {
         toHexString() Converts this instance into a 24-byte hexadecimal string representation.
         ObjectId(byte[] bytes) Constructs a new instance from the given byte array
      */
-    fun remOrder(oID: ObjectId)
+    fun remOrder(oID: String)
     {
         // val id = ObjectId(idInHex)
         val col = mongoDB.getCollection<order>("orders")
-        col.deleteOne(order::key eq oID.toId())
+        col.deleteOne(order::key eq oID)
     }
-
-    fun changeOrderActivityByIdAndOwner(owner: String, id: Id<order>, activity: Boolean)
+    fun remOrderByIDAndOwner(oID: String, o: String)
+    {
+        // val id = ObjectId(idInHex)
+        val col = mongoDB.getCollection<order>("orders")
+        col.deleteOne(Filters.and(order::key eq oID, order::owner eq o))
+    }
+    fun remOrder(oID: ObjectId) = DB.remOrder(oID.toHexString())
+    fun changeOrderActivityById(id: String, activity: Boolean)
     {
         val col = mongoDB.getCollection<order>("orders")
-        col.updateOne(Filters.and(order::owner eq owner, order::key eq id), setValue(order::isActive, activity))
+        col.updateOne(Filters.and(order::key eq id), setValue(order::isActive, activity))
     }
-    fun getOrdersByActivity(s: Boolean = true): List<DB.order>
+    fun ordersExistsForOwner(o: String, ord: order): Boolean
+    {
+        val orders = getOrdersByOwner(o)
+        orders.forEach() {
+            if (it.equals(ord)) return true
+        }
+        return false
+    }
+    fun getOrdersByOwner(o: String): List<DB.order>
     {
         val col = mongoDB.getCollection<order>("orders")
-        val act = col.find(order::isActive eq s)
+        val act = col.find(order::owner eq o)
         val it = act.iterator()
         val r = mutableListOf<DB.order>()
         while(it.hasNext())
@@ -431,9 +488,27 @@ object DB {
         }
         return r.toList()
     }
+
+    fun getOrdersByActivity(s: Boolean = true): List<DB.order>
+    {
+        val col = mongoDB.getCollection<order>("orders")
+        val act = col.find(order::isActive eq s)
+        val it = act.iterator()
+        val r = mutableListOf<DB.order>()
+        while(it.hasNext())
+        {
+
+            val i = it.next()
+            r.add(i)
+        }
+        return r.toList()
+    }
     // trade_stata
+    @Serializable
+    data class doneTrade(val buyer: String, val seller: String, val toSell: toSellStruct, val toBuy: toSellStruct, val key: String = (ObjectId().toHexString()))
     // use forum on phpbb for reviews maybe?
-    data class review(val reviewer: String, val about: String, val text: String, val isPositive: Boolean, @BsonId val key: Id<review> = newId())
+    @Serializable
+    data class review(val reviewer: String, val about: String, val text: String, val isPositive: Boolean, val key: String = (ObjectId().toHexString()) ) // @BsonId val key: Id<review>
     //
     fun addReview(reviewer: String, about: String, text: String, isPositive: Boolean = false)
     {
@@ -444,11 +519,12 @@ object DB {
             col.insertOne(review(reviewer, about, text, isPositive))
         }
     }
-    fun remReview(oID: ObjectId)
+    fun remReview(oID: ObjectId) = remReview(oID.toHexString())
+    fun remReview(oID: String)
     {
         // val id = ObjectId(idInHex)
         val col = mongoDB.getCollection<review>("traderStatsReview")
-        col.deleteOne(review::key eq oID.toId<review>())
+        col.deleteOne(review::key eq oID)
     }
     fun getReviewsByReviewer(r: String): List<review>
     {
@@ -462,7 +538,7 @@ object DB {
         }
         return r.toList()
     }
-    fun getReviewsByAbot(r: String): List<review>
+    fun getReviewsByAbout(r: String): List<review>
     {
         val col = mongoDB.getCollection<review>("traderStatsReview")
         val s = col.find(review::about eq r)
