@@ -12,6 +12,7 @@
       <change beforePath="$PROJECT_DIR$/.gradle/7.4.2/fileHashes/resourceHashesCache.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.4.2/fileHashes/resourceHashesCache.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HTTPServer/ApiReference.html" beforeDir="false" afterPath="$PROJECT_DIR$/HTTPServer/ApiReference.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build/classes/kotlin/main/org/antibiotic/pool/main/PoolServer/DB.class" beforeDir="false" afterPath="$PROJECT_DIR$/build/classes/kotlin/main/org/antibiotic/pool/main/PoolServer/DB.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build/classes/kotlin/main/org/antibiotic/pool/main/WebSite/Handlers/TradeHandler.class" beforeDir="false" afterPath="$PROJECT_DIR$/build/classes/kotlin/main/org/antibiotic/pool/main/WebSite/Handlers/TradeHandler.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build/kotlin/VAPSEPOOL10SNAPSHOTjar-classes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/build/kotlin/VAPSEPOOL10SNAPSHOTjar-classes.txt" afterDir="false" />
@@ -81,6 +82,7 @@
       <change beforePath="$PROJECT_DIR$/build/libs/VAPSEPOOL-1.0-SNAPSHOT.jar" beforeDir="false" afterPath="$PROJECT_DIR$/build/libs/VAPSEPOOL-1.0-SNAPSHOT.jar" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/PoolServer/DB.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/PoolServer/DB.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/WebSite/Handlers/TradeHandler.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/WebSite/Handlers/TradeHandler.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/WebSite/JettyServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/WebSite/JettyServer.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

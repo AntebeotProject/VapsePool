@@ -51,8 +51,8 @@
 <p>exchange:</p>
 <p>(need session) (auth before):</p>
 <pre>
-    w parameters - addOrderToSellCoin2Coin, getOrders, getOrderByName, removeMyOrderByID, removeOrderByID, changeActiveOrder, doTrade
-    examples - /exchange/?w=doTrade&count=1&id=63cee412d2fda05780b23c33
+    w parameters - addOrderToSellCoin2Coin, getOrders, getOrderByName, removeMyOrderByID, removeOrderByID, changeActiveOrder, doTrade, addReview, getReviewsByAbout, getReviewsByReviewer, getMyReviews, getMyDoneTrade
+    examples -   /exchange/?w=doTrade&count=1&id=63cee412d2fda05780b23c33
 		/exchange/?w=changeActiveOrder&id=63cebdd377a1a83abb3f7d9d&s=true
 		/exchange/?w=removeOrderByID&id=63cebdd377a1a83abb3f7d9d
 		/exchange/?w=removeMyOrderByID&id=63cebdcb77a1a83abb3f7d9a
@@ -63,6 +63,12 @@
                 by default is false    
 -
 /exchange/?w=addOrderToSellCoin2Coin&toSellName=gostcoin&toSellPrice=0&toSellLimitMin=1&toSellLimitMax=1&toBuyName=bitcoin&toBuyPrice=0.0001&toBuyLimitMin=0&toBuyLimitMax=1&tIsBuyer=true&msg=GostcoinNaBitcoin
+-
+?w=addReview&id=63cee8febece8102ab4a0da5&text="All fine!"&isPositive=true
+/exchange/?w=getReviewsByAbout&who=testusername_
+/exchange/?w=getReviewsByReviewer&who=testusername
+/exchange/?w=getMyReviews
+/exchange/?w=getMyDoneTrade
 ...
 </pre>
 <p>api:</p>

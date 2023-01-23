@@ -590,16 +590,31 @@ object DB {
             }
 
     }
+    fun getDoneTradeByBuyerOrSeller(who: String): List<trade> {
+        createCollection("doneTrade")
+        val col = mongoDB.getCollection<trade>("doneTrade")
+        return col.find(Filters.or(trade::buyer eq who, trade::seller eq who)).iterator().asSequence().toList() // use it instead big code
+    }
+    fun getDoneTradeByID(id: String): List<trade> {
+        createCollection("doneTrade")
+        val col = mongoDB.getCollection<trade>("doneTrade")
+        return col.find(trade::key eq id).iterator().asSequence().toList() // use it instead big code
+    }
+    class notAllowedReview(w: String) : Exception("not allowed review: $w")
     @Serializable
-    data class review(val reviewer: String, val about: String, val text: String, val isPositive: Boolean, val key: String = (ObjectId().toHexString()) ) // @BsonId val key: Id<review>
+    data class review(val reviewer: String, val about: String, val text: String, val tradeID: String, val isPositive: Boolean,
+                      val key: String = (ObjectId().toHexString()) ) // @BsonId val key: Id<review>
     //
-    fun addReview(reviewer: String, about: String, text: String, isPositive: Boolean = false)
+    fun addReview(reviewer: String, about: String, text: String, tradeID: String, isPositive: Boolean = false)
     {
         synchronized(DB)
         {
             createCollection("traderStatsReview")
+            if (getReviewsBytradeIDAndReviewer(tradeID, reviewer).size > 0) throw notAllowedReview("review for this trade already exists")
             val col = mongoDB.getCollection<review>("traderStatsReview")
-            col.insertOne(review(reviewer, about, text, isPositive))
+            col.insertOne(review(reviewer, about, text, tradeID, isPositive))
+            val aboutStat = if (isPositive) getTraderStatsByOwner(about).stats.addSuccesfully() else getTraderStatsByOwner(about).stats.addWrong()
+            changeTraderStatsByOwner(about, aboutStat)
         }
     }
     fun remReview(oID: ObjectId) = remReview(oID.toHexString())
@@ -609,17 +624,17 @@ object DB {
         val col = mongoDB.getCollection<review>("traderStatsReview")
         col.deleteOne(review::key eq oID)
     }
+    fun getReviewsBytradeIDAndReviewer(id: String, rev: String): List<review>
+    {
+        val col = mongoDB.getCollection<review>("traderStatsReview")
+        val s = col.find(Filters.and(review::tradeID eq id, review::reviewer eq rev))
+        return s.iterator().asSequence().toList()
+    }
     fun getReviewsByReviewer(r: String): List<review>
     {
         val col = mongoDB.getCollection<review>("traderStatsReview")
         val s = col.find(review::reviewer eq r)
-        val id  = s.iterator()
-        val r = mutableListOf<review>()
-        while(id.hasNext())
-        {
-            r.add(id.next())
-        }
-        return r.toList()
+        return  s.iterator().asSequence().toList()
     }
     fun getReviewsByAbout(r: String): List<review>
     {
@@ -633,6 +648,14 @@ object DB {
         }
         return r.toList()
     }
+    fun getReviewsByWho(who: String): List<review>
+    {
+        val col = mongoDB.getCollection<review>("traderStatsReview")
+        val s = col.find(Filters.or(review::reviewer eq who, review::about eq who))
+        return  s.iterator().asSequence().toList()
+    }
+
+    @Serializable
     data class traderStatsStruct(val successfullyTrade: Int = 0, val wrongTrade: Int = 0)
     {
         fun addSuccesfully(x: Int = 1) = traderStatsStruct(this.successfullyTrade + x, this.wrongTrade)

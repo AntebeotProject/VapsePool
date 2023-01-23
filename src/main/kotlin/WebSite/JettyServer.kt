@@ -4,7 +4,17 @@ import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletResponse
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
+import org.antibiotic.pool.main.CryptoCurrencies.ElectrumRPC
+import org.antibiotic.pool.main.PoolServer.DB
+import org.antibiotic.pool.main.PoolServer.RPC
+import org.antibiotic.pool.main.PoolServer.Settings
+import org.antibiotic.pool.main.PoolServer.deleteSquares
+import org.antibiotic.pool.main.WebSite.Handlers.*
 import org.eclipse.jetty.server.Connector
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
@@ -16,10 +26,6 @@ import org.eclipse.jetty.server.handler.gzip.GzipHandler
 import org.eclipse.jetty.util.Callback
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.util.resource.ResourceCollection
-import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
-import org.antibiotic.pool.main.CryptoCurrencies.ElectrumRPC
-import org.antibiotic.pool.main.PoolServer.*
-import org.antibiotic.pool.main.WebSite.Handlers.*
 import java.math.BigDecimal
 import java.util.*
 import javax.crypto.Cipher
@@ -37,6 +43,16 @@ const val defaultPathOfHTTPFiles = "HTTPServer"
 const val defRPCTXFee = 0.01 // I think is ok. for now.
 @Serializable
 data class JSONBooleanAnswer(val result: Boolean, val reason: String? = null)
+
+fun String.delHTML(notAl: List<Char> = listOf('<', '>','"', '\'')): String
+{
+    var rString = this
+    for(ch in notAl)
+    {
+        rString = rString.replace(ch, '_')
+    }
+    return rString
+}
 
 class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
     companion object {
