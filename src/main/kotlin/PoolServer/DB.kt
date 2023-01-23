@@ -493,7 +493,13 @@ object DB {
         }
         return r.toList()
     }
-
+    fun getOrderByID(id: String): DB.order?
+    {
+        val col = mongoDB.getCollection<order>("orders")
+        val it = col.find(order::key eq id).iterator()
+        if (!it.hasNext()) return null
+        return it.next()
+    }
     fun getOrdersByActivity(s: Boolean = true): List<DB.order>
     {
         val col = mongoDB.getCollection<order>("orders")
@@ -510,8 +516,80 @@ object DB {
     }
     // trade_stata
     @Serializable
-    data class doneTrade(val buyer: String, val seller: String, val toSell: toSellStruct, val toBuy: toSellStruct, val key: String = (ObjectId().toHexString()))
+    data class trade(val buyer: String, val seller: String, val toSell: toSellStruct, val toBuy: toSellStruct, val key: String = (ObjectId().toHexString()))
+
     // use forum on phpbb for reviews maybe?
+    fun doTrade(whoBuy: String, count: String, orderID: String): String
+    {
+        val ord = getOrderByID(orderID)
+        if (ord == null) throw notAllowedOrder("order not found")
+        if (ord.owner == whoBuy) throw notAllowedOrder("owner of trade not allow buy and self on own order")
+            val coinToSell = ord.whatSell.name
+            val coinToBuy = ord.whatBuy.name
+            val ownBalance = DB.getLoginBalance(ord.owner)?.get(coinToSell)
+            val whoBuyBalance = DB.getLoginBalance(whoBuy)?.get(coinToBuy)
+            if (!ord.isActive) throw notAllowedOrder("is not active order")
+            if (ord.isCoin2CoinTrade)
+            {
+                // is auto
+                if (ownBalance == null) {
+                    DB.remOrder(ord.key)
+                    throw notAllowedOrder("seller not have even balance for sell coin. order was drop")
+                }
+                val cInDecimal = count.toBigDecimal()
+                val ownBalanceInDecimal = ownBalance.balance.toBigDecimal()
+                // checks for seller
+                val ownerBalanceLessThanCountToBuy = ownBalanceInDecimal < cInDecimal
+                val countMoreThanLimit = cInDecimal > ord.whatSell.lmax.toBigDecimal()
+                val countLessThanMinLimit = cInDecimal < ord.whatSell.lmin.toBigDecimal()
+                println(ownerBalanceLessThanCountToBuy)
+                println(countMoreThanLimit)
+                println(countLessThanMinLimit)
+                if (ownerBalanceLessThanCountToBuy || countMoreThanLimit || countLessThanMinLimit) throw  notAllowedOrder("count more than balance or limit")
+                // checks for buyer
+                if (whoBuyBalance == null) throw notAllowedOrder("buyer not have balance of buy coin")
+                println("${ord.whatSell.price.toBigDecimal()} and ${ord.whatBuy.price.toBigDecimal()}")
+                // val fPrice = ord.whatSell.price.toBigDecimal() / ord.whatBuy.price.toBigDecimal()
+                // val fPrice_ = ord.whatBuy.price.toBigDecimal() / ord.whatSell.price.toBigDecimal()
+                val countForSell = ord.whatBuy.price.toBigDecimal() *  cInDecimal
+                val countForBuy  = ord.whatSell.price.toBigDecimal() * cInDecimal
+                println("$countForSell and $countForBuy")
+                if (whoBuyBalance.balance.toBigDecimal() < countForSell) throw notAllowedOrder("buyer not have enough balance (${whoBuyBalance.balance.toBigDecimal()}) $countForBuy, by ${ord.whatBuy.price.toBigDecimal()}")
+                println("Теперь баланс $whoBuy должен понизиться на $countForSell для монеты $coinToBuy")
+                println("Теперь баланс ${ord.owner} должен понизиться на $countForBuy для монеты $coinToSell")
+
+                println("Теперь баланс ${ord.owner} должен повыситься на $countForSell для монеты $coinToBuy")
+                println("Теперь баланс $whoBuy должен повыситься на $countForBuy для монеты $coinToSell")
+                synchronized(DB)
+                {
+                    //synchronized(CryptoCoins.coins)
+                    //{
+                        // Not tested yet
+                        DB.createNewNotification(whoBuy, "You buy $coinToSell by $coinToBuy ${ord.whatSell.price.toBigDecimal()} in $count use ID for more information")
+                        DB.createNewNotification(ord.owner, "You sell $coinToBuy by $coinToSell ${ord.whatBuy.price.toBigDecimal()} in $count use ID for more information")
+                        DB.addToBalance(whoBuy, -countForSell, coinToBuy)
+                        DB.addToBalance(ord.owner, -countForBuy, coinToSell)
+                        DB.addToBalance(ord.owner, countForSell, coinToBuy)
+                        DB.addToBalance(whoBuy, countForBuy, coinToSell)
+                        createCollection("doneTrade")
+                        val col = mongoDB.getCollection<trade>("doneTrade")
+                        val doneTrade = trade(whoBuy, ord.owner, ord.whatSell, ord.whatBuy)
+                        col.insertOne(doneTrade)
+                        DB.createNewNotification(whoBuy, "order ${doneTrade.key} is done succesfully")
+                        DB.createNewNotification(ord.owner, "order ${doneTrade.key} is done succesfully")
+                        return doneTrade.key
+                    //}
+                }
+            }// else if not coin2tocoin
+            else {
+                createCollection("notDoneTrade")
+                val col = mongoDB.getCollection<trade>("notDoneTrade")
+                val notDoneTrade = trade(whoBuy, ord.owner, ord.whatSell, ord.whatBuy)
+                col.insertOne(notDoneTrade)
+                return notDoneTrade.key
+            }
+
+    }
     @Serializable
     data class review(val reviewer: String, val about: String, val text: String, val isPositive: Boolean, val key: String = (ObjectId().toHexString()) ) // @BsonId val key: Id<review>
     //

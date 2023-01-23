@@ -55,7 +55,8 @@ class TradeHandler : AbstractHandler() {
                     val toB = DB.toSellStruct(toBuyName, toBuyPrice, lmin = toBuyLMin, lmax = toBuyLMax)
 
                     val tIsBuyer = request.getParameter("tIsBuyer").toBoolean() // trader is buyer or seller?
-                    // /exchange/?w=addOrderToSellCoin2Coin&toSellName=gostcoin&toSellPrice=1&toSellLimitMin=1&toSellLimitMax=1&toBuyName=bitcoin&toBuyPrice=0.0000028&toBuyLimitMin=1&toBuyLimitMax=1&tIsBuyer=true&msg=GostcoinNaBitcoin
+                    //
+                    // /exchange/?w=addOrderToSellCoin2Coin&toSellName=gostcoin&toSellPrice=0&toSellLimitMin=1&toSellLimitMax=1&toBuyName=bitcoin&toBuyPrice=0.0001&toBuyLimitMin=0&toBuyLimitMax=1&tIsBuyer=true&msg=GostcoinNaBitcoin
                     println("tISBuyer: $tIsBuyer")
                     val ordMsg = request.getParameter("msg").toString()
                     val usrBalance =
@@ -119,6 +120,23 @@ class TradeHandler : AbstractHandler() {
                 val s = request.getParameter("s").toBoolean()
                 DB.changeOrderActivityByIdAndOwner(id, session.owner, s)
                 return response.writer.print(Json.encodeToString(JSONBooleanAnswer(s, "Active was changed to $s")))
+            }
+
+            // DO TRADE
+
+            "doTrade" ->
+            {
+                // /exchange/?w=doTrade&count=1&id=63cee412d2fda05780b23c33
+                val buyer = session.owner
+                val count = request.getParameter("count")
+                val id = request.getParameter("id")
+                try {
+                    val id_ = DB.doTrade(buyer, count, id)
+                    response.writer.print(Json.encodeToString(JSONBooleanAnswer(true, "trade was done. id ${id_}")))
+                } catch(e: DB.notAllowedOrder)
+                {
+                    response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, e.toString())))
+                }
             }
             else -> TODO("not implemented yet ")// Json{encodeDefaults=true}.encodeToString(notifications)
         }

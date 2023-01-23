@@ -51,7 +51,19 @@
 <p>exchange:</p>
 <p>(need session) (auth before):</p>
 <pre>
-    ...
+    w parameters - addOrderToSellCoin2Coin, getOrders, getOrderByName, removeMyOrderByID, removeOrderByID, changeActiveOrder, doTrade
+    examples - /exchange/?w=doTrade&count=1&id=63cee412d2fda05780b23c33
+		/exchange/?w=changeActiveOrder&id=63cebdd377a1a83abb3f7d9d&s=true
+		/exchange/?w=removeOrderByID&id=63cebdd377a1a83abb3f7d9d
+		/exchange/?w=removeMyOrderByID&id=63cebdcb77a1a83abb3f7d9a
+		/exchange/?w=getOrderByName&who=testusername
+-
+                /exchange/?w=getOrders&a=true
+                /exchange/?w=getOrders&a=false
+                by default is false    
+-
+/exchange/?w=addOrderToSellCoin2Coin&toSellName=gostcoin&toSellPrice=0&toSellLimitMin=1&toSellLimitMax=1&toBuyName=bitcoin&toBuyPrice=0.0001&toBuyLimitMin=0&toBuyLimitMax=1&tIsBuyer=true&msg=GostcoinNaBitcoin
+...
 </pre>
 <p>api:</p>
 <p>(need session) (auth before):</p>
