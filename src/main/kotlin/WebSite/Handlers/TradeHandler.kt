@@ -92,18 +92,21 @@ class TradeHandler : AbstractHandler() {
             }
             "getOrderByName" ->
             {
+                // /exchange/?w=getOrderByName&who=testusername
                 val who = request.getParameter("who")
                 val orders = DB.getOrdersByOwner(who)
                 return response.writer.print(Json.encodeToString(orders))
             }
             "removeMyOrderByID" ->
             {
+                // /exchange/?w=removeMyOrderByID&id=63cebdcb77a1a83abb3f7d9a
                 val id = request.getParameter("id")
                 DB.remOrderByIDAndOwner(id, session.owner)
                 return response.writer.print(Json.encodeToString(JSONBooleanAnswer(true, "if it is was your order you delete it")))
             }
             "removeOrderByID" ->
             {
+                // /exchange/?w=removeOrderByID&id=63cebdd377a1a83abb3f7d9d
                 // TODO: privileged
                 val id = request.getParameter("id")
                 DB.remOrder(id)
@@ -111,7 +114,11 @@ class TradeHandler : AbstractHandler() {
             }
             "changeActiveOrder" ->
             {
-
+                // /exchange/?w=changeActiveOrder&id=63cebdd377a1a83abb3f7d9d&s=true
+                val id = request.getParameter("id")
+                val s = request.getParameter("s").toBoolean()
+                DB.changeOrderActivityByIdAndOwner(id, session.owner, s)
+                return response.writer.print(Json.encodeToString(JSONBooleanAnswer(s, "Active was changed to $s")))
             }
             else -> TODO("not implemented yet ")// Json{encodeDefaults=true}.encodeToString(notifications)
         }

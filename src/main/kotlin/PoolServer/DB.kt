@@ -467,6 +467,11 @@ object DB {
         val col = mongoDB.getCollection<order>("orders")
         col.updateOne(Filters.and(order::key eq id), setValue(order::isActive, activity))
     }
+    fun changeOrderActivityByIdAndOwner(id: String, o: String, activity: Boolean)
+    {
+        val col = mongoDB.getCollection<order>("orders")
+        col.updateOne(Filters.and(order::key eq id, order::owner eq o), setValue(order::isActive, activity))
+    }
     fun ordersExistsForOwner(o: String, ord: order): Boolean
     {
         val orders = getOrdersByOwner(o)
