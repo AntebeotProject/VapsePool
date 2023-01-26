@@ -241,6 +241,79 @@ isBlocked	false
 >>> 0.01841794 - 0.01742354 = 0.0009943999999999995
 в будующих версиях по возможности всё будет переводиться в сатоши перед расчетами. 
 </hr>
+UPD:
+Login	"dashcore"
+Balances	
+bitcoin	
+owner	"dashcore"
+CoinName	"bitcoin"
+inputAddress	"tb1q6p6e363dtvq0ru9dtpx9g6cxzga377hhtv8xmr"
+balance	"0.03388218"
+isBlocked	false
+gostcoin	
+owner	"dashcore"
+CoinName	"gostcoin"
+inputAddress	"mx7o1gmjm7Tqg5sQkDsfA3KKMgJKim5wfH"
+balance	"1000.0"
+isBlocked	false
+dogecoin	
+owner	"dashcore"
+CoinName	"dogecoin"
+inputAddress	"nfyPmUdjCXgzE7aeK5UCW4jjB3UXhA8iuA"
+balance	"369.46160727"
+isBlocked	false
+/exchange/?w=addOrderToSellCoin2Coin&toSellName=gostcoin&toBuyName=bitcoin&toSellPrice=1000&toBuyPrice=0.001&toSellLimitMin=1&toBuyLimitMin=0.0001&toBuyLimitMax=0.001&toSellLimitMax=1000&tIsBuyer=false&msg=БыстраяСделка!
+	
+result	true
+reason	"Ордер был создан"
+---
+Login: testusername
+
+    gostcoin: 1
+
+    Input address: mmeC7aSnedesUprPvJbTEyP3VPyEeLq4cC
+
+    bitcoin: 0.01841794
+
+    Input address: tb1q06fuf2nnks62z8yxafcs6txsj0kgseavwkats0
+
+    dogecoin: 2.0
+
+    Input address: null
+---
+63d2f278f83b3136c56bcacd
+/exchange/?w=doTrade&count=1&id=63d2e9c0f83b3136c56bcab6
+result	true
+reason	"Трейд завершен. ID завершенного трейда 63d2f30ff83b3136c56bcad1"
+Login	"testusername"
+Balances	
+gostcoin	
+owner	"testusername"
+CoinName	"gostcoin"
+inputAddress	"mmeC7aSnedesUprPvJbTEyP3VPyEeLq4cC"
+balance	"1001"
+isBlocked	false
+bitcoin	
+owner	"testusername"
+CoinName	"bitcoin"
+inputAddress	"tb1q06fuf2nnks62z8yxafcs6txsj0kgseavwkats0"
+balance	"0.01741794"
+isBlocked	false
+dogecoin	
+owner	"testusername"
+CoinName	"dogecoin"
+inputAddress	"null"
+balance	"2.0"
+isBlocked	false
+готскойн изменен на 1000. теперь баланс 1001 вместо 1
+биткоин изменен стал 0.01741794 и был 0.01841794
+всё честно. без сильнейших изменений.
+теперь проверяем у dashcore
+{bitcoin=UserCoinBalance(owner=dashcore, CoinName=bitcoin, inputAddress=tb1q6p6e363dtvq0ru9dtpx9g6cxzga377hhtv8xmr, balance=0.03488218, isBlocked=false), gostcoin=UserCoinBalance(owner=dashcore, CoinName=gostcoin, inputAddress=mx7o1gmjm7Tqg5sQkDsfA3KKMgJKim5wfH, balance=0.0, isBlocked=false), dogecoin=UserCoinBalance(owner=dashcore, CoinName=dogecoin, inputAddress=nfyPmUdjCXgzE7aeK5UCW4jjB3UXhA8iuA, balance=369.46160727, isBlocked=false)}
+баланс биткоина был "0.03388218" стал 0.03488218
+баланс госткойна был "1000.0" стал 0.0
+<hr/>
+теперь проблема с точностью решена?
 Обмен не до конца протестирован и запутаная логика. могут быть достойные изменения
 </pre>
 <p>api:</p>

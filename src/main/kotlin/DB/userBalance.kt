@@ -29,11 +29,14 @@ data class userBalance(val Login: String,
         }
 
         fun changeLoginBalance(Login: String, Balance: Double, coinName: String) = changeLoginBalance(Login, BigDecimal(Balance.toString()), coinName)
-
+        const val toSatoshiNums = 8
         // toString and after to BigDecimal better
         fun addToBalance(l: String, b: BigDecimal, coinName: String = defCoinName) {
             val cur_balance = DB.getLoginBalance(l)?.get(coinName)?.balance?.toBigDecimal() ?: 0.0.toBigDecimal()
-            changeLoginBalance(l, cur_balance.add(b), coinName)
+            val withPowCurBalance = cur_balance * BigDecimal.TEN.pow(toSatoshiNums)
+            val withPowB = b  * BigDecimal.TEN.pow(toSatoshiNums)
+            val newBalance = withPowCurBalance.add(withPowB).divide( BigDecimal.TEN.pow(toSatoshiNums) )
+            changeLoginBalance(l, newBalance, coinName)
         }
         fun addToBalance(l: String, b: Double, coinName: String) = addToBalance(l, BigDecimal(b.toString()), coinName)
 
