@@ -4,20 +4,17 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
+import org.antibiotic.pool.main.DB.*
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
-import org.antibiotic.pool.main.PoolServer.DB
 import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
 import org.antibiotic.pool.main.WebSite.JettyServer
 import org.antibiotic.pool.main.WebSite.delHTML
-import java.math.BigDecimal
 
 class TradeHandler : AbstractHandler() {
     override fun handle(target: String?, baseRequest: Request, request: HttpServletRequest?, response: HttpServletResponse?) {
         baseRequest.setHandled(true)
         response!!.setContentType("application/json; charset=UTF-8");
-
         val session_raw = JettyServer.Users.getSession(response, baseRequest)
         if (session_raw == null) return response.getWriter()
             .print(Json.encodeToString(JSONBooleanAnswer(false, "undefined session")))
@@ -35,6 +32,7 @@ class TradeHandler : AbstractHandler() {
         // {
         //     println(not)
         // }
+        val uLanguage = JettyServer.Users.language.getLangByUser(own)
         try {
             val doings = request?.getParameter("w")
             val rValue = when (doings) {
@@ -47,7 +45,7 @@ class TradeHandler : AbstractHandler() {
                         val toSellLMax = request.getParameter("toSellLimitMax")
 
                         val toS =
-                            DB.toSellStruct(toSellName, toSellPrice, lmin = toSellLMin, lmax = toSellLMax)
+                            toSellStruct(toSellName, toSellPrice, lmin = toSellLMin, lmax = toSellLMax)
 
                         val toBuyName = request.getParameter("toBuyName") // coin for buy name
                         val toBuyPrice = request.getParameter("toBuyPrice") // coin for buy price
@@ -55,7 +53,7 @@ class TradeHandler : AbstractHandler() {
                         val toBuyLMin = request.getParameter("toBuyLimitMin")
                         val toBuyLMax = request.getParameter("toBuyLimitMax")
 
-                        val toB = DB.toSellStruct(toBuyName, toBuyPrice, lmin = toBuyLMin, lmax = toBuyLMax)
+                        val toB = toSellStruct(toBuyName, toBuyPrice, lmin = toBuyLMin, lmax = toBuyLMax)
 
                         val tIsBuyer = request.getParameter("tIsBuyer").toBoolean() // trader is buyer or seller?
                         //
@@ -70,7 +68,7 @@ class TradeHandler : AbstractHandler() {
                             println(usrBalance)
                             println(usrBalance!! < toSellLMax.toBigDecimal())
                             println(usrBalance!! < toSellLMin.toBigDecimal())
-                            throw DB.notAllowedOrder("user balance is smaller than limit")
+                            throw notAllowedOrder(uLanguage.getString("uBalanceSmallerThanLimit"))
                         }
                         DB.addOrder(
                             session.owner,
@@ -81,8 +79,8 @@ class TradeHandler : AbstractHandler() {
                             isCoin2CoinTrade = true,
                             ownerIsBuyer = tIsBuyer
                         )
-                        return response.writer.print(Json.encodeToString(JSONBooleanAnswer(true, "order was created")))
-                    } catch (e: DB.notAllowedOrder) {
+                        return response.writer.print(Json.encodeToString(JSONBooleanAnswer(true, uLanguage.getString("orderWasCreated"))))
+                    } catch (e: notAllowedOrder) {
                         response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, e.toString())))
                     }
                 }
@@ -111,7 +109,7 @@ class TradeHandler : AbstractHandler() {
                         Json.encodeToString(
                             JSONBooleanAnswer(
                                 true,
-                                "if it is was your order you delete it"
+                                uLanguage.getString("orderDeletedIfItsUrs")
                             )
                         )
                     )
@@ -126,7 +124,7 @@ class TradeHandler : AbstractHandler() {
                         Json.encodeToString(
                             JSONBooleanAnswer(
                                 true,
-                                "access is allowed. order was drop"
+                                uLanguage.getString("accessIsAllowed")
                             )
                         )
                     )
@@ -137,7 +135,7 @@ class TradeHandler : AbstractHandler() {
                     val id = request.getParameter("id")
                     val s = request.getParameter("s").toBoolean()
                     DB.changeOrderActivityByIdAndOwner(id, session.owner, s)
-                    return response.writer.print(Json.encodeToString(JSONBooleanAnswer(s, "Active was changed to $s")))
+                    return response.writer.print(Json.encodeToString(JSONBooleanAnswer(s, String.format(uLanguage.getString("activeWasChanged"), s))))
                 }
 
                 // DO TRADE
@@ -149,8 +147,8 @@ class TradeHandler : AbstractHandler() {
                     val id = request.getParameter("id")
                     try {
                         val id_ = DB.doTrade(buyer, count, id)
-                        response.writer.print(Json.encodeToString(JSONBooleanAnswer(true, "trade was done. id ${id_}")))
-                    } catch (e: DB.notAllowedOrder) {
+                        response.writer.print(Json.encodeToString(JSONBooleanAnswer(true, String.format(uLanguage.getString("tradeDoneID"), id_))))
+                    } catch (e: notAllowedOrder) {
                         response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, e.toString())))
                     }
                 }
@@ -162,7 +160,7 @@ class TradeHandler : AbstractHandler() {
                         val trade = DB.getDoneTradeByID(id).first()
                         val about = if (session.owner != trade.seller) trade.seller else trade.buyer
                         DB.addReview(reviewer = session.owner, about = about, text = text, tradeID = trade.key, isPositive = isPositive)
-                        return JettyServer.sendJSONAnswer(true, "review added", response)
+                        return JettyServer.sendJSONAnswer(true, uLanguage.getString("reviewAdded"), response)
                 }
                 "getReviewsByAbout" -> {
                     // /exchange/?w=getReviewsByAbout&who=testusername_
@@ -187,8 +185,8 @@ class TradeHandler : AbstractHandler() {
                 else -> TODO("not fully implemented yet ")// Json{encodeDefaults=true}.encodeToString(notifications)
             }
             //response.getWriter().print(rValue)
-        } catch(e: DB.notAllowedOrder) {
-            return response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, e.toString())))
+        } catch(e: notAllowedOrder) {
+            return response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, e.toString().split(":")[1])))
         } catch(e: Exception) {
             return response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, "Not trade exc: " + e.toString())))
         }

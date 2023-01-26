@@ -2,13 +2,9 @@ package org.antibiotic.pool.main.WebSite.Handlers
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
-import org.antibiotic.pool.main.PoolServer.DB
 import org.antibiotic.pool.main.WebSite.Captcha
-import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
 import org.antibiotic.pool.main.WebSite.JettyServer
 import org.antibiotic.pool.main.WebSite.defCaptchaCookie
 import javax.imageio.ImageIO
@@ -26,7 +22,7 @@ class CaptchaHandler : AbstractHandler() {
             "get" ->
             {
                 // TODO: 150 is can be 150 users. in future version is will be more than 150. change it in future version. increase the limit
-                if (Captcha.serverOnFloodThoughCaptcha()) { return JettyServer.sendJSONAnswer(false, "Big requests in last time though captcha. wait a while please", response) }
+                if (Captcha.serverOnFloodThoughCaptcha()) { return JettyServer.sendJSONAnswer(false, "Much requests in last time though captcha. wait a while please", response) }
                 val mc = Captcha(200, 150)
                 val text = mc.RandText()
                 val id = Captcha.genCaptchaID()

@@ -2,8 +2,11 @@ package org.antibiotic.pool.main.CryptoCurrencies
 
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import org.antibiotic.pool.main.DB.DB
+import org.antibiotic.pool.main.DB.tx
 import org.antibiotic.pool.main.JSONRPC
 import org.antibiotic.pool.main.PoolServer.*
+import org.antibiotic.pool.main.WebSite.JettyServer
 import java.io.File
 import java.math.BigDecimal
 import java.util.*
@@ -73,20 +76,22 @@ class CryptoCoins {
         {
             // coinname
             synchronized(DB) {
+                val uLanguage = JettyServer.Users.language.getLangByUser(owner)
                 wDebug("Add it tx ${owner}, ${cname}")
-                DB.addTX(DB.tx(owner, cname, hash))
-                DB.createNewNotification(owner, "New unconfirmed input transaction $hash for $cname")
+                DB.addTX(tx(owner, cname, hash))
+                DB.createNewNotification(owner, String.format(uLanguage.getString("newUnconfirmedTX"), hash, cname))
             }
         }
         fun confirmTX(hash: String, owner: String, cname: String, bc_value: BigDecimal)
         {
             synchronized(DB) {
+            val uLanguage = JettyServer.Users.language.getLangByUser(owner)
             val tx = DB.getTX(hash)
                 if (tx!!.isConfirmed == false) {
                     DB.setTXConfirmed(hash, status = true)
                     wDebug("add balance $owner $bc_value")
                     DB.addToBalance(owner, bc_value, cname)
-                    DB.createNewNotification(owner, "Balance changed on +$bc_value new balance is ${DB.getLoginBalance(owner)?.get(cname)?.balance}")
+                    DB.createNewNotification(owner, String.format(uLanguage.getString("balanceChanged"), bc_value, DB.getLoginBalance(owner)?.get(cname)?.balance, cname))
                 }
             }
         }

@@ -4,9 +4,10 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
-import org.antibiotic.pool.main.PoolServer.DB
+import org.antibiotic.pool.main.DB.DB
 import org.antibiotic.pool.main.PoolServer.MinerData
 import org.antibiotic.pool.main.PoolServer.PoolServer
+import org.antibiotic.pool.main.WebSite.JettyServer
 import java.util.*
 
 
@@ -29,19 +30,20 @@ class DashBoardHandler : AbstractHandler() {
             }
             append("</ul>")
         }
+        val uLanguage = JettyServer.Users.language.getLangWithoutSession(request)
         response!!.setStatus(200);
         response!!.setContentType("text/html; charset=UTF-8");
         response.getWriter().print("" +
                 "<!DOCTYPE html>" +
                 "<html>" +
                 "<head>" +
-                "  <title>ProstoPoolDashboard</title>" +
+                "  <title>Dashboard</title>" +
                 "</head>" +
                 "<body>" +
-                "  <p>ServerUptime (days:hour:minutes:seconds): ${PoolServer.getServerUptimeSeconds() / 60 / 60 / 24}:${PoolServer.getServerUptimeSeconds() / 60 / 60 % 24}:${PoolServer.getServerUptimeSeconds() / 60 % 60}:${PoolServer.getServerUptimeSeconds() % 60}</p>" +
-                "  <p>Current workers on server: ${PoolServer.currentWorkers()}</p>" +
-                "  <p>Shares on all time: ${PoolServer.sharesUptime}</p>" +
-                "  <p>List Of Workers: ${listOfMiners}</p>" +
+                "  <p>${uLanguage.getString("uptime")}: ${PoolServer.getServerUptimeSeconds() / 60 / 60 / 24}:${PoolServer.getServerUptimeSeconds() / 60 / 60 % 24}:${PoolServer.getServerUptimeSeconds() / 60 % 60}:${PoolServer.getServerUptimeSeconds() % 60}</p>" +
+                "  <p>${uLanguage.getString("curWorkers")}: ${PoolServer.currentWorkers()}</p>" +
+                "  <p>${uLanguage.getString("sharesCount")}: ${PoolServer.sharesUptime}</p>" +
+                "  <p>${uLanguage.getString("listWorkers")}: ${listOfMiners}</p>" +
                 "</body>" +
                 "</html>" +
                 "");

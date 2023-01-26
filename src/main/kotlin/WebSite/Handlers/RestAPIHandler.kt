@@ -4,20 +4,18 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
 import org.antibiotic.pool.main.CryptoCurrencies.ElectrumRPC
-import org.antibiotic.pool.main.PoolServer.DB
+import org.antibiotic.pool.main.DB.DB
+import org.antibiotic.pool.main.DB.allowedLangauges
+import org.antibiotic.pool.main.DB.userLanguage
 import org.antibiotic.pool.main.PoolServer.RPC
-import org.antibiotic.pool.main.PoolServer.RPCClient
 import org.antibiotic.pool.main.PoolServer.deleteSquares
 import org.antibiotic.pool.main.WebSite.Captcha
 import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
 import org.antibiotic.pool.main.WebSite.JettyServer
-import org.antibiotic.pool.main.WebSite.defRPCTXFee
 
 class RESTHandler : AbstractHandler() {
 
@@ -26,6 +24,7 @@ class RESTHandler : AbstractHandler() {
         // Implement the REST APIs.
         response!!.setStatus(200);
         response!!.setContentType("text/html; charset=UTF-8");
+        val uLanguage = JettyServer.Users.language.getLangWithoutSession(request)
         when(request!!.getParameter("w")) {
             "getbalance" -> {
                 val ac = request!!.getParameter("ac")
@@ -41,6 +40,11 @@ class RESTHandler : AbstractHandler() {
                 response.getWriter().print(Json.encodeToString(allowed_coin_list))
                 // TODO("Not implemented")
             }
+            "getSupportsLanguage" ->
+            {
+                // println(allowedLangauges)
+                response.writer.print(Json.encodeToString(allowedLangauges))
+            }
             "output" -> {
                 synchronized(DB) {
                     response!!.setContentType("application/json; charset=UTF-8");
@@ -51,13 +55,13 @@ class RESTHandler : AbstractHandler() {
                     val coinname = request!!.getParameter("coinname") ?: "gostcoin"
                     val answ = Captcha.checkCaptcha("captchaText", baseRequest, request, response, delCaptchaAfter = true)
                     if (answ == false) {
-                        return JettyServer.sendJSONAnswer(false, "not correct captcha", response)
+                        return JettyServer.sendJSONAnswer(false, uLanguage.getString("notCorrectCaptcha"), response)
                     }
                     if (acc == null || pass == null) {
-                        return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, "U will auth everytime for output with your login and password")))
+                        return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("uWillAuthEverytime"))))
                     }
                     if (DB.checkUserPassword(acc, pass!!) != true) {
-                        return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, "Not correct logn and password")))
+                        return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("notCorrectLoginOrPass"))))
                     }
                     JettyServer.Users.cryptocoins.sendMoney(acc = acc, oAdr = oAdr, coinname = coinname, cMoney = cMoney, response)
                 }

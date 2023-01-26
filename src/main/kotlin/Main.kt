@@ -4,12 +4,14 @@ import org.antibiotic.pool.AsyncServer
 import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
 import org.antibiotic.pool.main.PoolServer.*
 import org.antibiotic.pool.main.WebSite.JettyServer
+import java.util.*
 
 // import com.github.jleskovar.*
 
 
 
 fun main(args: Array<String>) {
+    val myI18N = org.antibiotic.pool.main.i18n.i18n(locale = Locale("ru", "RU"))
     AsyncServer.DebugEnabled = true
     var s = AsyncServer("0.0.0.0", 3334) // async
     Settings.load_propetries()

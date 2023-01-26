@@ -1,6 +1,7 @@
 package org.antibiotic.pool.main.WebSite
 
 import jakarta.servlet.http.Cookie
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -10,11 +11,15 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
 import org.antibiotic.pool.main.CryptoCurrencies.ElectrumRPC
-import org.antibiotic.pool.main.PoolServer.DB
+import org.antibiotic.pool.main.DB.DB
+import org.antibiotic.pool.main.DB.UserCoinBalance
+import org.antibiotic.pool.main.DB.defUserLanguage
+import org.antibiotic.pool.main.DB.userLanguage
 import org.antibiotic.pool.main.PoolServer.RPC
 import org.antibiotic.pool.main.PoolServer.Settings
 import org.antibiotic.pool.main.PoolServer.deleteSquares
 import org.antibiotic.pool.main.WebSite.Handlers.*
+import org.antibiotic.pool.main.i18n.i18n
 import org.eclipse.jetty.server.Connector
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
@@ -145,6 +150,25 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
 
     } // obj Cookie
     object Users {
+        object language
+        {
+            fun geti18nByLocale(s: String): Locale
+            {
+                val sp = s.split("_")
+                // println("locale is ${sp[0]}_${sp[1]}")
+                return Locale(sp[0], sp[1])
+            }
+            fun getLangWithoutSession(request: HttpServletRequest?): i18n
+            {
+                var curLanguage = defUserLanguage
+                try {
+                    val lang = request!!.getParameter("lang")
+                    curLanguage = lang
+                } catch(_: Exception) {}
+                return i18n(locale = geti18nByLocale(curLanguage))
+            }
+            fun getLangByUser(o: String)  = i18n( locale = geti18nByLocale(userLanguage.getForUser(o)?.language?: defUserLanguage) )
+        }
         object cryptocoins
         {
             fun sendMoney(acc: String, oAdr: String, coinname: String, cMoney: String, response: HttpServletResponse) {
@@ -221,7 +245,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
             }
         }
         @Serializable
-        data class UserData(val Login: String, val Balances: Map<String, DB.UserCoinBalance>)
+        data class UserData(val Login: String, val Balances: Map<String, UserCoinBalance>)
         const val sessionLifeLimitSec = 43200 // 12 hours
         fun getBySession(session_raw: String, response: HttpServletResponse): UserData? {
             val session = DB.getSession(session_raw)
@@ -242,7 +266,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
             val mp = DB.getLoginBalance(owner)
             if (mp == null) {
                 // response!!.setStatus(500);
-                return UserData(owner, mapOf<String, DB.UserCoinBalance>())
+                return UserData(owner, mapOf<String, UserCoinBalance>())
                 // response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, "Not found balances for $owner")))
                 // return null
             }
@@ -291,12 +315,12 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                 if (rpc.getisElectrum()) { // TODO: us double code of one thing. rewrite it later. but for now is not very double code. because is not used much times more than 2
                     val eRpc = rpc as ElectrumRPC
                     val adr = foundUnusedAddress(eRpc)
-                    if (adr == null) return genNewAddrForUser(Login, coinname, search_unused= true)
+                    if (adr == null) return genNewAddrForUser(Login, coinname, search_unused= false)
                     return adr
                 } else {
                     val bRpc = rpc as RPC
                     val adr = foundUnusedAddress(bRpc)
-                    if (adr == null) return genNewAddrForUser(Login, coinname, search_unused= true)
+                    if (adr == null) return genNewAddrForUser(Login, coinname, search_unused= false)
                     return adr
                 }
             } else {

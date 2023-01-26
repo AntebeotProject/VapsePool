@@ -6,7 +6,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
-import org.antibiotic.pool.main.PoolServer.DB
+import org.antibiotic.pool.main.DB.DB
 import org.antibiotic.pool.main.WebSite.Captcha
 import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
 import org.antibiotic.pool.main.WebSite.JettyServer
@@ -14,20 +14,21 @@ import org.antibiotic.pool.main.WebSite.JettyServer
 class SignInHandler : AbstractHandler() {
     override fun handle(target: String?, baseRequest: Request, request: HttpServletRequest?, response: HttpServletResponse?) {
         baseRequest.setHandled(true)
+        val uLanguage = JettyServer.Users.language.getLangWithoutSession(request)
         synchronized(DB) {
             response!!.setStatus(200);
             response!!.setContentType("application/json; charset=UTF-8");
             val answ = Captcha.checkCaptcha("captchaText", baseRequest, request, response, delCaptchaAfter = true)
             if (answ == false) {
-                return JettyServer.sendJSONAnswer(false, "not correct captcha", response)
+                return JettyServer.sendJSONAnswer(false, uLanguage.getString("notCorrectCaptcha"), response)
             }
             val workname = request!!.getParameter("workname")
             val workpass = request!!.getParameter("workpass")
             val answer =
                 if (workname == null || workpass == null || !(workname.length > 0 && workpass.length > 0)) {
-                    Json.encodeToString(JSONBooleanAnswer(false, "Workpass and WorkLogin will be correct size. more than 0.")) // we can to use small size for passwords for some hacks
+                    Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("notCorrectLoginOrPass"))) // we can to use small size for passwords for some hacks
                 } else if (DB.checkUserPassword(workname, workpass) != true) { //maybe weird logic.
-                    Json.encodeToString(JSONBooleanAnswer(false, "bad login or password"))
+                    Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("notCorrectLoginOrPass")))
                 } else {
                     // magic character can be changed I think to SEPARATOR?
                     // we can to use session instead from DB

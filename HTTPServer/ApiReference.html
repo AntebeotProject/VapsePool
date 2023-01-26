@@ -17,6 +17,14 @@
   <li>/captcha</li>
   <li>/dashboard</li>
 </ul>
+<p> about lang </p>
+<pre>
+	for language, where not need session use ?lang parameter. example. ?...&lang=ru_RU 
+	?...&lang=en_EN
+	where need. for change use /user/?w=changeLanguage&lang=en_US or /user/?w=changeLanguage&lang=ru_RU
+	or /user/?changeLanguage=ru_RU
+	for get supports language /api/?w=getSupportsLanguage
+</pre>
 <p>registration</p>
 <p>parameters:</p>
 <ol>
@@ -32,13 +40,19 @@
 <p>user:</p>
 <p>(need session) (auth before):</p>
 <pre>
-    supports = getowninput, genAddress, updateSession, changePassword
+    supports = getowninput, genAddress, updateSession, changePassword, checkOTP, genOTP, setOTP, GetQR, outByOTP
     getowninput - returns input address for cryptocoin by parameter ?cryptocoin example /user?w=getowninput&cryptocoin=bitcoin
     genAddress - returns new input address for cryptocoin by parameter ?cryptocoin example /user?w=genAddress&cryptocoin=gostcoin
     updateSession - just update last activity by session. for session life. without parameters
     changePassword - for change password ?w=changePassword&last_pass={userlastpassword}&new_pass={new password of user}
     In future versions for all things of users that do updates need be captcha before. for now its can be skip
 
+/user/?w=setOTP&otp=ZSM6TF66FPZ7WX57VGJQHGP22CRJZ6TV&code=138862
+where code is old code
+/user/?w=setOTP&otp=ZSM6TF66FPZ7WX57VGJQHGP22CRJZ6TV
+/user/?w=GetQR&otp=ZSM6TF66FPZ7WX57VGJQHGP22CRJZ6TV
+/user/?w=genOTP
+/user/?w=outByOTP&code=666999&oAdr=mraKgrx4QKTrrWpiAXKke9VQx2bRR3uU9B&cMoney=1.0&coinname=gostcoin
     bydefault returns all input addresses of user and balances.
 </pre>
 <p>notify:</p>

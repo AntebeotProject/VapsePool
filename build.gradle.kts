@@ -26,6 +26,9 @@ dependencies {
     implementation("org.bitcoinj:bitcoinj-core:0.16.2") // not need for now if sure.
     implementation("org.eclipse.jetty:jetty-server:11.0.8") // org.eclipse.jetty:jetty-http:11.0.8
     implementation("org.eclipse.jetty:jetty-http:11.0.8")
+    implementation("jakarta.mail:jakarta.mail-api:2.1.1")
+    implementation("dev.turingcomplete:kotlin-onetimepassword:2.4.0")
+    implementation("io.github.g0dkar:qrcode-kotlin-jvm:3.3.0")
 }
 
 tasks.test {
@@ -49,6 +52,7 @@ buildscript {
         val kotlinVersion = "1.7.20"
         classpath(kotlin("gradle-plugin", version = kotlinVersion))
         classpath(kotlin("serialization", version = kotlinVersion))
+        classpath("jakarta.mail:jakarta.mail-api:2.1.1")
     }
 }
 kotlin {
