@@ -105,10 +105,10 @@ data class order(val owner: String, val whatSell: toSellStruct, val whatBuy: toS
             }
             return false
         }
-        fun getOrdersByOwner(o: String): List<order>
+        fun getOrdersByOwner(o: String, lim: Int = 25, skip: Int = 0): List<order>
         {
             val col = DB.mongoDB.getCollection<order>("orders")
-            val act = col.find(order::owner eq o)
+            val act = col.find(order::owner eq o).skip(skip).limit(lim)
             val it = act.iterator()
             val r = mutableListOf<order>()
             while(it.hasNext())
@@ -125,10 +125,10 @@ data class order(val owner: String, val whatSell: toSellStruct, val whatBuy: toS
             if (!it.hasNext()) return null
             return it.next()
         }
-        fun getOrdersByActivity(s: Boolean = true): List<order>
+        fun getOrdersByActivity(s: Boolean = true, lim: Int = 25, skip: Int = 0): List<order>
         {
             val col = DB.mongoDB.getCollection<order>("orders")
-            val act = col.find(order::isActive eq s)
+            val act = col.find(order::isActive eq s).skip(skip).limit(lim)
             val it = act.iterator()
             val r = mutableListOf<order>()
             while(it.hasNext())

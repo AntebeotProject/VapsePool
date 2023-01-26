@@ -20,6 +20,7 @@ data class trade(val buyer: String, val seller: String, val toSell: toSellStruct
             DB.createCollection("notDoneTrade")
         }
         // use forum on phpbb for reviews maybe?
+        // 63d2e276dc3ff75fba814547
         fun doTrade(whoBuy: String, count: String, orderID: String): String
         {
             val uLanguage = JettyServer.Users.language.getLangByUser(whoBuy)
@@ -100,35 +101,36 @@ data class trade(val buyer: String, val seller: String, val toSell: toSellStruct
                 //synchronized(CryptoCoins.coins)
                 //{
                 // Not tested yet
-                DB.createNewNotification(
+                notification.createNewNotification(
                     whoBuy,
-                    String.format(uLanguage.getString("UBuy"), coinToSell, coinToBuy, ord.whatSell.price )
+                    String.format(uLanguage.getString("UBuy"), coinToSell, coinToBuy, ord.whatSell.price, countForBuy )
                 )
-                DB.createNewNotification(
+                notification.createNewNotification(
                     ord.owner,
-                    String.format(uLanguage.getString("USell"), coinToSell, coinToBuy, ord.whatSell.price )
+                    String.format(uLanguage.getString("USell"), coinToSell, coinToBuy, ord.whatSell.price, countForSell )
                 )
-                DB.addToBalance(whoBuy, -countForSell, coinToBuy)
-                DB.addToBalance(ord.owner, -countForBuy, coinToSell)
-                DB.addToBalance(ord.owner, countForSell, coinToBuy)
-                DB.addToBalance(whoBuy, countForBuy, coinToSell)
+                println("notification was created")
+                userBalance.addToBalance(whoBuy, -countForSell, coinToBuy)
+                userBalance.addToBalance(ord.owner, -countForBuy, coinToSell)
+                userBalance.addToBalance(ord.owner, countForSell, coinToBuy)
+                userBalance.addToBalance(whoBuy, countForBuy, coinToSell)
                 DB.createCollection("doneTrade")
                 val col = DB.mongoDB.getCollection<trade>("doneTrade")
                 val doneTrade = trade(whoBuy, ord.owner, ord.whatSell, ord.whatBuy)
                 col.insertOne(doneTrade)
-                DB.createNewNotification(whoBuy,
+                notification.createNewNotification(whoBuy,
                     String.format(uLanguage.getString("orderIsSucc"), doneTrade.key)
                 )
-                DB.createNewNotification(ord.owner, String.format(uLanguage.getString("orderIsSucc"), doneTrade.key))
+                notification.createNewNotification(ord.owner, String.format(uLanguage.getString("orderIsSucc"), doneTrade.key))
                 changeOrderParameters(ord, countForBuy, countForSell)
                 //
                 return doneTrade.key
                 //}
             }
         }
-        fun getDoneTradeByBuyerOrSeller(who: String): List<trade> {
+        fun getDoneTradeByBuyerOrSeller(who: String, skip: Int = 0, lim: Int = 5): List<trade> {
             val col = DB.mongoDB.getCollection<trade>("doneTrade")
-            return col.find(Filters.or(trade::buyer eq who, trade::seller eq who)).iterator().asSequence().toList() // use it instead big code
+            return col.find(Filters.or(trade::buyer eq who, trade::seller eq who)).skip(skip).limit(lim).iterator().asSequence().toList() // use it instead big code
         }
         fun getDoneTradeByID(id: String): List<trade> {
             val col = DB.mongoDB.getCollection<trade>("doneTrade")

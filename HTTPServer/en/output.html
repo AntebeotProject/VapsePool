@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration</title>
+</head>
+<body>
+<script>
+    function reloadCaptcha() {
+            console.log("captcha reload")
+            let captcha = document.getElementById("catpcha")
+            captcha.src="/captcha?w=get&" + new Date().getTime();
+    }
+</script>
+<center>
+  <p>OutPut: </p>
+  <form action="/api" method="GET">
+    <input type="hidden" name="w" value="output" />
+    WorkName: <input type=textarea name="acc" /></br>
+    Password: <input type=password name="pass" /></br>
+    outputAdr: <input type=textarea name="oAdr" /></br>
+    outputMoney: <input type=textarea name="cMoney" value="1.0" /></br>
+    coin: <input type=textarea value=gostcoin name=coinname /></br>
+    Captcha text: <input type=text name="captchaText"></br>
+    <input type=submit value=outputfrombalance>
+  </form></br>
+  <img src="/captcha?w=get" alt="captcha" id="catpcha" > <br/>
+    <button onclick="reloadCaptcha()">reload captcha</button>
+</center>
+<!-- refactoring will be -->
+<script type="text/javascript">changeULang("en_US");</script>
+</body>
+</html>

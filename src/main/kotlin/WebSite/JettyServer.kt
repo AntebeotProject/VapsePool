@@ -11,10 +11,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
 import org.antibiotic.pool.main.CryptoCurrencies.ElectrumRPC
-import org.antibiotic.pool.main.DB.DB
-import org.antibiotic.pool.main.DB.UserCoinBalance
-import org.antibiotic.pool.main.DB.defUserLanguage
-import org.antibiotic.pool.main.DB.userLanguage
+import org.antibiotic.pool.main.DB.*
 import org.antibiotic.pool.main.PoolServer.RPC
 import org.antibiotic.pool.main.PoolServer.Settings
 import org.antibiotic.pool.main.PoolServer.deleteSquares
@@ -63,6 +60,15 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
     companion object {
         public fun sendJSONAnswer(res: Boolean, text: String, response: HttpServletResponse) = response.writer.print(Json.encodeToString(JSONBooleanAnswer(res, text)))
         fun pWarning(m: String) = System.err.println("[WARNING OF PART OF JETTY SERVER] $m")
+        fun getOffsetLimit(request: Request): Pair<Int, Int> {
+            try {
+                val offset = request.getParameter("offset").toIntOrNull() ?: 0
+                val lim = request.getParameter("lim").toIntOrNull() ?: 5
+                return Pair(offset, lim)
+            } catch (_: Exception){
+                return Pair(0,5)
+            }
+        }
     }
     object Encryption {
         // maybe change key fun?
@@ -150,6 +156,16 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
 
     } // obj Cookie
     object Users {
+        object OTP
+        {
+            fun check(u: String, request: Request, parName: String = "otpcode"): Boolean
+            {
+                if (!userOTP.userOTPExistsForUser(u)) return true
+                val code = request.getParameter(parName)
+                val rcode = userOTP.getCodeForUser(u)
+                return code.equals(rcode)
+            }
+        }
         object language
         {
             fun geti18nByLocale(s: String): Locale

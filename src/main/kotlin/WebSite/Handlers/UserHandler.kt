@@ -73,7 +73,10 @@ class UserHandler : AbstractHandler() {
                 "changePassword" -> {
                     val new_pass = request.getParameter("new_pass")
                     val last_pass = request.getParameter("last_pass")
-                    if (DB.checkUserPassword(session.owner, last_pass) == true) {
+                    if (!JettyServer.Users.OTP.check(session.owner, baseRequest))
+                    {
+                        Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("OTPNotCorrect")))
+                    } else if (DB.checkUserPassword(session.owner, last_pass) == true) {
                         DB.changeUserPassword(session.owner, new_pass);
                         Json.encodeToString(JSONBooleanAnswer(true, uLanguage.getString("passwordChanged")))
                     } else {

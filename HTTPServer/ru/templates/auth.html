@@ -1,0 +1,16 @@
+<center>
+<p>Auth:</p>
+<noscript>
+	<form action="/signin" method="GET">
+</noscript>
+  <div> <!--  -->
+    Имя пользователя: <input type=textarea id="workname" name="workname"></br>
+    Пароль: <input type=password id="workpass" name="workpass"></br>
+    OTP код если имеется: <input type=password id="otpcode" name="otpcode"></br>
+    Каптча: <input type=text id="captchaText" name="captchaText"></br>
+    <button onclick="doAuth()">SignIN</button>
+  </div></br>
+  <img src="/captcha?w=get" alt="captcha" id="catpcha" > <br/>
+    <button onclick="reloadCaptcha()">reload captcha</button>
+</center>
+

@@ -12,7 +12,7 @@ data class traderStatsStruct(val successfullyTrade: Int = 0, val wrongTrade: Int
     fun addWrong(x: Int = 1) = traderStatsStruct(this.successfullyTrade, this.wrongTrade + x)
 }
 
-
+@Serializable
 data class traderStats(val owner: String, val stats: traderStatsStruct = traderStatsStruct())
 {
     companion object

@@ -20,7 +20,7 @@ class TradeHandler : AbstractHandler() {
             .print(Json.encodeToString(JSONBooleanAnswer(false, "undefined session")))
         response!!.setStatus(200);
 
-        val session = DB.getSession(session_raw)
+        val session = UserSession.getSession(session_raw)
         val r = JettyServer.Users.getBySession(session_raw, response) // returns UserData data class
 
         if (r == null || session == null) {
@@ -62,15 +62,15 @@ class TradeHandler : AbstractHandler() {
                         val ordMsg = request.getParameter("msg").toString().delHTML()
 
                         val usrBalance =
-                            if (tIsBuyer) DB.getLoginBalance(session.owner)?.get(toSellName)?.balance?.toBigDecimal()
-                            else DB.getLoginBalance(session.owner)?.get(toBuyName)?.balance?.toBigDecimal()
+                            if (!tIsBuyer) UserCoinBalance.getLoginBalance(session.owner)?.get(toSellName)?.balance?.toBigDecimal()
+                            else UserCoinBalance.getLoginBalance(session.owner)?.get(toBuyName)?.balance?.toBigDecimal()
                         if (usrBalance == null || usrBalance < toSellLMax.toBigDecimal() || usrBalance < toSellLMin.toBigDecimal()) {
                             println(usrBalance)
                             println(usrBalance!! < toSellLMax.toBigDecimal())
                             println(usrBalance!! < toSellLMin.toBigDecimal())
                             throw notAllowedOrder(uLanguage.getString("uBalanceSmallerThanLimit"))
                         }
-                        DB.addOrder(
+                        order.addOrder(
                             session.owner,
                             toSell = toS,
                             toBuy = toB,
@@ -90,21 +90,22 @@ class TradeHandler : AbstractHandler() {
                     // /exchange/?w=getOrders&a=false
                     // by default false
                     val a = request.getParameter("a").toBoolean()
-                    val orders = DB.getOrdersByActivity(a)
+                    val (offset,lim) = JettyServer.getOffsetLimit(baseRequest)
+                    val orders = order.getOrdersByActivity(a, lim = lim, skip =  offset)
                     return response.writer.print(Json.encodeToString(orders))
                 }
 
                 "getOrderByName" -> {
                     // /exchange/?w=getOrderByName&who=testusername
                     val who = request.getParameter("who")
-                    val orders = DB.getOrdersByOwner(who)
+                    val orders = order.getOrdersByOwner(who)
                     return response.writer.print(Json.encodeToString(orders))
                 }
 
                 "removeMyOrderByID" -> {
                     // /exchange/?w=removeMyOrderByID&id=63cebdcb77a1a83abb3f7d9a
                     val id = request.getParameter("id")
-                    DB.remOrderByIDAndOwner(id, session.owner)
+                    order.remOrderByIDAndOwner(id, session.owner)
                     return response.writer.print(
                         Json.encodeToString(
                             JSONBooleanAnswer(
@@ -119,7 +120,7 @@ class TradeHandler : AbstractHandler() {
                     // /exchange/?w=removeOrderByID&id=63cebdd377a1a83abb3f7d9d
                     // TODO: privileged
                     val id = request.getParameter("id")
-                    DB.remOrder(id)
+                    order.remOrder(id)
                     return response.writer.print(
                         Json.encodeToString(
                             JSONBooleanAnswer(
@@ -134,7 +135,7 @@ class TradeHandler : AbstractHandler() {
                     // /exchange/?w=changeActiveOrder&id=63cebdd377a1a83abb3f7d9d&s=true
                     val id = request.getParameter("id")
                     val s = request.getParameter("s").toBoolean()
-                    DB.changeOrderActivityByIdAndOwner(id, session.owner, s)
+                    order.changeOrderActivityByIdAndOwner(id, session.owner, s)
                     return response.writer.print(Json.encodeToString(JSONBooleanAnswer(s, String.format(uLanguage.getString("activeWasChanged"), s))))
                 }
 
@@ -146,7 +147,7 @@ class TradeHandler : AbstractHandler() {
                     val count = request.getParameter("count")
                     val id = request.getParameter("id")
                     try {
-                        val id_ = DB.doTrade(buyer, count, id)
+                        val id_ = trade.doTrade(buyer, count, id)
                         response.writer.print(Json.encodeToString(JSONBooleanAnswer(true, String.format(uLanguage.getString("tradeDoneID"), id_))))
                     } catch (e: notAllowedOrder) {
                         response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, e.toString())))
@@ -154,32 +155,45 @@ class TradeHandler : AbstractHandler() {
                 }
                 "addReview" -> {
                         // /?w=addReview&id=63cee8febece8102ab4a0da5&text="All fine!"&isPositive=true
+
                         val id = request.getParameter("id").toString()
                         val text = request.getParameter("text").toString().delHTML()
                         val isPositive = request.getParameter("isPositive").toBoolean()
-                        val trade = DB.getDoneTradeByID(id).first()
+                        val trade = trade.getDoneTradeByID(id).first()
+                        if (!session.owner.equals(trade.seller) && !session.owner.equals(trade.buyer))
+                        {
+                            return JettyServer.sendJSONAnswer(true, uLanguage.getString("notAllowed"), response)
+                        }
                         val about = if (session.owner != trade.seller) trade.seller else trade.buyer
-                        DB.addReview(reviewer = session.owner, about = about, text = text, tradeID = trade.key, isPositive = isPositive)
+                        review.addReview(reviewer = session.owner, about = about, text = text, tradeID = trade.key, isPositive = isPositive)
                         return JettyServer.sendJSONAnswer(true, uLanguage.getString("reviewAdded"), response)
                 }
                 "getReviewsByAbout" -> {
                     // /exchange/?w=getReviewsByAbout&who=testusername_
                     val who = request.getParameter("who")
-                    return response.writer.print(Json.encodeToString(DB.getReviewsByAbout(who)))
+                    val (offset,lim) = JettyServer.getOffsetLimit(baseRequest)
+                    return response.writer.print(Json.encodeToString(review.getReviewsByAbout(who, lim = lim, skip = offset)))
                 }
                 "getReviewsByReviewer" -> {
                     // /exchange/?w=getReviewsByReviewer&who=testusername
                     val who = request.getParameter("who")
-                    return response.writer.print(Json.encodeToString(DB.getReviewsByReviewer(who)))
+                    val (offset,lim) = JettyServer.getOffsetLimit(baseRequest)
+                    return response.writer.print(Json.encodeToString(review.getReviewsByReviewer(who, skip = offset, lim = lim)))
+                }
+                "getTraderStats" -> {
+                    val who = request.getParameter("who")
+                    return response.writer.print( Json {encodeDefaults=true}.encodeToString(traderStats.getTraderStatsByOwner(who)))
                 }
                 "getMyReviews" -> {
                     // /exchange/?w=getMyReviews
-                    return response.writer.print(Json.encodeToString(DB.getReviewsByWho(session.owner)))
+                    val (offset,lim) = JettyServer.getOffsetLimit(baseRequest)
+                    return response.writer.print(Json.encodeToString(review.getReviewsByWho(session.owner, skip = offset, lim = lim)))
                 }
                 "getMyDoneTrade" ->
                 {
                     // /exchange/?w=getMyDoneTrade
-                    return response.writer.print(Json.encodeToString(DB.getDoneTradeByBuyerOrSeller(session.owner)))
+                    val (offset,lim) = JettyServer.getOffsetLimit(baseRequest)
+                    return response.writer.print(Json.encodeToString(trade.getDoneTradeByBuyerOrSeller(session.owner, skip = offset, lim = lim)))
                 }
 
                 else -> TODO("not fully implemented yet ")// Json{encodeDefaults=true}.encodeToString(notifications)

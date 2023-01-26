@@ -7,6 +7,7 @@ import kotlinx.serialization.json.Json
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.antibiotic.pool.main.DB.DB
+import org.antibiotic.pool.main.DB.notification
 import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
 import org.antibiotic.pool.main.WebSite.JettyServer
 
@@ -32,20 +33,43 @@ class NotifyHandler : AbstractHandler() {
        // {
        //     println(not)
        // }
+
+        val defTime = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000)
         val doings = request?.getParameter("w")
-        val rValue = when (doings) {
-            "clean" -> {
-                // TODO: drop notification is will be vuln?
-                // DB.dropNotificationByTimeAndOwner(own, System.currentTimeMillis())
-                Json{encodeDefaults=true}.encodeToString(JSONBooleanAnswer(false, "Is vulnerability. is disabled. use getByTime"))
+        try {
+            val rValue = when (doings) {
+                "clean" -> {
+                    // TODO: drop notification is will be vuln?
+                    // DB.dropNotificationByTimeAndOwner(own, System.currentTimeMillis())
+                    Json { encodeDefaults = true }.encodeToString(
+                        JSONBooleanAnswer(
+                            false,
+                            "Is vulnerability. is disabled. use getByTime"
+                        )
+                    )
+                }
+
+                "getByTime" -> {
+                    val (offset,lim) = JettyServer.getOffsetLimit(baseRequest)
+                    val t = request.getParameter("t").toString().toLongOrNull() ?: System.currentTimeMillis()
+                    Json { encodeDefaults = true }.encodeToString(notification.getNotificationsByOwnerAndTimestamp(own, t, lim = lim, offset = offset))
+                }
+
+                else -> {
+                    val (offset,lim) = JettyServer.getOffsetLimit(baseRequest)
+                    Json { encodeDefaults = true }.encodeToString(
+                        notification.getNotificationsByOwnerAndTimestamp(
+                            own,
+                            defTime, lim = lim, offset = offset
+                        )
+                    )
+                } // 1 day
             }
-            "getByTime" ->
-            {
-                val t = request.getParameter("t").toString().toLongOrNull() ?: System.currentTimeMillis()
-                Json{encodeDefaults=true}.encodeToString(DB.getNotificationsByOwnerAndTimestamp(own, t))
-            }
-            else -> Json{encodeDefaults=true}.encodeToString(DB.getNotificationsByOwnerAndTimestamp(own,  System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000) )) // 1 day
+
+            response.getWriter().print(rValue)
+        }catch (e: Exception)
+        {
+            response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, e.toString())))
         }
-        response.getWriter().print(rValue)
     }
 }

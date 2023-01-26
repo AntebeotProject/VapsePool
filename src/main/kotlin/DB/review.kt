@@ -25,10 +25,10 @@ data class review(val reviewer: String, val about: String, val text: String, val
                 if (getReviewsBytradeIDAndReviewer(tradeID, reviewer).size > 0) throw notAllowedReview("review for this trade already exists")
                 val col = DB.mongoDB.getCollection<review>("traderStatsReview")
                 col.insertOne(review(reviewer, about, text, tradeID, isPositive))
-                val aboutStat = if (isPositive) DB.getTraderStatsByOwner(about).stats.addSuccesfully() else DB.getTraderStatsByOwner(
+                val aboutStat = if (isPositive) traderStats.getTraderStatsByOwner(about).stats.addSuccesfully() else traderStats.getTraderStatsByOwner(
                     about
                 ).stats.addWrong()
-                DB.changeTraderStatsByOwner(about, aboutStat)
+                traderStats.changeTraderStatsByOwner(about, aboutStat)
             }
         }
         fun remReview(oID: ObjectId) = remReview(oID.toHexString())
@@ -38,22 +38,22 @@ data class review(val reviewer: String, val about: String, val text: String, val
             val col = DB.mongoDB.getCollection<review>("traderStatsReview")
             col.deleteOne(review::key eq oID)
         }
-        fun getReviewsBytradeIDAndReviewer(id: String, rev: String): List<review>
+        fun getReviewsBytradeIDAndReviewer(id: String, rev: String, lim: Int = 5, skip: Int = 0): List<review>
         {
             val col = DB.mongoDB.getCollection<review>("traderStatsReview")
-            val s = col.find(Filters.and(review::tradeID eq id, review::reviewer eq rev))
+            val s = col.find(Filters.and(review::tradeID eq id, review::reviewer eq rev)).skip(skip).limit(lim)
             return s.iterator().asSequence().toList()
         }
-        fun getReviewsByReviewer(r: String): List<review>
+        fun getReviewsByReviewer(r: String, lim: Int = 5, skip: Int = 0): List<review>
         {
             val col = DB.mongoDB.getCollection<review>("traderStatsReview")
-            val s = col.find(review::reviewer eq r)
+            val s = col.find(review::reviewer eq r).skip(skip).limit(lim)
             return  s.iterator().asSequence().toList()
         }
-        fun getReviewsByAbout(r: String): List<review>
+        fun getReviewsByAbout(r: String, lim: Int = 5, skip: Int = 0): List<review>
         {
             val col = DB.mongoDB.getCollection<review>("traderStatsReview")
-            val s = col.find(review::about eq r)
+            val s = col.find(review::about eq r).skip(skip).limit(lim)
             val id  = s.iterator()
             val r = mutableListOf<review>()
             while(id.hasNext())
@@ -62,10 +62,10 @@ data class review(val reviewer: String, val about: String, val text: String, val
             }
             return r.toList()
         }
-        fun getReviewsByWho(who: String): List<review>
+        fun getReviewsByWho(who: String, lim: Int = 5, skip: Int = 0): List<review>
         {
             val col = DB.mongoDB.getCollection<review>("traderStatsReview")
-            val s = col.find(Filters.or(review::reviewer eq who, review::about eq who))
+            val s = col.find(Filters.or(review::reviewer eq who, review::about eq who)).skip(skip).limit(lim)
             return  s.iterator().asSequence().toList()
         }
 

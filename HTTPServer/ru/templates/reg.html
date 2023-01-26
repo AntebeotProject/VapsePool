@@ -1,0 +1,15 @@
+<center>
+<p>Register:</p>
+<noscript>
+	<form action="/registration" method="GET">
+</noscript>
+   <div> <!--  -->
+    Логин: <input type=textarea id=workname name="workname"></br>
+    Пароль: <input type=password id=workpass name="workpass"></br>
+    Пароль для подтверждения: <input type=password id=workpass2 name="workpass2"></br>
+    Каптча: <input type=text id=captchaText name="captchaText"></br>
+    <button onclick="doRegistration()">Register</button>
+  </div></br>
+  <img src="/captcha?w=get" alt="captcha" id="catpcha" > <br/>
+    <button onclick="reloadCaptcha()">перезагрузка капчи</button>
+</center>

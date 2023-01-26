@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-XSS-Protection" content="1"/>
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy -->
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; "/> -->
+    <link rel="stylesheet" href="/css/main.css">
+    <title>Registration</title>
+</head>
+<body>
+
+<center>
+  <p>Register:</p>
+<noscript>
+	<form action="/registration" method="GET">
+</noscript>
+   <div> <!--  -->
+    WorkName: <input type=textarea id=workname name="workname"></br>
+    Password: <input type=password id=workpass name="workpass"></br>
+    Password_: <input type=password id=workpass2 name="workpass2"></br>
+    Captcha text: <input type=text id=captchaText name="captchaText"></br>
+    <button onclick="doRegistration()">Register</button>
+  </div></br>
+  <img src="/captcha?w=get" alt="captcha" id="catpcha" > <br/>
+    <button onclick="reloadCaptcha()">reload captcha</button>
+</center>
+
+<!-- scripts -->
+<script src="/js/jquery.js" type="text/javascript"></script>
+<script src="/js/jquery.cookie.js" type="text/javascript"></script>
+<script src="/js/cursor.js" type="text/javascript"></script>
+<script src="/js/functions.js" type="text/javascript"></script>
+<script src="uikit.min.js"></script>
+<script type="text/javascript">
+if (userIsSigned())
+{
+	window.location.href = "/user.html"
+}
+</script>
+<!-- refactoring will be -->
+<script type="text/javascript">changeULang("en_US");</script>
+<div id='alertBox' style="display:none">
+	<p id="alertTitle">ERROR!!!</p>
+	<b id="alertMsg"></b>
+	<p><button onclick="hideAlertBox()" id="alertButton">OK</button></p>
+</div>
+</body>
+</html>

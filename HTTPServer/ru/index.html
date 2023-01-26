@@ -1,0 +1,38 @@
+<html>
+<head>
+	<title>Просто пул</title>
+	<meta charset=utf-8>
+</head>
+<body>
+	<p>Добро пожаловать на пул тестнетовского госткойна. А так же будующего обменника</p>
+<p>Инструкция:</p><ol>
+<li> Первое что нужно, запустить кошелек в testnet режиме. Для этого нужно добавить -testnet в свойствах файла, к параметрам, аргументам программы<br/>Если используется Windows, то кликните правой кнопкой мыши по папке зажав shift, далее откройте командную строку и введите без скобок `./gostcoin-qt -testnet`</li>
+
+<li> Скачать майнер </li>
+<ul>
+	<li> windows: <a href="minerForWindowsBundle.zip">WindowsBundle</a> нажмите правой кнопкой мыши на .bat и измените содержимое. измените workname и workpass на свои.</li>
+	<li> linux: https://github.com/GOSTSec/cpuminer-gostd compile it </li>
+	<li> Андроид: <a href="android.apk">android.apk</a>; так же можете использовать userland если знаете как</li>
+</ul>
+</ol>
+<p><a href="ApiReference.html">Api reference</a></p>
+
+<ol>
+	<li><a href="empty.html">...</a></li>
+</ol>
+
+<li>GetBalance: </li>
+<form action="/api" method="GET">
+	<input type="hidden" name="w" value="getbalance" />
+	WorkName: <input type=textarea name="ac"></br>
+	<input type=submit value=getBalance>
+</form>
+<a href=/dashboard>Dashboard</a><br/>
+<a href=/api?w=ReserveGet>reserve</a>
+<pre>
+3334 - порт самого пула, используйте http протокол для майнинга. stratum не доделан. Пул умеет заменьшать сложность для майнинга для проверки майнит ли человек или нет.
+пул не доделан из-за подписей для сборки блока в stratum' протоколе. а именно входящий адрес. так же в данной криптовалюте изменен хэш  для merkleyRoot, что немного усложняет. сервер будет выдавать задания для stratum, но они никогда не собирутся/не будут корректными 
+Так же, всё тут использует тестнет
+</p>
+</body>
+</html>

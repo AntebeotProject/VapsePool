@@ -27,16 +27,26 @@ data class notification(val owner: String, val msg: String, val time: Long) // ,
          }*/
         // Will to delele notifications that less by time than tLimit
         fun dropNotificationByTimeAndOwner(o: String, tLimit: Long) {
+            TODO("Is vuln?")
             col.deleteOne(Filters.and(notification::time lt tLimit, notification::owner eq o))
         }
         /*
             Return notifications that more than tLimit. so if you
          */
-        fun getNotificationsByOwnerAndTimestamp(o: String, tLimit: Long): List<notification> {
+        const val maxLimit = 25;
+        fun getNotificationsByOwnerAndTimestamp(o: String, tLimit: Long, lim: Int = 5, offset: Int = 0): List<notification> {
             val col = DB.mongoDB.getCollection<Document>("notifications")
-            val l = col.find( Filters.or(notification::owner eq o, notification::owner eq "_ANYUSER_"), notification::time gt tLimit).toList()
+
+            val l = col.find( Filters.or(notification::owner eq o, notification::owner eq "_ANYUSER_"), notification::time gt tLimit).reversed()
+
+            var cLim =  if (lim >= l.size) l.size - 1 else lim
+            var cOffset = if (offset >= l.size) l.size - 1 else offset
+            if (cLim < 0) cLim = 0
+            if (cOffset < 0) cOffset = 0
+            if (cLim > maxLimit) cLim = maxLimit
+
             val r = mutableListOf<notification>()
-            for(n in l) {
+            for(n in l.subList(cOffset, cOffset + cLim)) {
                 val owner = n.get("owner").toString()
                 val msg = n.get("msg").toString()
                 val time = n.get("time").toString().toLong()

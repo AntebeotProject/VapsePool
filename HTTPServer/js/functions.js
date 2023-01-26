@@ -1,3 +1,7 @@
+var ulang = "ru_RU"
+function changeULang(lang) {
+	ulang = lang
+}
 function getAlertTitle() {
 	return $("#alertTitle")
 }
@@ -50,18 +54,19 @@ function doAuth()
 	let name = $("#workname").val() 
 	let pass = $("#workpass").val() 
 	let captcha = $("#captchaText").val() 
-
-	$.get( "/signin", { workname: name, workpass: pass, captchaText: captcha } ).done(function(data){
+	let ocode = $("#otpcode").val() 
+	$.get( "/signin", { 'workname': name, 'workpass': pass, 'captchaText': captcha, 'otpcode': ocode, 'lang': ulang } ).done(function(data){
 		if (data.result === false)
 		{
 			showAlertBox(data.reason)	
-		}else showAlertBox("Succesfully. Reload the page", "Info", "snow")
+		}else window.location.href = "user.html"
+// showAlertBox("Succesfully. Reload the page", "Info", "snow")
 	});
 	$("#captchaText").val("")
 	reloadCaptcha()
 	if (userIsSigned())
 	{
-		window.location.href = "/user.html"
+		window.location.href = "user.html"
 	}
 }
 function doRegistration()
@@ -71,17 +76,17 @@ function doRegistration()
 	let pass = $("#workpass").val() 
 	let pass2 = $("#workpass2").val() 
 	let captcha = $("#captchaText").val() 
-	$.get( "/registration", { workname: name, workpass: pass, workpass2: pass2, captchaText: captcha } ).done(function(data){
+	$.get( "/registration", { workname: name, workpass: pass, workpass2: pass2, captchaText: captcha, 'lang': ulang  } ).done(function(data){
 		if (data.result === false)
 		{
 			showAlertBox(data.reason)	
-		}else showAlertBox("Succesfully. Reload the page", "Info", "snow")
+		}else window.location.href = "user.html"
 	});
 	$("#captchaText").val("")
 	reloadCaptcha()
 	if (userIsSigned())
 	{
-		window.location.href = "/user.html"
+		window.location.href = "user.html"
 	}
 }
 const userSessionCookieName = "usession"
@@ -138,5 +143,5 @@ function getAllowCoins() {
  return apiData({'w':"getallowcoins"})
 }
 function outputMoney(login,password, output_address, count_of_money, coin_name, captchaData) {
- return apiData({'w':"output", 'acc': login, 'pass': password, 'oAdr': output_address, 'cMoney': count_of_money, 'coinname': coin_name, 'captchaText':captchaData})
+ return apiData({'w':"output", 'acc': login, 'pass': password, 'oAdr': output_address, 'cMoney': count_of_money, 'coinname': coin_name, 'captchaText':captchaData, 'lang': ulang })
 }

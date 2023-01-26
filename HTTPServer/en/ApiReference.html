@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Api reference</title>
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<p>Handlers</p>
+<ul>
+  <li>/registration</li>
+  <li>/user</li>
+  <li>/signin</li>
+  <li>/notify</li>
+  <li>/exchange</li>
+  <li>/api</li>
+  <li>/captcha</li>
+  <li>/dashboard</li>
+</ul>
+<p> about lang </p>
+<pre>
+	for language, where not need session use ?lang parameter. example. ?...&lang=ru_RU 
+	?...&lang=en_EN
+	where need. for change use /user/?w=changeLanguage&lang=en_US or /user/?w=changeLanguage&lang=ru_RU
+	or /user/?changeLanguage=ru_RU
+	for get supports language /api/?w=getSupportsLanguage
+</pre>
+<p>registration</p>
+<p>parameters:</p>
+<ol>
+    <li>workname (userlogin)</li>
+    <li>workpass (userpassword)</li>
+</ol>
+<p>signin:</p>
+<p>parameters:</p>
+<ol>
+    <li>workname (userlogin)</li>
+    <li>workpass (userpassword)</li>
+</ol>
+<p>user:</p>
+<p>(need session) (auth before):</p>
+<pre>
+    supports = getowninput, genAddress, updateSession, changePassword, checkOTP, genOTP, setOTP, GetQR, outByOTP
+    getowninput - returns input address for cryptocoin by parameter ?cryptocoin example /user?w=getowninput&cryptocoin=bitcoin
+    genAddress - returns new input address for cryptocoin by parameter ?cryptocoin example /user?w=genAddress&cryptocoin=gostcoin
+    updateSession - just update last activity by session. for session life. without parameters
+    changePassword - for change password ?w=changePassword&last_pass={userlastpassword}&new_pass={new password of user}
+    In future versions for all things of users that do updates need be captcha before. for now its can be skip
+
+/user/?w=setOTP&otp=ZSM6TF66FPZ7WX57VGJQHGP22CRJZ6TV&code=138862
+where code is old code
+/user/?w=setOTP&otp=ZSM6TF66FPZ7WX57VGJQHGP22CRJZ6TV
+/user/?w=GetQR&otp=ZSM6TF66FPZ7WX57VGJQHGP22CRJZ6TV
+/user/?w=genOTP
+/user/?w=outByOTP&code=666999&oAdr=mraKgrx4QKTrrWpiAXKke9VQx2bRR3uU9B&cMoney=1.0&coinname=gostcoin
+    bydefault returns all input addresses of user and balances.
+</pre>
+<p>notify:</p>
+<p>(need session) (auth before):</p>
+<pre>
+    getByTime - time in milliseconds for skip example /notify?w=getByTime&t=304003040340
+
+    bydefault returns notification of one day. for last 24 hours
+</pre>
+<p>exchange:</p>
+<p>(need session) (auth before):</p>
+<pre>
+    w parameters - addOrderToSellCoin2Coin, getOrders, getOrderByName, removeMyOrderByID, removeOrderByID, changeActiveOrder, doTrade, addReview, getReviewsByAbout, getReviewsByReviewer, getMyReviews, getMyDoneTrade
+    examples -   /exchange/?w=doTrade&count=1&id=63cee412d2fda05780b23c33
+		/exchange/?w=changeActiveOrder&id=63cebdd377a1a83abb3f7d9d&s=true
+		/exchange/?w=removeOrderByID&id=63cebdd377a1a83abb3f7d9d
+		/exchange/?w=removeMyOrderByID&id=63cebdcb77a1a83abb3f7d9a
+		/exchange/?w=getOrderByName&who=testusername
+-
+                /exchange/?w=getOrders&a=true
+                /exchange/?w=getOrders&a=false
+                by default is false    
+-
+/exchange/?w=addOrderToSellCoin2Coin&toSellName=gostcoin&toSellPrice=0&toSellLimitMin=1&toSellLimitMax=1&toBuyName=bitcoin&toBuyPrice=0.0001&toBuyLimitMin=0&toBuyLimitMax=1&tIsBuyer=true&msg=GostcoinNaBitcoin
+-
+?w=addReview&id=63cee8febece8102ab4a0da5&text="All fine!"&isPositive=true
+/exchange/?w=getReviewsByAbout&who=testusername_
+/exchange/?w=getReviewsByReviewer&who=testusername
+/exchange/?w=getMyReviews
+/exchange/?w=getMyDoneTrade
+...
+</pre>
+<p>api:</p>
+<p>(need session) (auth before):</p>
+<pre>
+    w parameters - getbalance, getallowcoins, output, BitcoinBroadcast, ReserveGet,
+    getbalance - returns balance of user [[will be in future version only for on privileges people]]
+    getallowcoins - returns cryptocoins that accept server
+    output - for money output. parameters: acc - account login, pass - account password, oAdr - output address, cMoney - count for send, coinname - name of cryptocoin
+    example: ?w=output&acc=testusername&pass=testusername&oAdr=mraKgrx4QKTrrWpiAXKke9VQx2bRR3uU9B&cMoney=1.0&coinname=gostcoin
+    UPD: For now this works only with captchaText
+    BitcoinBroadcast - broardcast tx. parameters tx. example ?w=BitcoinBroadcast&tx={Tx for broadcast in network bitcoin. as example from electrum offline wallet}
+    ReserveGet - info about server money. will be allowed in future version only for privilleged users.
+</pre>
+<p>captcha:</p>
+<p>(need session) (auth before):</p>
+<pre>
+    w parameters - get returns new captcha for user. example /captcha/?w=get
+    answerTest - for test example. example. example ?w=answerTest&a=pJXhEEHIKy where a is answer of last captcha of user
+</pre>
+<p>dashboard:</p>
+<pre>
+    Just returns dashboard of pool
+</pre>
+<div id="footer"></div>
+<!-- scripts -->
+<script src="/js/jquery.js" type="text/javascript"></script>
+<script src="/js/cursor.js" type="text/javascript"></script>
+<script src="/js/functions.js" type="text/javascript"></script>
+<!-- refactoring will be -->
+<script type="text/javascript">changeULang("en_US");</script>
+</body>
+</html>
