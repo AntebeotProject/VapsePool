@@ -4,13 +4,23 @@ import org.antibiotic.pool.AsyncServer
 import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
 import org.antibiotic.pool.main.PoolServer.*
 import org.antibiotic.pool.main.WebSite.JettyServer
+import org.antibiotic.pool.main.tgbot.prostaVapseTelegaBot
+import org.antibiotic.pool.main.tgbot.prostaVapseTelegaBotSet
 import java.util.*
+import kotlin.concurrent.thread
 
 // import com.github.jleskovar.*
 
 
-
+const val tg_bot_token = "5961057014:AAF4kpngMlC0DCnmJYvvlz0_XkkcK4F0j6c"
+val telegabot = prostaVapseTelegaBot( tg_bot_token )
 fun main(args: Array<String>) {
+    thread {
+        while(true) {
+            telegabot.readUpdatesAndSaveProps()
+            Thread.sleep(3000);
+        }
+    }
     AsyncServer.DebugEnabled = true
     var s = AsyncServer("0.0.0.0", 3334) // async
     Settings.load_propetries()

@@ -13,7 +13,6 @@ import org.antibiotic.pool.main.DB.*
 import org.antibiotic.pool.main.WebSite.Email.mail_service
 import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
 import org.antibiotic.pool.main.WebSite.JettyServer
-import io.github.g0dkar.qrcode.render.Colors
 
 // https://kotlinlang.org/docs/nested-classes.html not need internal for now
 class UserHandler : AbstractHandler() {
@@ -60,7 +59,7 @@ class UserHandler : AbstractHandler() {
                                     String.format(uLanguage.getString("urNewAddrIs"), nadr)
                                 )
                             )
-                                .also { DB.setLoginInputAddress(session.owner, nadr!!, coin!!) }
+                                .also { UserCoinBalance.setLoginInputAddress(session.owner, nadr!!, coin!!) }
                         }
                     }
                 }

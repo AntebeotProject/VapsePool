@@ -10,7 +10,6 @@ import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
 import org.antibiotic.pool.main.CryptoCurrencies.ElectrumRPC
 import org.antibiotic.pool.main.DB.DB
 import org.antibiotic.pool.main.DB.allowedLangauges
-import org.antibiotic.pool.main.DB.userLanguage
 import org.antibiotic.pool.main.PoolServer.RPC
 import org.antibiotic.pool.main.PoolServer.deleteSquares
 import org.antibiotic.pool.main.WebSite.Captcha

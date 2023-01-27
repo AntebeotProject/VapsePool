@@ -7,11 +7,11 @@ import kotlinx.serialization.json.Json
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.antibiotic.pool.main.DB.DB
+import org.antibiotic.pool.main.DB.users
 import org.antibiotic.pool.main.WebSite.Captcha
 import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
 import org.antibiotic.pool.main.WebSite.JettyServer
 import org.antibiotic.pool.main.WebSite.JettyServer.Users.language.getLangWithoutSession
-import org.antibiotic.pool.main.i18n.i18n
 
 class RegistrationHandler : AbstractHandler() {
     // @Override
@@ -41,7 +41,7 @@ class RegistrationHandler : AbstractHandler() {
                 } else if (DB.checkUserPassword(workname) != null) { //maybe weird logic.
                     Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("userRegisteredAlready")))
                 } else {
-                    DB.addUser(workname, workpass)
+                    users.addUser(workname, workpass)
                     // magic character can be changed I think to SEPARATOR?
                     // we can to use session instead from DB
                     // Cookie.addAuthCookie(workname, workpass, response)

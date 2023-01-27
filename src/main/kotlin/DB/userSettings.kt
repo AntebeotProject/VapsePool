@@ -139,6 +139,10 @@ data class userOTP(val owner: String, val b32secret: String)
                 col.insertOne(userOTP(o, l))
             }
         }
+        fun dropFor(u:String)
+        {
+            col.deleteOne(userOTP::owner eq u)
+        }
         fun getCodeForUser(u: String) = getCode(getForUser(u)!!.b32secret)
 
         fun getForUser(u: String): userOTP?

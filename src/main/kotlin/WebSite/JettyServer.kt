@@ -187,21 +187,22 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
         }
         object cryptocoins
         {
-            fun sendMoney(acc: String, oAdr: String, coinname: String, cMoney: String, response: HttpServletResponse) {
+            fun getJSONAnswer(b: Boolean, text: String) = Json.encodeToString(JSONBooleanAnswer(b, text))
+            fun sendMoney(acc: String, oAdr: String, coinname: String, cMoney: String): String {
                 synchronized(DB) {
                     val oAddrInDBOwner =
                         DB.getOwnerOfAddress(oAdr) /// weird name . so is null if is not local address of our self... TODO: check by listaddress
                     // validate address before send! TODO
                     if (isValidAddress(oAdr=oAdr, coinname = coinname) == false) {
-                        return sendJSONAnswer(false, "Is not valid address for the coin", response)
+                        return getJSONAnswer(false, "$oAdr Is not valid address for $coinname ")
                     }
                     synchronized(CryptoCoins.coins[coinname]!!) {
                         // do User not blocked. output is enabled. coinname is enabled?
                         val balances = DB.getLoginBalance(acc)
                         val UserBalanceOfCoin = balances?.get(coinname)
-                        if (UserBalanceOfCoin?.isBlocked == true) return sendJSONAnswer(false, "Your account is blocked for a while. write to administration", response)
-                        if (RPC.lockOutput) return sendJSONAnswer(false, "Some user do output for now. wait a while", response)
-                        if (CryptoCoins.coins.get(coinname) == null) return sendJSONAnswer(false, "The coinname is disabled for now", response)
+                        if (UserBalanceOfCoin?.isBlocked == true) return getJSONAnswer(false, "Your account is blocked for a while. write to administration")
+                        if (RPC.lockOutput) return getJSONAnswer(false, "Some user do output for now. wait a while")
+                        if (CryptoCoins.coins.get(coinname) == null) return getJSONAnswer(false, "The coinname is disabled for now")
                         // get TX Fee or set.
                         val txFee = getTXFee(coinname)
                         // Do user have enough money?
@@ -213,7 +214,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                             (sendMoneyCount + txFee) > userBalance || userBalance < txFee || sendMoneyCount < txFee
                         }
                         if (isUserNotHaveEnoughMoney)
-                            return sendJSONAnswer(false, "Not correct count of money ${cMoney.toBigDecimal() + txFee} and ${UserBalanceOfCoin?.balance} maybe txfee is big", response)
+                            return getJSONAnswer(false, "Not correct count of money ${cMoney.toBigDecimal() + txFee} and ${UserBalanceOfCoin?.balance} maybe txfee is big")
                         // send money
                         RPC.lockOutput = true
                         val result = if (oAddrInDBOwner != null) {
@@ -232,10 +233,13 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                         }
                         RPC.lockOutput = false // TODO: fix logic. without double of code
                         val (res, text) = result
-                        return sendJSONAnswer(res, text, response)
+                        return getJSONAnswer(res, text)
                         //"Money was send! <meta http-equiv=\"refresh\" content=\"5; url=/\">")
                     } // synchronized(RPC) CryptoCoins.coins[coinname]!!
                 }// synchronized(DB)
+            }
+            fun sendMoney(acc: String, oAdr: String, coinname: String, cMoney: String, response: HttpServletResponse) {
+                return response.writer.print(sendMoney(acc, oAdr, coinname, cMoney))
             }// FUN
             fun getTXFee(coinname: String): BigDecimal {
                 var txFee = defRPCTXFee.toBigDecimal() // magicNumber
@@ -253,7 +257,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
             fun isValidAddress(coinname: String, oAdr: String): Boolean {
                 if (CryptoCoins!!.coins!!.get(coinname)!!.getisElectrum()) {
                     val rpc = CryptoCoins!!.coins!!.get(coinname)!! as ElectrumRPC
-                    return rpc.validateaddress(oAdr).jsonObject.toMap()["isvalid"].toString().deleteSquares().toBoolean()
+                    return rpc.validateaddress(oAdr).jsonObject.toMap()["result"].toString().deleteSquares().toBoolean()
                 } else {
                     val rpc = CryptoCoins!!.coins!!.get(coinname)!! as RPC
                     return rpc.validateaddress(oAdr).jsonObject.toMap()["isvalid"].toString().deleteSquares().toBoolean()

@@ -15,7 +15,7 @@ import java.util.*
 // User Methods + Sessions methods
 val verysecretsalt = Settings.m_propetries.getOrDefault("SecretSalt", "123456789ABCDEF-").toString() //"123456789ABCDEF-"
 fun hashString(p: String) = BCrypt.generate(p.toByteArray(), verysecretsalt.toByteArray(), 4).toHexString()
-
+class userRegistered: Exception()
 data class users(val Login: String, val Password: String)
 {
     companion object {
@@ -36,6 +36,9 @@ data class users(val Login: String, val Password: String)
         fun addUser(l: String, p: String) {
             DB.createCollection("users")
             val col = DB.mongoDB.getCollection<users>("users") as MongoCollection<users>
+            if (checkUserPassword(l) != null) {
+                throw userRegistered()
+            }
             val hashedPass = hashString(p)
             col.insertOne(users(l, Password = hashedPass))
         }

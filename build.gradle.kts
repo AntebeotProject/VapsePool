@@ -29,6 +29,10 @@ dependencies {
     implementation("jakarta.mail:jakarta.mail-api:2.1.1")
     implementation("dev.turingcomplete:kotlin-onetimepassword:2.4.0")
     implementation("io.github.g0dkar:qrcode-kotlin-jvm:3.3.0")
+    //
+    implementation ("com.github.pengrad:java-telegram-bot-api:6.0.1")
+    implementation ("com.squareup.okhttp3:okhttp:4.5.0")
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.5.0")
 }
 
 tasks.test {
