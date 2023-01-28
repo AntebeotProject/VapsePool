@@ -11,10 +11,13 @@ import com.pengrad.telegrambot.request.SendMessage
 import com.pengrad.telegrambot.request.SendPhoto
 import io.github.g0dkar.qrcode.QRCode
 import jakarta.servlet.http.HttpServletResponse
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
 import org.antibiotic.pool.main.DB.*
 import org.antibiotic.pool.main.PoolServer.RPC
 import org.antibiotic.pool.main.WebSite.Captcha
+import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
 import org.antibiotic.pool.main.WebSite.JettyServer
 import org.antibiotic.pool.main.i18n.i18n
 import java.io.ByteArrayOutputStream
@@ -22,10 +25,11 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.math.BigDecimal
 import java.util.*
 import javax.imageio.ImageIO
 import kotlin.random.Random
-
+import kotlin.reflect.KFunction2
 
 
 internal object prostaVapseTelegaBotSet {
@@ -137,7 +141,7 @@ class prostaVapseTelegaBot {
         val uidForDB = userInfoToDBName(uid)
         if (userOTP.userOTPExistsForUser(uidForDB))
         {
-            val request = SendMessage(update.message().chat().id(), uLanguage.getString("OTPExists")).replyMarkup(getMainMenuKeyboard())
+            val request = SendMessage(update.message().chat().id(), uLanguage.getString("OTPExists")).replyMarkup(getMainMenuKeyboard(uLanguage))
             mBot!!.execute(request)
             return
         }
@@ -149,6 +153,8 @@ class prostaVapseTelegaBot {
         val req = SendPhoto(uid, b.toByteArray())
         userTemporaryData[uidForDB] = b32secret
         mBot!!.execute(req)
+        mBot!!.execute(SendMessage(uid, uLanguage.getString("WriteCodeOfOTP")))
+        mBot!!.execute(SendMessage(uid, b32secret))
     }
 
 
@@ -157,12 +163,12 @@ class prostaVapseTelegaBot {
         val uLanguage = getLangForUid(uid)
         val uidForDB = userInfoToDBName(uid)
         if (!userOTP.userOTPExistsForUser(uidForDB)) {
-            val request = SendMessage(update.message().chat().id(), uLanguage.getString("OTPNotExists")).replyMarkup(getMainMenuKeyboard())
+            val request = SendMessage(update.message().chat().id(), uLanguage.getString("OTPNotExists")).replyMarkup(getMainMenuKeyboard(uLanguage))
             mBot!!.execute(request)
             uLastAction[uidForDB] = ""
             return
         }
-        val request = SendMessage(update.message().chat().id(), uLanguage.getString("WriteCurrentOTP")).replyMarkup(getMainMenuKeyboard())
+        val request = SendMessage(update.message().chat().id(), uLanguage.getString("WriteCurrentOTP")).replyMarkup(getMainMenuKeyboard(uLanguage))
         mBot!!.execute(request)
     }
     fun getAllowInputToArray(): Array<String> {
@@ -197,29 +203,41 @@ class prostaVapseTelegaBot {
         mBot!!.execute(SendMessage(update.message().chat().id(), uLanguage.getString("SelectCryptocoin")).replyMarkup(keyboard))
     }
 
-    val u_on = mutableMapOf("setLanguage" to ::setLanguage,
-        "registration" to ::registration,
-        "sendCaptcha" to ::sendCaptcha,
-        "genNewOTP" to ::genNewOTP,
-        "dropOTP" to ::dropOTP,
-        "getAllowInput" to ::getAllowInput,
-        "getInput" to ::getInput,
-        "genInput" to ::getInput,
-        "output" to ::output
-    )
+    val u_on = fun(uLanguage:i18n): MutableMap<String, KFunction2<Update, Long, Unit>> {
+        return mutableMapOf(
+            uLanguage.getString("tgbot_setLanguage") to ::setLanguage,
+            uLanguage.getString("tgbot_registration") to ::registration,
+            "sendCaptcha" to ::sendCaptcha,
+            uLanguage.getString("tgbot_genNewOTP") to ::genNewOTP,
+            uLanguage.getString("tgbot_dropOTP") to ::dropOTP,
+            "getAllowInput" to ::getAllowInput,
+            uLanguage.getString("tgbot_getInput") to ::getInput,
+            uLanguage.getString("tgbot_genInput") to ::getInput,
+            uLanguage.getString("tgbot_output") to ::output
+        )
+    }
     val uLastAction = mutableMapOf<String, String>()
     val uLastCaptchas = mutableMapOf<String, String>()
     val userTemporaryData = mutableMapOf<String, String>()
-    fun getMainMenuKeyboard() = ReplyKeyboardMarkup(
-        arrayOf("registration", "setLanguage"),
-        arrayOf("getInput", "genInput"),
-        arrayOf("fullList"), arrayOf("website")
+    fun getMainMenuKeyboard(uLanguage: i18n) = ReplyKeyboardMarkup(
+        arrayOf(/*uLanguage.getString("tgbot_registration"),*/ uLanguage.getString("tgbot_setLanguage")), // language registration
+        arrayOf(uLanguage.getString("tgbot_getInput"), uLanguage.getString("tgbot_genInput")), // input address
+        arrayOf(uLanguage.getString("tgbot_exchange"), uLanguage.getString("tgbot_output")), // exchange and output
+        arrayOf(uLanguage.getString("tgbot_website")), // Contacts
+        arrayOf(uLanguage.getString("tgbot_genNewOTP"), uLanguage.getString("tgbot_dropOTP")) // OTP
     ).resizeKeyboard(true).selective(true)
 
     fun sendToUid(uid: Long, msg: String) {
         mBot!!.execute(SendMessage(uid, "$msg"))
     }
     private fun updateDo(update: Update) {
+        val sendmainmenu = fun(uid: Long, uidForDB: String, uLanguage: i18n )
+        {
+            val request = SendMessage(uid, uLanguage.getString("SelectChoice")).replyMarkup(getMainMenuKeyboard(uLanguage))
+            mBot!!.execute(request)
+            uLastAction[uidForDB] = ""
+            userTemporaryData[uidForDB] = ""
+        }
         try {
            // println("Update is:")
            // println(update.toString())
@@ -227,42 +245,29 @@ class prostaVapseTelegaBot {
             val uid = msg.chat().id()
             val uLanguage = getLangForUid(uid)
             val uidForDB = userInfoToDBName(uid)
-            if (u_on.containsKey(msg.text())) {
+            if (u_on(uLanguage).containsKey(msg.text())) {
                 println("load fun")
                 uLastAction[uidForDB] = msg.text()
-                u_on[msg.text()]!!(update, uid)
+                u_on(uLanguage)[msg.text()]!!(update, uid)
             }else when (msg.text())
             {
-                "website" -> {
+                uLanguage.getString("tgbot_website") -> {
                     val apiref = "http://80.64.173.196:8081/ru/ApiReference.html"
                     val request = mBot!!.execute(SendMessage(msg.chat().id(), "$apiref"))
                 }
-                "testbutton" -> {
-                    val replyKeyboardMarkup: Keyboard = ReplyKeyboardMarkup(
-                        arrayOf("first row button1", "first row button2"),
-                        arrayOf("second row button1", "second row button2")
-                    )
-                        .oneTimeKeyboard(true) // optional
-                        .resizeKeyboard(true) // optional
-                        .selective(true) // optional
-
-                    val request = SendMessage(msg.chat().id(), "Выбери действие ${msg.chat().toString()}")
-                    .parseMode(ParseMode.HTML).
-                    disableWebPagePreview(true).
-                    disableNotification(true).replyMarkup(replyKeyboardMarkup)
-                    val sendResponse = mBot!!.execute(request)
-                    val ok = sendResponse.isOk
-                    println("send update is $ok")
+                "/start" -> {
+                    registration(update, uid)
+                    sendmainmenu(uid, uidForDB, uLanguage)
                 }
                 "menu" -> {
-                    val request = SendMessage(msg.chat().id(), uLanguage.getString("SelectChoice")).replyMarkup(getMainMenuKeyboard())
-                    mBot!!.execute(request)
-                    uLastAction[uidForDB] = ""
-                    userTemporaryData[uidForDB] = ""
+                    sendmainmenu(uid, uidForDB, uLanguage)
                 }
                 else -> {
                     when(uLastAction[uidForDB])
                     {
+                        // Exchange
+
+                        // End Exchange
                         // OUTPUT
                         "SendMoney0" -> {
                             userTemporaryData[uidForDB] = userTemporaryData[uidForDB] + ";" + msg.text()
@@ -270,15 +275,35 @@ class prostaVapseTelegaBot {
                             mBot!!.execute(SendMessage(msg.chat().id(), uLanguage.getString("WriteAmmount")))
                         }
                         "SendMoney1" -> {
+                            if ( !Regex("\\d+(.\\d+)?").matches(msg.text()) )
+                            {
+                                 mBot!!.execute(SendMessage(msg.chat().id(), String.format(uLanguage.getString("NotCorrectAmmount"))))
+                                return
+                            }
                             userTemporaryData[uidForDB] = userTemporaryData[uidForDB] + ";" + msg.text()
                             uLastAction[uidForDB] = "SendMoney2"
                             val sp = userTemporaryData[uidForDB]!!.split(";")
                             println(sp)
-                            mBot!!.execute(SendMessage(msg.chat().id(), String.format(uLanguage.getString("ConfirmSend"),  sp[0], sp[1], sp[2])))
+                            if (userOTP.userOTPExistsForUser(uidForDB))
+                            {
+                                mBot!!.execute(SendMessage(msg.chat().id(), String.format(uLanguage.getString("ConfirmSendOTP"),  sp[0], sp[1], sp[2])))
+                            }
+                            else
+                            {
+                                mBot!!.execute(SendMessage(msg.chat().id(), String.format(uLanguage.getString("ConfirmSend"),  sp[0], sp[1], sp[2])))
+                            }
                             println("was execute?")
                         }
                         "SendMoney2" -> {
-                            val sends = msg.text().equals("yes")
+                            val sends = if (userOTP.userOTPExistsForUser(uidForDB))
+                            {
+                                msg.text().equals( userOTP.getCodeForUser(uidForDB) )
+                            }
+                            else
+                            {
+                                msg.text().equals("yes")
+                            }
+                            //
                             if (sends)
                             {
                                 val sp = userTemporaryData[uidForDB]!!.split(";")
@@ -291,9 +316,10 @@ class prostaVapseTelegaBot {
                             else
                             {
                                 mBot!!.execute(SendMessage(msg.chat().id(), uLanguage.getString("Canceled")))
+                                sendmainmenu(uid, uidForDB, uLanguage)
                             }
                         }
-                        "output" -> {
+                        uLanguage.getString("tgbot_output") -> {
                             val i = UserCoinBalance.getLoginBalance(uidForDB)
                             val c = msg.text()
                             if (i?.containsKey(c) != true)
@@ -310,67 +336,69 @@ class prostaVapseTelegaBot {
 
                         }
                         // END OUTPUT
-                        "setLanguage" -> {
+                        uLanguage.getString("tgbot_setLanguage") -> {
                             val newLang = msg.text()
                             if ( allowedLangauges.contains(newLang) ) {
                                 userLanguage.set(uidForDB, newLang)
-                                val request = SendMessage(msg.chat().id(), uLanguage.getString("LanguageChanged")).replyMarkup(getMainMenuKeyboard())
+                                val _userLanguage = getLangForUid(uid)
+                                val request = SendMessage(msg.chat().id(), _userLanguage.getString("LanguageChanged")).replyMarkup(getMainMenuKeyboard(uLanguage))
                                 mBot!!.execute(request)
+                                sendmainmenu(uid, uidForDB, _userLanguage)
                             } else {
-                                val request = SendMessage(msg.chat().id(), uLanguage.getString("LanguageChanged")).replyMarkup(getMainMenuKeyboard())
+                                val request = SendMessage(msg.chat().id(), uLanguage.getString("LanguageNotChanged")).replyMarkup(getMainMenuKeyboard(uLanguage))
                                 mBot!!.execute(request)
-
                             }
                         }
-                        "genNewOTP" -> {
+                        uLanguage.getString("tgbot_genNewOTP") -> {
                             val code = msg.text()
                             val secret = userTemporaryData[uidForDB]!!
                             val rcode = userOTP.getCode(secret)
                             if (code != rcode) {
-                                val request = SendMessage(msg.chat().id(), uLanguage.getString("OTPNotCorrect")).replyMarkup(getMainMenuKeyboard())
+                                val request = SendMessage(msg.chat().id(), uLanguage.getString("OTPNotCorrect")).replyMarkup(getMainMenuKeyboard(uLanguage))
                                 mBot!!.execute(request)
                             } else {
-                                val request = SendMessage(msg.chat().id(), uLanguage.getString("OTPWasChanged")).replyMarkup(getMainMenuKeyboard())
+                                val request = SendMessage(msg.chat().id(), uLanguage.getString("OTPWasChanged")).replyMarkup(getMainMenuKeyboard(uLanguage))
                                 mBot!!.execute(request)
                                 userOTP.set(uidForDB, secret, null) // last par its for last code
                             }
                         }
-                        "dropOTP" -> {
+                        uLanguage.getString("tgbot_dropOTP") -> {
                             val code = msg.text()
                             val rcode = userOTP.getCodeForUser(uidForDB)
                             if (code != rcode) {
                                 val request =
                                     SendMessage(msg.chat().id(), uLanguage.getString("OTPNotCorrect")).replyMarkup(
-                                        getMainMenuKeyboard()
+                                        getMainMenuKeyboard(uLanguage)
                                     )
                                 mBot!!.execute(request)
                             } else {
                                 val request =
                                     SendMessage(msg.chat().id(), uLanguage.getString("OTPWasChanged")).replyMarkup(
-                                        getMainMenuKeyboard()
+                                        getMainMenuKeyboard(uLanguage)
                                     )
                                 mBot!!.execute(request)
                                 userOTP.dropFor(uidForDB)
                             }
                         }
-                        "getInput" -> {
+                        uLanguage.getString("tgbot_genInput") -> {
                             val i = UserCoinBalance.getLoginBalance(uidForDB)
                             val c = msg.text()
                             if (i?.containsKey(c) != true)
                             {
                                 mBot!!.execute(SendMessage(msg.chat().id(), uLanguage.getString("CryptocoinNotFound")))
                             } else {
-                                mBot!!.execute(SendMessage(msg.chat().id(), String.format(uLanguage.getString("YourInputAddress"), i[c]?.inputAddress, i[c]?.CoinName, i[c]?.balance) ))
+                                mBot!!.execute(SendMessage(msg.chat().id(), String.format( uLanguage.getString("YourInputAddress"), i[c]!!.inputAddress, i[c]!!.CoinName, i[c]!!.balance  )) )
                             }
                         } // get input
-                        "genInput" -> {
-                            val nadr = JettyServer.Users.genNewAddrForUser(uidForDB, msg.text(), search_unused = true)
-                            if (nadr != null) {
-                                val m = String.format(uLanguage.getString("urNewAddrIs"), nadr).also { UserCoinBalance.setLoginInputAddress(uidForDB, nadr!!, msg.text()) }
-                                mBot!!.execute(SendMessage(msg.chat().id(), "$m"))
-                            } else {
-                                mBot!!.execute(SendMessage(msg.chat().id(), uLanguage.getString("ErrorWithGenerateNewAddress")))
-                            }
+                        uLanguage.getString("tgbot_getInput") -> {
+                            val res = JettyServer.Users.money.genAdr(
+                                coin = msg.text(),
+                                uLanguage = uLanguage,
+                                owner = uidForDB
+                            )
+                            val res_json = Json.decodeFromString<JSONBooleanAnswer>(res)
+                            val m = String.format(res_json.reason?: "internalerrror") // uLanguage.getString("urNewAddrIs"),
+                            mBot!!.execute(SendMessage(msg.chat().id(), "$m"))
                         } // there last actions
                         else -> {
                             if (msg.text().startsWith("getNotify")) {
@@ -393,6 +421,7 @@ class prostaVapseTelegaBot {
                             } else { // not found command
                                 val request = SendMessage(msg.chat().id(), uLanguage.getString("CommandNotFound"))
                                 mBot!!.execute(request)
+                                sendmainmenu(uid, uidForDB, uLanguage)
                                 // ?
                             }
                         }// else

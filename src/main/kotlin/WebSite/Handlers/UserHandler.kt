@@ -13,6 +13,7 @@ import org.antibiotic.pool.main.DB.*
 import org.antibiotic.pool.main.WebSite.Email.mail_service
 import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
 import org.antibiotic.pool.main.WebSite.JettyServer
+import org.antibiotic.pool.main.WebSite.JettyServer.Users.money.genAdr
 
 // https://kotlinlang.org/docs/nested-classes.html not need internal for now
 class UserHandler : AbstractHandler() {
@@ -40,28 +41,7 @@ class UserHandler : AbstractHandler() {
 
                 "genAddress" -> {
                     val coin = request?.getParameter("cryptocoin")
-                    val rpc = CryptoCoins.coins.get(coin)
-                    if (rpc == null || coin == null) {
-                        Json { encodeDefaults = true }.encodeToString(
-                            JSONBooleanAnswer(
-                                false,
-                                uLanguage.getString("notFoundCryptoCur")
-                            )
-                        )
-                    } else {
-                        if (DB.userHaveNotConfirmedTXOnCoinName(session.owner, coin)) {
-                            Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("uHaveNotConfirmedTx")))
-                        } else {
-                            val nadr = JettyServer.Users.genNewAddrForUser(session.owner, coin, search_unused = true)
-                            Json.encodeToString(
-                                JSONBooleanAnswer(
-                                    true,
-                                    String.format(uLanguage.getString("urNewAddrIs"), nadr)
-                                )
-                            )
-                                .also { UserCoinBalance.setLoginInputAddress(session.owner, nadr!!, coin!!) }
-                        }
-                    }
+                    genAdr(coin = coin!!, uLanguage = uLanguage, owner = session.owner)
                 }
 
                 "updateSession" -> {

@@ -156,6 +156,35 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
 
     } // obj Cookie
     object Users {
+        object money
+        {
+            fun genAdr(coin: String, uLanguage: i18n, owner: String): String
+            {
+
+                val rpc = CryptoCoins.coins.get(coin)
+                if (rpc == null || coin == null) {
+                    return Json { encodeDefaults = true }.encodeToString(
+                         JSONBooleanAnswer(
+                            false,
+                            uLanguage.getString("notFoundCryptoCur")
+                        )
+                    )
+                } else {
+                    if (DB.userHaveNotConfirmedTXOnCoinName(owner, coin)) {
+                        return Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("uHaveNotConfirmedTx")))
+                    } else {
+                        val nadr = JettyServer.Users.genNewAddrForUser(owner, coin, search_unused = true)
+                        return Json.encodeToString(
+                             JSONBooleanAnswer(
+                                true,
+                                String.format(uLanguage.getString("urNewAddrIs"), nadr)
+                            )
+                        )
+                            .also { UserCoinBalance.setLoginInputAddress(owner, nadr!!, coin!!) }
+                    }
+                }
+            }
+        }
         object OTP
         {
             fun check(u: String, request: Request, parName: String = "otpcode"): Boolean
