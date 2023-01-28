@@ -5,13 +5,53 @@ import jakarta.servlet.http.HttpServletResponse
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.antibiotic.pool.main.DB.*
+import org.antibiotic.pool.main.DB.trade.Companion.comissionPercent
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
 import org.antibiotic.pool.main.WebSite.JettyServer
 import org.antibiotic.pool.main.WebSite.delHTML
+import org.antibiotic.pool.main.i18n.i18n
 
 class TradeHandler : AbstractHandler() {
+    companion object
+    {
+        fun createOrder(tIsBuyer: Boolean,
+                        owner: String, toSellName: String, toBuyName: String,
+                        toSellLMax: String, toSellLMin: String,
+                        uLanguage: i18n, toS: toSellStruct, toB: toSellStruct,
+                        ordMsg: String
+        ): String
+        {
+            val usrBalance =
+                if (!tIsBuyer) UserCoinBalance.getLoginBalance(owner)
+                    ?.get(toSellName)?.balance?.toBigDecimal()
+                else UserCoinBalance.getLoginBalance(owner)?.get(toBuyName)?.balance?.toBigDecimal()
+            if (usrBalance == null || usrBalance < toSellLMax.toBigDecimal() || usrBalance < toSellLMin.toBigDecimal()) {
+                println("Usr balance for coin (false/true)[$tIsBuyer] ${toSellName} / ${toBuyName} $usrBalance. limit max ${toSellLMax}")
+                println(usrBalance!! < toSellLMax.toBigDecimal())
+                println(usrBalance!! < toSellLMin.toBigDecimal())
+                throw notAllowedOrder(uLanguage.getString("uBalanceSmallerThanLimit"))
+            }
+            order.addOrder(
+                owner,
+                toSell = toS,
+                toBuy = toB,
+                orderMSG = ordMsg,
+                isFiat2CoinTrade = false,
+                isCoin2CoinTrade = true,
+                ownerIsBuyer = tIsBuyer
+            )
+            return Json.encodeToString(
+                    JSONBooleanAnswer(
+                        true,
+                        uLanguage.getString("orderWasCreated")
+                    )
+                )
+
+
+        }
+    }
     override fun handle(target: String?, baseRequest: Request, request: HttpServletRequest?, response: HttpServletResponse?) {
         baseRequest.setHandled(true)
         response!!.setContentType("application/json; charset=UTF-8");
@@ -38,50 +78,38 @@ class TradeHandler : AbstractHandler() {
             val rValue = when (doings) {
                 "addOrderToSellCoin2Coin" -> {
                     try {
-                        val toSellName = request.getParameter("toSellName") // coin to sell name
-                        val toSellPrice = request.getParameter("toSellPrice") // coin to sell price
+                        println("addOrder")
+                        val toSellName = request.getParameter("toSellName").trimIndent() // coin to sell name
+                        val toSellPrice = request.getParameter("toSellPrice").trimIndent() // coin to sell price
                         // we can to put the checks to constructor
-                        val toSellLMin = request.getParameter("toSellLimitMin")
-                        val toSellLMax = request.getParameter("toSellLimitMax")
-
+                        val toSellLMin = request.getParameter("toSellLimitMin").trimIndent()
+                        val toSellLMax = request.getParameter("toSellLimitMax").trimIndent()
+                        println("'$toSellPrice', $toSellName , $toSellLMin , $toSellLMax")
                         val toS =
                             toSellStruct(toSellName, toSellPrice, lmin = toSellLMin, lmax = toSellLMax)
+                        println("Struct created")
+                        val toBuyName = request.getParameter("toBuyName").trimIndent() // coin for buy name
+                        val toBuyPrice = request.getParameter("toBuyPrice").trimIndent() // coin for buy price
 
-                        val toBuyName = request.getParameter("toBuyName") // coin for buy name
-                        val toBuyPrice = request.getParameter("toBuyPrice") // coin for buy price
-
-                        val toBuyLMin = request.getParameter("toBuyLimitMin")
-                        val toBuyLMax = request.getParameter("toBuyLimitMax")
+                        val toBuyLMin = request.getParameter("toBuyLimitMin").trimIndent()
+                        val toBuyLMax = request.getParameter("toBuyLimitMax").trimIndent()
 
                         val toB = toSellStruct(toBuyName, toBuyPrice, lmin = toBuyLMin, lmax = toBuyLMax)
-
+                        println("Struct 2 created")
                         val tIsBuyer = request.getParameter("tIsBuyer").toBoolean() // trader is buyer or seller?
                         //
                         // /exchange/?w=addOrderToSellCoin2Coin&toSellName=gostcoin&toSellPrice=0&toSellLimitMin=1&toSellLimitMax=1&toBuyName=bitcoin&toBuyPrice=0.0001&toBuyLimitMin=0&toBuyLimitMax=1&tIsBuyer=true&msg=GostcoinNaBitcoin
                         println("tISBuyer: $tIsBuyer")
                         val ordMsg = request.getParameter("msg").toString().delHTML()
-
-                        val usrBalance =
-                            if (!tIsBuyer) UserCoinBalance.getLoginBalance(session.owner)?.get(toSellName)?.balance?.toBigDecimal()
-                            else UserCoinBalance.getLoginBalance(session.owner)?.get(toBuyName)?.balance?.toBigDecimal()
-                        if (usrBalance == null || usrBalance < toSellLMax.toBigDecimal() || usrBalance < toSellLMin.toBigDecimal()) {
-                            println(usrBalance)
-                            println(usrBalance!! < toSellLMax.toBigDecimal())
-                            println(usrBalance!! < toSellLMin.toBigDecimal())
-                            throw notAllowedOrder(uLanguage.getString("uBalanceSmallerThanLimit"))
-                        }
-                        order.addOrder(
-                            session.owner,
-                            toSell = toS,
-                            toBuy = toB,
-                            orderMSG = ordMsg,
-                            isFiat2CoinTrade = false,
-                            isCoin2CoinTrade = true,
-                            ownerIsBuyer = tIsBuyer
+                        return response.writer.print(
+                            createOrder(tIsBuyer =tIsBuyer, owner = session.owner,
+                            toSellName = toSellName, toBuyName = toBuyName, toSellLMax = toSellLMax, toSellLMin = toSellLMin,
+                            uLanguage = uLanguage, toS = toS, toB = toB, ordMsg = ordMsg)
                         )
-                        return response.writer.print(Json.encodeToString(JSONBooleanAnswer(true, uLanguage.getString("orderWasCreated"))))
                     } catch (e: notAllowedOrder) {
                         response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, e.toString())))
+                    } catch (e: java.lang.NumberFormatException) {
+                        response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, "WrongNumber")))
                     }
                 }
 
@@ -90,11 +118,15 @@ class TradeHandler : AbstractHandler() {
                     // /exchange/?w=getOrders&a=false
                     // by default false
                     val a = request.getParameter("a").toBoolean()
-                    val (offset,lim) = JettyServer.getOffsetLimit(baseRequest)
-                    val orders = order.getOrdersByActivity(a, lim = lim, skip =  offset)
+                    val (offset, lim) = JettyServer.getOffsetLimit(baseRequest)
+                    val orders = order.getOrdersByActivity(a, lim = lim, skip = offset)
                     return response.writer.print(Json.encodeToString(orders))
                 }
 
+                "getComissionPercent" ->
+                {
+                    return response.writer.print(Json.encodeToString(comissionPercent));
+                }
                 "getOrderByName" -> {
                     // /exchange/?w=getOrderByName&who=testusername
                     val who = request.getParameter("who")
@@ -206,3 +238,66 @@ class TradeHandler : AbstractHandler() {
         }
     }
 }
+
+/*
+OLD CODE
+ "addOrderToSellCoin2Coin" -> {
+                    try {
+                        println("addOrder")
+                        val toSellName = request.getParameter("toSellName").trimIndent() // coin to sell name
+                        val toSellPrice = request.getParameter("toSellPrice").trimIndent() // coin to sell price
+                        // we can to put the checks to constructor
+                        val toSellLMin = request.getParameter("toSellLimitMin").trimIndent()
+                        val toSellLMax = request.getParameter("toSellLimitMax").trimIndent()
+                        println("'$toSellPrice', $toSellName , $toSellLMin , $toSellLMax")
+                        val toS =
+                            toSellStruct(toSellName, toSellPrice, lmin = toSellLMin, lmax = toSellLMax)
+                        println("Struct created")
+                        val toBuyName = request.getParameter("toBuyName").trimIndent() // coin for buy name
+                        val toBuyPrice = request.getParameter("toBuyPrice").trimIndent() // coin for buy price
+
+                        val toBuyLMin = request.getParameter("toBuyLimitMin").trimIndent()
+                        val toBuyLMax = request.getParameter("toBuyLimitMax").trimIndent()
+
+                        val toB = toSellStruct(toBuyName, toBuyPrice, lmin = toBuyLMin, lmax = toBuyLMax)
+                        println("Struct 2 created")
+                        val tIsBuyer = request.getParameter("tIsBuyer").toBoolean() // trader is buyer or seller?
+                        //
+                        // /exchange/?w=addOrderToSellCoin2Coin&toSellName=gostcoin&toSellPrice=0&toSellLimitMin=1&toSellLimitMax=1&toBuyName=bitcoin&toBuyPrice=0.0001&toBuyLimitMin=0&toBuyLimitMax=1&tIsBuyer=true&msg=GostcoinNaBitcoin
+                        println("tISBuyer: $tIsBuyer")
+                        val ordMsg = request.getParameter("msg").toString().delHTML()
+
+                        val usrBalance =
+                            if (!tIsBuyer) UserCoinBalance.getLoginBalance(session.owner)
+                                ?.get(toSellName)?.balance?.toBigDecimal()
+                            else UserCoinBalance.getLoginBalance(session.owner)?.get(toBuyName)?.balance?.toBigDecimal()
+                        if (usrBalance == null || usrBalance < toSellLMax.toBigDecimal() || usrBalance < toSellLMin.toBigDecimal()) {
+                            println(usrBalance)
+                            println(usrBalance!! < toSellLMax.toBigDecimal())
+                            println(usrBalance!! < toSellLMin.toBigDecimal())
+                            throw notAllowedOrder(uLanguage.getString("uBalanceSmallerThanLimit"))
+                        }
+                        order.addOrder(
+                            session.owner,
+                            toSell = toS,
+                            toBuy = toB,
+                            orderMSG = ordMsg,
+                            isFiat2CoinTrade = false,
+                            isCoin2CoinTrade = true,
+                            ownerIsBuyer = tIsBuyer
+                        )
+                        return response.writer.print(
+                            Json.encodeToString(
+                                JSONBooleanAnswer(
+                                    true,
+                                    uLanguage.getString("orderWasCreated")
+                                )
+                            )
+                        )
+                    } catch (e: notAllowedOrder) {
+                        response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, e.toString())))
+                    } catch (e: java.lang.NumberFormatException) {
+                        response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, "WrongNumber")))
+                    }
+                }
+ */

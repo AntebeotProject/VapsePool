@@ -17,6 +17,7 @@ import org.antibiotic.pool.main.PoolServer.Settings
 import org.antibiotic.pool.main.PoolServer.deleteSquares
 import org.antibiotic.pool.main.WebSite.Handlers.*
 import org.antibiotic.pool.main.i18n.i18n
+import org.antibiotic.pool.main.telegabot
 import org.eclipse.jetty.server.Connector
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
@@ -250,6 +251,14 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                             // if local transaction
                             DB.createNewNotification(oAddrInDBOwner, "input local $coinname +$cMoney")
                             DB.addToBalance(oAddrInDBOwner, cMoney.toBigDecimal(), coinname)
+                                q@if(Regex("TELEGRAM USER \\d+").matches(oAddrInDBOwner))
+                                {
+                                    val s = oAddrInDBOwner.split(" ")
+                                    val uid = s[2].toLongOrNull()?: 0L
+                                    if (uid != 0L) {
+                                        telegabot.sendToUid(uid, String.format("input local $coinname +$cMoney"))
+                                    }
+                                }
 
                             DB.createNewNotification(acc, "output local $coinname -$cMoney")
                             DB.addToBalance(acc, -cMoney.toBigDecimal(), coinname)

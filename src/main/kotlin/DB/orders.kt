@@ -16,11 +16,12 @@ data class toSellStruct(val name: String, val price: String, val lmin: String, v
 {
     init
     {
+        // println("init toSellStruct with $name $price $lmin $lmax $isCrypto")
         if (isCrypto && !CryptoCoins.coins.contains(name))
         {
             throw notAllowedOrder("cryptocurrency is not allowed")
         }
-        if (price.toBigDecimal() <= BigDecimal.ZERO)
+        if (BigDecimal(price) <= BigDecimal.ZERO)
         {
             throw notAllowedOrder("not correct coin price")
         }

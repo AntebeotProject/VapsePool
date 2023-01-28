@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters
 import kotlinx.serialization.Serializable
 import org.antibiotic.pool.main.WebSite.JettyServer
 import org.antibiotic.pool.main.i18n.i18n
+import org.antibiotic.pool.main.telegabot
 import org.bson.types.ObjectId
 import org.litote.kmongo.eq
 import org.litote.kmongo.getCollection
@@ -39,15 +40,22 @@ data class trade(val buyer: String, val seller: String, val toSell: toSellStruct
                     DB.remOrder(ord.key)
                     throw notAllowedOrder(uLanguage.getString("sellerNotHavenEvenBalance"))
                 }
+                //
+                   // let for_one_count_sell = (ord.whatSell.price / ord.whatSell.lmin) * ord.whatSell.price
+                   // let for_one_count_buy = (ord.whatBuy.price / ord.whatBuy.lmin) * ord.whatBuy.price
+                   val forOneCountSell = (ord.whatSell.price.toBigDecimal() / ord.whatSell.lmin.toBigDecimal() ) * ord.whatSell.price.toBigDecimal()
+                   val forOneCountBuy = (ord.whatBuy.price.toBigDecimal()  / ord.whatBuy.lmin.toBigDecimal() ) * ord.whatBuy.price.toBigDecimal()
+                //
                 val cInDecimal = count.toBigDecimal()
                 val ownBalanceInDecimal = ownBalance.balance.toBigDecimal()
                 // checks for seller
-                val ownerBalanceLessThanCountToBuy = ownBalanceInDecimal < cInDecimal
-                val countMoreThanLimit = cInDecimal > ord.whatSell.lmax.toBigDecimal()
-                val countLessThanMinLimit = cInDecimal < ord.whatSell.lmin.toBigDecimal()
-                println(ownerBalanceLessThanCountToBuy)
-                println(countMoreThanLimit)
-                println(countLessThanMinLimit)
+                val ownerBalanceLessThanCountToBuy = ownBalanceInDecimal < forOneCountSell
+                val countMoreThanLimit = (forOneCountSell * cInDecimal) > ord.whatSell.lmax.toBigDecimal()
+                val countLessThanMinLimit = (forOneCountSell * cInDecimal) < ord.whatSell.lmin.toBigDecimal()
+               // println(ownerBalanceLessThanCountToBuy)
+               // println(countMoreThanLimit)
+               // println(countLessThanMinLimit)
+               // println("cInDecimal: ${(forOneCountSell * cInDecimal)}, ${ord.whatSell.lmin}")
                 if (ownerBalanceLessThanCountToBuy || countMoreThanLimit || countLessThanMinLimit) throw  notAllowedOrder(uLanguage.getString("countMoreThanLimit"))
                 // checks for buyer
                 if (whoBuyBalance == null) throw notAllowedOrder(uLanguage.getString("uDontHaveBalance"))
@@ -84,11 +92,13 @@ data class trade(val buyer: String, val seller: String, val toSell: toSellStruct
             ord.whatBuy.lmax = (ord.whatBuy.lmax.toBigDecimal() - countForBuy).toString()
             ord.whatSell.lmax = (ord.whatSell.lmax.toBigDecimal() - countForSell).toString()
             order.remOrder(ord.key)
-            if (ord.whatBuy.lmax.toBigDecimal() > BigDecimal.ZERO && ord.whatSell.lmax.toBigDecimal() > BigDecimal.ZERO)
-            {
-                order.addOrder(ord.owner, ord.whatSell, ord.whatBuy, ord.orderMSG, ord.isCoin2CoinTrade, ord.isFiat2CoinTrade, ord.ownerIsBuyer)
-            }
+            // if (ord.whatBuy.lmax.toBigDecimal() > BigDecimal.ZERO && ord.whatSell.lmax.toBigDecimal() > BigDecimal.ZERO)
+            // {
+            //    order.addOrder(ord.owner, ord.whatSell, ord.whatBuy, ord.orderMSG, ord.isCoin2CoinTrade, ord.isFiat2CoinTrade, ord.ownerIsBuyer)
+            // }
         }
+        const val comissionPercent = 0.01
+        const val NAME_OF_SERVER_BALANCE = "!_ SERVER BALANCE _!"
         private fun doCoin2CoinTrade(whoBuy: String, countForSell: BigDecimal, countForBuy: BigDecimal, coinToSell: String, coinToBuy: String, ord: order, uLanguage: i18n): String
         {
             println("Теперь баланс $whoBuy должен понизиться на $countForSell для монеты $coinToBuy")
@@ -96,6 +106,8 @@ data class trade(val buyer: String, val seller: String, val toSell: toSellStruct
 
             println("Теперь баланс ${ord.owner} должен повыситься на $countForSell для монеты $coinToBuy")
             println("Теперь баланс $whoBuy должен повыситься на $countForBuy для монеты $coinToSell")
+
+
             synchronized(DB)
             {
                 //synchronized(CryptoCoins.coins)
@@ -109,6 +121,16 @@ data class trade(val buyer: String, val seller: String, val toSell: toSellStruct
                     ord.owner,
                     String.format(uLanguage.getString("USell"), coinToSell, coinToBuy, ord.whatSell.price, countForSell )
                 )
+
+                q@if(Regex("TELEGRAM USER \\d+").matches(ord.owner))
+                {
+                    val s = ord.owner.split(" ")
+                    val uid = s[2].toLongOrNull()?: 0L
+                    if (uid != 0L) {
+                        telegabot.sendMsg(uid, String.format(uLanguage.getString("USell"), coinToSell, coinToBuy, ord.whatSell.price, countForSell ))
+                    }
+                }
+
                 println("notification was created")
                 userBalance.addToBalance(whoBuy, -countForSell, coinToBuy)
                 userBalance.addToBalance(ord.owner, -countForBuy, coinToSell)
@@ -123,6 +145,14 @@ data class trade(val buyer: String, val seller: String, val toSell: toSellStruct
                 )
                 notification.createNewNotification(ord.owner, String.format(uLanguage.getString("orderIsSucc"), doneTrade.key))
                 changeOrderParameters(ord, countForBuy, countForSell)
+                println("Comission")
+                // Comission
+                println("С учетом комиссии у всех снимает баланс на аккаунт сервера с каждой валюты по ${comissionPercent}% за сделку")
+                userBalance.addToBalance(ord.owner, -(countForSell * comissionPercent.toBigDecimal()), coinToBuy)
+                userBalance.addToBalance(whoBuy,    -(countForBuy * comissionPercent.toBigDecimal()),  coinToSell)
+                userBalance.addToBalance(NAME_OF_SERVER_BALANCE, (countForSell * comissionPercent.toBigDecimal()), coinToSell)
+                userBalance.addToBalance(NAME_OF_SERVER_BALANCE,    (countForBuy * comissionPercent.toBigDecimal()),  coinToBuy)
+                // END Commision
                 //
                 return doneTrade.key
                 //}

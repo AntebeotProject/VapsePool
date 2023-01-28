@@ -32,7 +32,7 @@ if (!userIsSigned())
 {
 	window.location.href = "/"
 }
-let userInfo = GetUserInfo()
+var userInfo = GetUserInfo()
 $("p.Login").text("Login: "+userInfo.Login)
 document.title = "Dashboard of " + userInfo.Login
 for(name in userInfo.Balances) {
@@ -45,7 +45,7 @@ for(name in userInfo.Balances) {
  //var isBlocked = balance["isBlocked"]
  $(".Balances").append("<li><p>" + CoinName + ": " + _balance + "<p>Input address: " + inputAddress + "</p>") 
 }
-let coins = getAllowCoins()
+var coins = getAllowCoins()
 for (idx in coins) // forEach?
 {
 	let coin_name = coins[idx]

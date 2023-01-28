@@ -73,7 +73,7 @@
 <p>exchange:</p>
 <p>(нужна сессия):</p>
 <pre>
-    w parameters - addOrderToSellCoin2Coin, getOrders, getOrderByName, removeMyOrderByID, removeOrderByID, changeActiveOrder, doTrade, addReview, getReviewsByAbout, getReviewsByReviewer, getMyReviews, getMyDoneTrade
+    w parameters - addOrderToSellCoin2Coin, getOrders, getOrderByName, removeMyOrderByID, removeOrderByID, changeActiveOrder, doTrade, addReview, getReviewsByAbout, getReviewsByReviewer, getMyReviews, getMyDoneTrade, getComissionPercent
     examples -   /exchange/?w=doTrade&count=1&id=63cee412d2fda05780b23c33
 		/exchange/?w=changeActiveOrder&id=63cebdd377a1a83abb3f7d9d&s=true
 		/exchange/?w=removeOrderByID&id=63cebdd377a1a83abb3f7d9d
@@ -337,6 +337,11 @@ isBlocked	false
 <p>dashboard:</p>
 <pre>
     Возвращает информацию о состояние пула.
+</pre>
+<p>дополнительные параметры</p>
+<pre>
+К "гетерам" где может быть большой вывод добавлен offset и lim. ?...&offset=22&lim=25 
+Могут вовзращать значения в обратном порядке, не обязательно использовать offset и lim
 </pre>
 <div id="footer"></div>
 <!-- scripts -->
