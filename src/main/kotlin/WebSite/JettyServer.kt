@@ -12,6 +12,7 @@ import org.antibiotic.pool.main.CryptoCurrencies.MoneroRPC
 import org.antibiotic.pool.main.DB.*
 import org.antibiotic.pool.main.PoolServer.RPC
 import org.antibiotic.pool.main.PoolServer.Settings
+import org.antibiotic.pool.main.PoolServer.debugEnabled
 import org.antibiotic.pool.main.PoolServer.deleteSquares
 import org.antibiotic.pool.main.WebSite.Handlers.*
 import org.antibiotic.pool.main.i18n.i18n
@@ -42,6 +43,9 @@ const val defCipherInstance = "AES/CBC/PKCS5Padding"
 const val defaultPathOfHTTPFiles = "HTTPServer"
 
 const val defRPCTXFee = 0.01 // I think is ok. for now.
+const val debufEnbaled = false
+fun printIfDebug(w: String) = if (debugEnabled) println("[DEBUG JETTY] $w") else {}
+
 @Serializable
 data class JSONBooleanAnswer(val result: Boolean, val reason: String? = null)
 
@@ -224,7 +228,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                     if (isValidAddress(oAdr=oAdr, coinname = coinname) == false) {
                         return getJSONAnswer(false, "$oAdr Is not valid address for $coinname ")
                     }
-                    println("now synchronized")
+                    printIfDebug("now synchronized")
                     var txMonero: JsonElement? = null
                     synchronized(CryptoCoins.coins[coinname]!!) {
                         // do User not blocked. output is enabled. coinname is enabled?
@@ -234,9 +238,10 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                         if (RPC.lockOutput) return getJSONAnswer(false, "Some user do output for now. wait a while")
                         if (CryptoCoins.coins.get(coinname) == null) return getJSONAnswer(false, "The coinname is disabled for now")
                         // get TX Fee or set.
-                        println("txFee")
+                        printIfDebug("txFee")
                         val (txFee, txMonero_) = getTXFee(coinname, oAdr, cMoney)
                         txMonero = txMonero_
+                        printIfDebug("txmonero now is $txMonero; $cMoney")
                         // Do user have enough money?
                         val sendMoneyCount = cMoney.toBigDecimal()
                         val userBalance = UserBalanceOfCoin?.balance?.toBigDecimal() ?: 0.0.toBigDecimal()
@@ -266,28 +271,33 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                             DB.addToBalance(acc, -cMoney.toBigDecimal(), coinname)
                             Pair(true, "local $cMoney without fee was send on address $oAdr")
                         } else {
+                            printIfDebug("else")
                             if (txMonero != null)
                             {
-                                println("txMonero not equal null")
+                                printIfDebug("$txMonero")
+                                printIfDebug("txMonero not equal null")
                                 val monero = CryptoCoins.coins[coinname]!! as MoneroRPC
                                 // println("send tx_metadata from $txMonero")
                                 val tx_metadata = txMonero!!.jsonObject.toMap()["result"]!!.jsonObject.toMap()["tx_metadata"].toString().deleteSquares()
-                                println(tx_metadata)
+                                printIfDebug(tx_metadata)
                                 val ret = monero.relay_tx(tx_metadata)
                                 if (ret?.jsonObject?.toMap()?.get("error") != null)
                                 {
                                     val message = ret!!.jsonObject!!.toMap()!!.get("error")!!.jsonObject!!.toMap()!!.get("message")!!
-                                    println("ret internal error")
+                                    printIfDebug("ret internal error")
                                     Pair(false, "internal error: $message")
                                 }else {
-                                    val atomic_amount = (monero.toAtomic(cMoney.toBigDecimal()).toBigDecimal() + txFee)
-                                    val not_atomic_value = monero.fromAtomic(atomic_amount)
+                                    val txAmount_Atomic = monero.toAtomic(cMoney.toBigDecimal())
+                                    val txAmount_fee_Atomic = monero.toAtomic(txFee)
+                                    val atomic_amount = (txAmount_Atomic + txAmount_fee_Atomic)
+                                    //
+                                    val not_atomic_value = monero.fromAtomic(atomic_amount.toBigDecimal())
+                                    printIfDebug("add to balance $acc; -$atomic_amount , -$not_atomic_value")
                                     DB.addToBalance(acc, -not_atomic_value, coinname)
-                                    Pair(true, "${monero.fromAtomic(atomic_amount)} with fee was send on address $oAdr; $ret")
+                                    Pair(true, "${not_atomic_value} with fee was send on address $oAdr; $ret")
                                 }
-                            }
-                            else {
-                                println("tx monero is equal null")
+                            } else {
+                                printIfDebug("tx monero is equal null")
                                 // if not local transaction
                                 CryptoCoins.coins[coinname]!!.sendMoney(oAdr, (cMoney.toBigDecimal()), "$acc from pool")
                                 DB.addToBalance(acc, -(cMoney.toBigDecimal() + txFee), coinname)
@@ -317,9 +327,9 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                     val adr = oAdr!!
                     val rpc = CryptoCoins.coins[coinname]!! as MoneroRPC
                     val tx = rpc.transfer(adr, cMoney!!.toBigDecimal(), do_not_relay = true)
-                    println(tx)
-                    val fee = tx.jsonObject.toMap()["result"]?.jsonObject?.toMap()?.get("fee")!!.toString().toBigDecimal()
-                    println("fee ${fee}") // can be wrong? maybe better tx_relay
+                    printIfDebug(tx.toString())
+                    val fee = rpc.fromAtomic( tx.jsonObject.toMap()["result"]?.jsonObject?.toMap()?.get("fee")!!.toString().toBigDecimal() )
+                    printIfDebug("fee ${fee}") // can be wrong? maybe better tx_relay
                     return Pair(fee, tx)
                 }
                 else {
@@ -376,7 +386,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
 
             val _session = request?.getParameter("session")
             var session_raw = ""
-            println("Username session like to got now check")
+            printIfDebug("Username session like to got now check")
             if (UsernameSession == null && _session == null) {
                 response!!.setStatus(401);
                 return null
@@ -400,8 +410,8 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
             val mRPC = rpc as MoneroRPC
             mRPC.get_accounts()?.shuffled()?.forEach()
             {
-                //println(it)
-                //println(it.base_address)
+                //printIfDebug(it)
+                //printIfDebug(it.base_address)
                 if (!DB.isUsedAddress(it.base_address)) {
                     return it.base_address
                 }
@@ -427,7 +437,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                     if (adr == null) return genNewAddrForUser(Login, coinname, search_unused= false)
                     return adr
                 } else if (rpc.getisMonero()) {
-                    //println("get RPC")
+                    //printIfDebug("get RPC")
                     val mRpc = rpc as MoneroRPC
                     val adr = foundUnusedAddress(rpc)
                     if (adr == null) return genNewAddrForUser(Login, coinname, search_unused= false)

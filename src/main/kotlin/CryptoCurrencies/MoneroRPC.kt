@@ -61,8 +61,9 @@ class MoneroRPC : JSONRPC.worker {
     {
         val t = getInfoAboutAddress(adr)
         println("found address $t")
-        return this.doCall("get_transfers", buildJsonObject{put("in",income);put("account_index", t!!.account_index)})?.jsonObject?.toMap()
+        val ret = this.doCall("get_transfers", buildJsonObject{put("in",income);put("account_index", t!!.account_index)})?.jsonObject?.toMap()
             ?.get("result")
+        return ret
     }
     fun get_balance(idx: Int) = this.doCall("get_balance", buildJsonObject { put("account_index ", JsonPrimitive(idx) ) })
     override fun createnewaddress( ) = this.doCall("create_account")

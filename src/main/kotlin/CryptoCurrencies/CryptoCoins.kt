@@ -3,10 +3,13 @@ package org.antibiotic.pool.main.CryptoCurrencies
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import org.antibiotic.pool.main.DB.DB
+import org.antibiotic.pool.main.DB.defUserLanguage
 import org.antibiotic.pool.main.DB.tx
+import org.antibiotic.pool.main.DB.userLanguage
 import org.antibiotic.pool.main.JSONRPC
 import org.antibiotic.pool.main.PoolServer.*
 import org.antibiotic.pool.main.WebSite.JettyServer
+import org.antibiotic.pool.main.i18n.i18n
 import org.antibiotic.pool.main.telegabot
 import java.io.File
 import java.math.BigDecimal
@@ -175,39 +178,73 @@ class CryptoCoins {
                                 val rpc = c.value as MoneroRPC
                                 // println(rpc.refresh())
                                 // println(rpc.getbalance())
-                                val transfers = rpc.get_transfers(balance.inputAddress)
-                                if (transfers != transfers?.jsonObject?.toMap()?.get("in"))
-                                {
-                                    try {
-                                        for (transfer in transfers!!.jsonObject!!.toMap()!!.get("in")!!.jsonArray) {
-                                            val obj = transfer.jsonObject.toMap()
-                                            val adr = obj["address"]
-                                            val amount = rpc.fromAtomic(obj["amount"].toString().toBigDecimal())
-                                            val amounts = obj["amounts"]!!.jsonArray
-                                            val confirmations = obj["confirmations"].toString().toInt()
-                                            val txid = obj["txid"].toString()
-                                            // println("$obj")
-                                            // println("$adr")
-                                            // println("$amount")
-                                            // println("$confirmations")
-                                            // println("$txid")
-                                            val _TX = DB.getTX(txid)
-                                            if (amount > BigDecimal.ZERO && confirmations > 0 && _TX != null) {
-                                                confirmTX(txid, balance.owner, balance.CoinName, amount)
-                                            } else if (amount > BigDecimal.ZERO) {
-                                                wDebug("Add monero tx $txid ${balance.owner}, ${coinname}")
-                                                addTX(balance.owner, coinname, txid)
+                                try {
+                                    val transfers = rpc.get_transfers(balance.inputAddress)
+                                    if (transfers == null) {
+                                        throw  NullPointerException()
+                                    } // some times can be broken
+                                    if (transfers != transfers?.jsonObject?.toMap()?.get("in"))
+                                    {
+                                        try {
+                                            for (transfer in transfers!!.jsonObject!!.toMap()!!.get("in")!!.jsonArray) {
+                                                val obj = transfer.jsonObject.toMap()
+                                                val adr = obj["address"]
+                                                val amount = rpc.fromAtomic(obj["amount"].toString().toBigDecimal())
+                                                val amounts = obj["amounts"]!!.jsonArray
+                                                val confirmations = obj["confirmations"].toString().toInt()
+                                                val txid = obj["txid"].toString()
+                                                // println("$obj")
+                                                // println("$adr")
+                                                // println("$amount")
+                                                // println("$confirmations")
+                                                // println("$txid")
+                                                val _TX = DB.getTX(txid)
+                                                if (amount > BigDecimal.ZERO && confirmations > 0 && _TX != null) {
+                                                    confirmTX(txid, balance.owner, balance.CoinName, amount)
+                                                } else if (amount > BigDecimal.ZERO) {
+                                                    wDebug("Add monero tx $txid ${balance.owner}, ${coinname}")
+                                                    addTX(balance.owner, coinname, txid)
+                                                }
                                             }
-                                        }
-                                    }catch(_:NullPointerException){}
-                                }
-                                else
+                                        }catch(_:NullPointerException){}
+                                    }
+                                    else
+                                    {
+                                        System.err.println(balance.inputAddress + " - null transfers. monero")
+                                    }
+                                    // println(rpc.get_balance(0))
+                                    // println(rpc.get_accounts())
+                                    // println(rpc.createnewaddress())
+                                }catch (_: NullPointerException)
                                 {
-                                    System.err.println(balance.inputAddress + " - null transfers. monero")
-                                }
-                               // println(rpc.get_balance(0))
-                               // println(rpc.get_accounts())
-                               // println(rpc.createnewaddress())
+                                    println("$balance")
+                                    val uLanguage = i18n(
+                                        locale = JettyServer.Users.language.geti18nByLocale(
+                                            userLanguage.getForUser(balance.owner)?.language ?: defUserLanguage
+                                        )
+                                    )
+                                    val res = JettyServer.Users.money.genAdr(
+                                        coin = balance.CoinName,
+                                        uLanguage = uLanguage,
+                                        owner = balance.owner
+                                    )
+                                    q@ if (Regex("TELEGRAM USER \\d+").matches(balance.owner)) {
+                                        val s = balance.owner.split(" ")
+                                        val uid = s[2].toLongOrNull() ?: 0L
+                                        if (uid != 0L) {
+                                            telegabot.sendToUid(
+                                                uid,
+                                                String.format(uLanguage.getString("moneroAddressWasChanged"), res)
+                                            )
+                                        }
+                                    }
+                                    DB.createNewNotification(
+                                        balance.owner,
+                                        String.format(uLanguage.getString("moneroAddressWasChanged"), res)
+                                    )
+                                    continue
+
+                                }// catch
                             } else { // if is not E wallet RPC (bitcoin)
                                 val rpc = c.value as RPC
                                 val data = rpc.listreceivedbyaddress()

@@ -43,15 +43,16 @@ class RESTHandler : AbstractHandler() {
             "output" -> {
                 synchronized(DB) {
                     response!!.setContentType("application/json; charset=UTF-8");
-                    val acc = request!!.getParameter("acc")
-                    val pass = request!!.getParameter("pass")
-                    val oAdr = request!!.getParameter("oAdr")
-                    val cMoney = request!!.getParameter("cMoney")
-                    val coinname = request!!.getParameter("coinname") ?: "gostcoin"
-                    val answ = Captcha.checkCaptcha("captchaText", baseRequest, request, response, delCaptchaAfter = true)
-                    if (answ == false) {
-                        return JettyServer.sendJSONAnswer(false, uLanguage.getString("notCorrectCaptcha"), response)
-                    }
+                    val acc = request!!.getParameter("acc").trim()
+                    val pass = request!!.getParameter("pass").trim()
+                    val oAdr = request!!.getParameter("oAdr").trim()
+                    val cMoney = request!!.getParameter("cMoney").trim()
+                    val coinname = (request!!.getParameter("coinname") ?: "gostcoin").trim()
+                    // val answ = Captcha.checkCaptcha("captchaText", baseRequest, request, response, delCaptchaAfter = true)
+                    // if (answ == false) {
+                     //   return JettyServer.sendJSONAnswer(false, uLanguage.getString("notCorrectCaptcha"), response)
+                    // }
+                    // TODO: ! ENABLE !
                     if (acc == null || pass == null) {
                         return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("uWillAuthEverytime"))))
                     }
