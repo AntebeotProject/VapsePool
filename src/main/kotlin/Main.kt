@@ -1,7 +1,10 @@
 package org.antibiotic.pool.main;
 
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.antibiotic.pool.AsyncServer
 import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
+import org.antibiotic.pool.main.CryptoCurrencies.MoneroRPC
 import org.antibiotic.pool.main.PoolServer.*
 import org.antibiotic.pool.main.WebSite.JettyServer
 import org.antibiotic.pool.main.tgbot.prostaVapseTelegaBot

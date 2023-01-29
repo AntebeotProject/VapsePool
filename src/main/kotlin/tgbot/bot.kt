@@ -519,8 +519,19 @@ class prostaVapseTelegaBot {
                             {
                                 val sp = userTemporaryData[uidForDB]!!.split(";")
                                 mBot!!.execute(SendMessage(msg.chat().id(), String.format(uLanguage.getString("MoneySends"),  sp[0], sp[1], sp[2])))
-                                val resp = JettyServer.Users.cryptocoins.sendMoney(acc = uidForDB, oAdr = sp[1].trimIndent(), coinname = sp[0].trimIndent(), cMoney = sp[2].trimIndent())
-                                mBot!!.execute(SendMessage(msg.chat().id(), resp))
+                                try {
+                                    val resp = JettyServer.Users.cryptocoins.sendMoney(
+                                        acc = uidForDB,
+                                        oAdr = sp[1].trimIndent(),
+                                        coinname = sp[0].trimIndent(),
+                                        cMoney = sp[2].trimIndent()
+                                    )
+                                    mBot!!.execute(SendMessage(msg.chat().id(), resp))
+                                }catch(e: Exception)
+                                {
+                                    mBot!!.execute(SendMessage(msg.chat().id(), e.toString()))
+                                }
+
                                 uLastAction[uidForDB] = ""
                                 userTemporaryData[uidForDB] = ""
                             }

@@ -23,6 +23,11 @@ enum class mode(val mode: String) {
         override fun init(user: String, pass: String, txFee: Double, host: String, port: Int): JSONRPC.worker {
             return RPC(host, user, pass, txFee)
         }
+    },
+    monero("monero") {
+        override fun init(user: String, pass: String, txFee: Double, host: String, port: Int): JSONRPC.worker {
+            return MoneroRPC(port, user, pass)
+        }
     };
     abstract fun init(user: String, pass: String, txFee: Double = 0.01, host: String = "http://127.0.0.1", port: Int = 0): JSONRPC.worker
     companion object {
@@ -62,6 +67,12 @@ class CryptoCoins {
                             coins.put(f.name.split(".")[0], rpc)
                         }
                         "electrum" -> {
+                            val cPort = tPropetries.getProperty("port").toInt()
+                            val rpc = cMode.init(cUser, cPass, port = cPort)
+                            coins.put(f.name.split(".")[0], rpc)
+                        }
+                        "monero" -> {
+                            println("is monero. $cMode")
                             val cPort = tPropetries.getProperty("port").toInt()
                             val rpc = cMode.init(cUser, cPass, port = cPort)
                             coins.put(f.name.split(".")[0], rpc)
@@ -157,7 +168,47 @@ class CryptoCoins {
                                         }
                                     } // todo:
                                 }
-                            } else { // if is not E wallet RPC (not tested yet)
+                            } else if (c.value.getisMonero())
+                            {
+                                println("is monero")
+                                // if is monero
+                                val rpc = c.value as MoneroRPC
+                                // println(rpc.refresh())
+                                // println(rpc.getbalance())
+                                val transfers = rpc.get_transfers(balance.inputAddress)
+                                if (transfers != transfers?.jsonObject?.toMap()?.get("in"))
+                                {
+                                    try {
+                                        for (transfer in transfers!!.jsonObject!!.toMap()!!.get("in")!!.jsonArray) {
+                                            val obj = transfer.jsonObject.toMap()
+                                            val adr = obj["address"]
+                                            val amount = rpc.fromAtomic(obj["amount"].toString().toBigDecimal())
+                                            val amounts = obj["amounts"]!!.jsonArray
+                                            val confirmations = obj["confirmations"].toString().toInt()
+                                            val txid = obj["txid"].toString()
+                                            // println("$obj")
+                                            // println("$adr")
+                                            // println("$amount")
+                                            // println("$confirmations")
+                                            // println("$txid")
+                                            val _TX = DB.getTX(txid)
+                                            if (amount > BigDecimal.ZERO && confirmations > 0 && _TX != null) {
+                                                confirmTX(txid, balance.owner, balance.CoinName, amount)
+                                            } else if (amount > BigDecimal.ZERO) {
+                                                wDebug("Add monero tx $txid ${balance.owner}, ${coinname}")
+                                                addTX(balance.owner, coinname, txid)
+                                            }
+                                        }
+                                    }catch(_:NullPointerException){}
+                                }
+                                else
+                                {
+                                    System.err.println(balance.inputAddress + " - null transfers. monero")
+                                }
+                               // println(rpc.get_balance(0))
+                               // println(rpc.get_accounts())
+                               // println(rpc.createnewaddress())
+                            } else { // if is not E wallet RPC (bitcoin)
                                 val rpc = c.value as RPC
                                 val data = rpc.listreceivedbyaddress()
                                 // println("txs: $txs")

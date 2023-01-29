@@ -45,27 +45,39 @@ object JSONRPC {
 
     @Serializable
     data class _RPCAsk(val method: String, val params: JsonElement = buildJsonArray {  }, val id: Int = 1)
-
+    //enum class type
+    //{
+    //    BITCOIN,
+    //    ELECTRUM,
+    //    MONERO
+    //}
     open class worker {
         private lateinit var sHost: String
         private lateinit var sLogin: String
         private lateinit var sPassword: String
+        //private var mType = type.BITCOIN
         private var isElectrum: Boolean = false
+        private var isMonero: Boolean = false
             //get() {
              //   return isElectrum
            // }
         public fun getisElectrum(): Boolean {
             return isElectrum
         }
+        public fun getisMonero(): Boolean {
+            return isMonero
+        }
         private val logPair: Pair<String, String> by lazy() {
             return@lazy Pair(sLogin, sPassword)
         }
 
-        constructor(host: String, l: String, p: String, isElectrum: Boolean = false) {
+        constructor(host: String, l: String, p: String, isElectrum: Boolean = false, isMonero: Boolean = false) {
             sHost = host
             sLogin = l
             sPassword = p
             this.isElectrum = isElectrum
+            this.isMonero = isMonero
+            if (isMonero && isElectrum) throw Exception("isMonero both isElectrum, and bitcoin mode not allowed")
         }
 
         public fun doCall(method: String, params: JsonElement = buildJsonArray {  }, id: Int = 1): JsonElement {

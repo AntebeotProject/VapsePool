@@ -127,12 +127,6 @@ class TradeHandler : AbstractHandler() {
                 {
                     return response.writer.print(Json.encodeToString(comissionPercent));
                 }
-                "getOrderByName" -> {
-                    // /exchange/?w=getOrderByName&who=testusername
-                    val who = request.getParameter("who")
-                    val orders = order.getOrdersByOwner(who)
-                    return response.writer.print(Json.encodeToString(orders))
-                }
 
                 "removeMyOrderByID" -> {
                     // /exchange/?w=removeMyOrderByID&id=63cebdcb77a1a83abb3f7d9a
@@ -147,22 +141,6 @@ class TradeHandler : AbstractHandler() {
                         )
                     )
                 }
-
-                "removeOrderByID" -> {
-                    // /exchange/?w=removeOrderByID&id=63cebdd377a1a83abb3f7d9d
-                    // TODO: privileged
-                    val id = request.getParameter("id")
-                    order.remOrder(id)
-                    return response.writer.print(
-                        Json.encodeToString(
-                            JSONBooleanAnswer(
-                                true,
-                                uLanguage.getString("accessIsAllowed")
-                            )
-                        )
-                    )
-                }
-
                 "changeActiveOrder" -> {
                     // /exchange/?w=changeActiveOrder&id=63cebdd377a1a83abb3f7d9d&s=true
                     val id = request.getParameter("id")
@@ -199,18 +177,6 @@ class TradeHandler : AbstractHandler() {
                         val about = if (session.owner != trade.seller) trade.seller else trade.buyer
                         review.addReview(reviewer = session.owner, about = about, text = text, tradeID = trade.key, isPositive = isPositive)
                         return JettyServer.sendJSONAnswer(true, uLanguage.getString("reviewAdded"), response)
-                }
-                "getReviewsByAbout" -> {
-                    // /exchange/?w=getReviewsByAbout&who=testusername_
-                    val who = request.getParameter("who")
-                    val (offset,lim) = JettyServer.getOffsetLimit(baseRequest)
-                    return response.writer.print(Json.encodeToString(review.getReviewsByAbout(who, lim = lim, skip = offset)))
-                }
-                "getReviewsByReviewer" -> {
-                    // /exchange/?w=getReviewsByReviewer&who=testusername
-                    val who = request.getParameter("who")
-                    val (offset,lim) = JettyServer.getOffsetLimit(baseRequest)
-                    return response.writer.print(Json.encodeToString(review.getReviewsByReviewer(who, skip = offset, lim = lim)))
                 }
                 "getTraderStats" -> {
                     val who = request.getParameter("who")

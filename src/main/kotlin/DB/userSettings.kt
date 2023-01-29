@@ -8,6 +8,7 @@ import dev.turingcomplete.kotlinonetimepassword.RandomSecretGenerator
 import kotlinx.serialization.Serializable
 import org.antibiotic.pool.main.WebSite.JettyServer
 import org.litote.kmongo.eq
+import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
 import org.litote.kmongo.setValue
 
@@ -91,6 +92,64 @@ data class userLanguage(val owner: String, val language: String = defUserLanguag
 
 fun ByteArray.toB32(): String {
     return BaseEncoding.base32().encode(this)
+}
+
+@Serializable
+data class userPrivilegies(val owner: String, val level: Int) {
+    enum class privilegies(n: Int) {
+        NOT_PRIVILEGED(0),
+        EDIT_ORDERS(1.shl(1)),
+        DELETE_ORDERS(1.shl(2)),
+        SHOW_ORDERS(1.shl(3)),
+        GET_USER_BALANCE(1.shl(4)),
+        EDIT_USER_PRIVILEGIES(1.shl(5)),
+        SHOW_REVIEWS(1.shl(6));
+        open fun isAllowed(l: Int, privilegie: privilegies) = l.and(privilegie.ordinal) == privilegie.ordinal
+    }
+
+    companion object {
+        init {
+            DB.createCollection("userPrivilegies")
+        }
+        private val col = DB.mongoDB.getCollection<userPrivilegies>("userPrivilegies")
+        fun createUserPrivilegeis(o: String)
+        {
+            col.insertOne(userPrivilegies(o, privilegies.NOT_PRIVILEGED.ordinal))
+        }
+        fun changeUserPrivilegies(o: String, lvl: Int)
+        {
+            if (getUserPrivilegies(o) == null) createUserPrivilegeis(o);
+            col.updateOne(userPrivilegies::owner eq o, setValue(userPrivilegies::level, lvl))
+        }
+        fun getUserPrivilegies(o: String): userPrivilegies? {
+            val w = col.findOne { userPrivilegies::owner eq o }
+            return w;
+        }
+        fun addPrivilegie(o: String, pr: privilegies)
+        {
+            val tmp = getUserPrivilegies(o)
+            if (tmp == null) {
+                createUserPrivilegeis(o)
+                return addPrivilegie(o, pr)
+            }
+            val nLvl = pr.ordinal.or(tmp.level)
+            changeUserPrivilegies(o, nLvl)
+        }
+        fun delPrivilegie(o: String, pr: privilegies)
+        {
+            val tmp = getUserPrivilegies(o)
+            if (tmp == null) {
+                createUserPrivilegeis(o)
+                return addPrivilegie(o, pr)
+            }
+            val nLvl = pr.ordinal.xor(tmp.level)
+            changeUserPrivilegies(o, nLvl)
+        }
+        fun checkUserPrivilegies(o: String, pr: privilegies): Boolean{
+            val p = getUserPrivilegies(o)!!
+            return pr.isAllowed(p.level, pr)
+        }
+    }
 }
 
 class notcorrectb32(u:String): Exception( JettyServer.Users.language.getLangByUser(u).getString("notCorrectB32")  )

@@ -9,6 +9,7 @@ import java.math.BigDecimal
 
 /*
     WARNING USE synchronized EVERYWHERE WHERE (possible) IS CHANGES OF THE DB
+    // TODO: change all where 1 element to findOne .
  */
 // https://mongodb.github.io/mongo-java-driver/3.5/javadoc/com/mongodb/client/model/Filters.html
 const val defCoinName = "GST"

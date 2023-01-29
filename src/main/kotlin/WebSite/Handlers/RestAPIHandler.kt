@@ -25,10 +25,6 @@ class RESTHandler : AbstractHandler() {
         response!!.setContentType("text/html; charset=UTF-8");
         val uLanguage = JettyServer.Users.language.getLangWithoutSession(request)
         when(request!!.getParameter("w")) {
-            "getbalance" -> {
-                val ac = request!!.getParameter("ac")
-                response.getWriter().print(DB.getLoginBalance(ac).toString())
-            }
             "getallowcoins" ->
             {
                 response!!.setContentType("application/json; charset=UTF-8");
