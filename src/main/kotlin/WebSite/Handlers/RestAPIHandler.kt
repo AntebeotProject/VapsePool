@@ -10,6 +10,7 @@ import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
 import org.antibiotic.pool.main.CryptoCurrencies.ElectrumRPC
 import org.antibiotic.pool.main.DB.DB
 import org.antibiotic.pool.main.DB.allowedLangauges
+import org.antibiotic.pool.main.DB.userOTP
 import org.antibiotic.pool.main.PoolServer.RPC
 import org.antibiotic.pool.main.PoolServer.deleteSquares
 import org.antibiotic.pool.main.WebSite.Captcha
@@ -48,16 +49,24 @@ class RESTHandler : AbstractHandler() {
                     val oAdr = request!!.getParameter("oAdr").trim()
                     val cMoney = request!!.getParameter("cMoney").trim()
                     val coinname = (request!!.getParameter("coinname") ?: "gostcoin").trim()
-                    // val answ = Captcha.checkCaptcha("captchaText", baseRequest, request, response, delCaptchaAfter = true)
-                    // if (answ == false) {
-                     //   return JettyServer.sendJSONAnswer(false, uLanguage.getString("notCorrectCaptcha"), response)
-                    // }
+                    val answ = Captcha.checkCaptcha("captchaText", baseRequest, request, response, delCaptchaAfter = true)
+                    if (answ == false) {
+                       return JettyServer.sendJSONAnswer(false, uLanguage.getString("notCorrectCaptcha"), response)
+                     }
                     // TODO: ! ENABLE !
                     if (acc == null || pass == null) {
                         return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("uWillAuthEverytime"))))
                     }
                     if (DB.checkUserPassword(acc, pass!!) != true) {
                         return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("notCorrectLoginOrPass"))))
+                    }
+                    if(userOTP.userOTPExistsForUser(acc))
+                    {
+                        val code_otp = request!!.getParameter("code")
+                        if (!code_otp.equals(userOTP.getCodeForUser(acc)))
+                        {
+                            return response.getWriter().print(Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("OTPNotCorrect"))))
+                        }
                     }
                     JettyServer.Users.cryptocoins.sendMoney(acc = acc, oAdr = oAdr, coinname = coinname, cMoney = cMoney, response)
                 }

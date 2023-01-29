@@ -60,7 +60,7 @@ class MoneroRPC : JSONRPC.worker {
     fun get_transfers(adr: String, income: Boolean = true): JsonElement?
     {
         val t = getInfoAboutAddress(adr)
-        println("found address $t")
+        //println("found address $t")
         val ret = this.doCall("get_transfers", buildJsonObject{put("in",income);put("account_index", t!!.account_index)})?.jsonObject?.toMap()
             ?.get("result")
         return ret
@@ -71,21 +71,21 @@ class MoneroRPC : JSONRPC.worker {
     fun toAtomic(c: BigDecimal): BigInteger
     {
         val ret = (c / atomic_unit).toBigInteger()
-        println("toAtomic $c = $ret")
+        //println("toAtomic $c = $ret")
         return ret
     }
     fun fromAtomic(c: BigDecimal): BigDecimal
     {
         val ret = c * atomic_unit
-        println("fromAtomic $c = $ret")
+        //println("fromAtomic $c = $ret")
         return ret
     }
     fun validate_address(adr: String): Boolean
     {
         val map = this.doCall("validate_address", buildJsonObject { put("address", adr) })!!.jsonObject!!.toMap()["result"]!!.jsonObject
-        println(map)
+        //println(map)
         val ret =  map["valid"].toString().toBoolean() || map["integrated"].toString().toBoolean() || map["subaddress"].toString().toBoolean() || map["openalias_address"].toString().toBoolean()
-        println(ret)
+        //println(ret)
         return ret
     }
     fun relay_tx(tx: String): JsonElement {
@@ -96,7 +96,7 @@ class MoneroRPC : JSONRPC.worker {
     fun make_integrated_address( ) = this.doCall("make_integrated_address", params = buildJsonObject {  })
     fun transfer(dest: String, ammount: BigDecimal, do_not_relay: Boolean = false): JsonElement
     {
-        println("our balance: ${this.get_balance(0)}")
+        //println("our balance: ${this.get_balance(0)}")
         val ammount_big = this.toAtomic(ammount)
         val destinations = buildJsonArray { add(buildJsonObject { put("amount", ammount_big); put("address", dest) }) }
         return this.doCall("transfer", buildJsonObject { put("destinations", destinations); put("do_not_relay", do_not_relay); put("get_tx_metadata", do_not_relay) })

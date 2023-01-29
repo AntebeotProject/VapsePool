@@ -13,14 +13,8 @@
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/file-system.probe" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/local.config" beforeDir="false" afterPath="$PROJECT_DIR$/local.config" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/CryptoCurrencies/CryptoCoins.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/CryptoCurrencies/CryptoCoins.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/CryptoCurrencies/MoneroRPC.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/CryptoCurrencies/MoneroRPC.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/WebSite/Handlers/RestAPIHandler.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/WebSite/Handlers/RestAPIHandler.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/WebSite/JettyServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/WebSite/JettyServer.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/localization.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/localization.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/localization_en_US.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/localization_en_US.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/localization_ru_RU.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/localization_ru_RU.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,7 +70,7 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;jdk.selected.JAVA_MODULE&quot;: &quot;17&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/poolserver/birshatruda/VapsePoolLiteSVN&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/poolserver/ForCompilation&quot;,
     &quot;project.structure.last.edited&quot;: &quot;Libraries&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.49885058&quot;,
