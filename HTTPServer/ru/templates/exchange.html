@@ -1,0 +1,156 @@
+
+<noscript>
+Use apireference if u not want use scripts.
+for now.
+</noscript>
+<div>
+<p>Активные ордера:</p>
+<ol id="active_orders"></ol>
+</div>
+<p>Мои ордера</p>
+<ol id="my_orders"></ol>
+</div>
+
+<p>Добавить ордер</p>
+<div id="addOrderBox">
+	<p>Сколько хотим получить взамен: <input type=textarea id="toGet" placeholder="0.0025"/></p>
+	<p>Сколько за это готовы отдать: <input type=textarea id="toGive" placeholder="1"/></p>
+--
+<!--
+	<p>Сколько отдаем (по цене того что отдаем): <input type=textarea id="toSellPrice"placeholder="1000"/></p>
+	<p>По цене (того получаем): <input type=textarea id="toBuyPrice" placeholder="0.001"/></p>	
+	<p>Сколько минимально хотим получить взамен: <input type=textarea id="toBuyLimitMin" placeholder="0.00001"/></p>
+	<p>Сколько максимально хотим отдать взамен: <input type=textarea id="toSellLimitMax" placeholder="1000"/></p>
+	<p>Сколько максимально хотим получить взамен: <input type=textarea id="toBuyLimitMax" placeholder="0.001"/></p>
+-->
+	<p>Сообщение сделки: <input type=textarea id="msg"/></p>
+	<p>Что отдаете взамен: <select type=textarea id="SellNamecoin"></select></p>
+	<p>Что получаете взамен: <select type=textarea id="BuyNamecoin"></select></p>
+	<p><button onclick=addOrder_()>Добавить ордер</button></p>
+	<p>
+<pre>
+Если хотите продать 100 госткойн за 0.0025 биткоина. тогда 1 биткоин к госткойну стоит 0.000025 (0.0025 / 100)
+Тогда минимально хотим отдавать взамен 100 штук и максимально 100 штук. и минимально, допустим получить 0.000025 и максимально 0.0025 биткоина. или и максимально, и минимально 0.0025 
+udp:
+для бота и возможно для всех торгов c2c будет так
+toSellPrice = toSellLimitMin = toSellLimitMax
+toBuyLimitMin = toBuyLimitMax
+toSellPrice = toBuyLimitMax / toSellLimitMax 
+</pre>
+	</p>
+</div>
+<p><button onclick="session_refresh()">updateSession</button></p>
+<div id='alertBox' style="display:none">
+	<p id="alertTitle"></p>
+	<b id="alertMsg"></b>
+	<p><button onclick="hideAlertBox()" id="alertButton">OK</button></p>
+</div>
+<script type="application/javascript">
+	var coins = getAllowCoins()
+	function addOrder_()
+	{
+		let toGive = $("#toGive").val() // 100
+		let toGet  = $("#toGet").val() // 0.0025
+
+		let toSellPrice = toGive
+		let toBuyPrice = toGet //toGet / toGive // 0.000025
+		let toBuyLimitMin = toGet
+		let toSellLimitMax = toGive
+		let toBuyLimitMax = toGet
+
+		let toSellLimitMin = toSellLimitMax
+
+		let msg = $("#msg").val()
+		let SellNamecoin = $("#SellNamecoin").val()
+		let BuyNamecoin = $("#BuyNamecoin").val()
+		console.log("~~~~")
+		console.log(SellNamecoin) // gostcoin
+	        console.log(toSellPrice) // 100
+	        console.log(toSellLimitMin) // 100
+	        console.log(toSellLimitMax) // 100
+	        console.log(BuyNamecoin) // bitcoin
+	        console.log(toBuyPrice) // 0.000025
+	        console.log(toBuyLimitMin) // 0.0025
+	        console.log(toSellLimitMax) // 100
+	        console.log(msg)
+
+		let r = addOrderToSellCoin2Coin(SellNamecoin, toSellPrice, toSellLimitMin, toSellLimitMax, BuyNamecoin, toBuyPrice, toBuyLimitMin, toSellLimitMax, msg)
+		showAlertBox(r.result ? "Succesfully: " : "Error" + ": " +r.reason, 'INFO')
+	}
+	function getOwnOrders()
+	{
+		return getOrderByName(GetUserInfo().Login)
+	}
+	function order_to_info(ord)
+	{
+		let for_one_count_sell = (ord.whatSell.price / ord.whatSell.lmin) * ord.whatSell.price
+		let for_one_count_buy = (ord.whatBuy.price / ord.whatBuy.lmin) * ord.whatBuy.price
+
+		let for_max_count_sell =  (ord.whatSell.lmax / for_one_count_sell) 
+		let for_max_count_buy =  (ord.whatBuy.lmax / for_one_count_buy)
+
+		console.log(`Минимально, за одну продажу (1 count) можно отдать ${for_one_count_sell} ${ord.whatSell.name} и получить взамень минимально ${for_one_count_buy} ${ord.whatBuy.name}`)
+		return ord.owner + " желает продать " + ord.whatSell.name + " за " + ord.whatBuy.name  + " по котировке " + ord.whatSell.price + "к" + ord.whatBuy.price + "<br/>" + 
+			`Минимально, за одну продажу (1 count) можно получить ${for_one_count_sell} ${ord.whatSell.name} и отдать взамен минимально ${for_one_count_buy} ${ord.whatBuy.name}`
+/*
+		var MaxBuy = price_to_one * ord.whatBuy.lmax
+		if (MaxBuy > ord.whatSell.lmax) MaxBuy = ord.whatBuy.lmax
+		var MaxSell = ord.whatSell.price/ord.whatSell.lmax
+		if (MaxSell > ord.whatBuy.lmax) MaxSell = ord.whatSell.lmax
+		return ord.owner + " желает продать " + ord.whatSell.name + " за " + ord.whatBuy.name  + " по котировке " + ord.whatSell.price + "к" + ord.whatBuy.price + "<br/>" +
+		// "По этому ордеру максимум можно купить "+ ord.whatBuy.lmax +" "+ ord.whatSell.name + " и минимум " + ord.whatBuy.lmin + " " + ord.whatSell.name + "<br/>" +
+		// "По этому ордеру максимум можно продать " + ord.whatSell.lmax + " " + ord.whatBuy.name + " и минимум " + ord.whatSell.lmin + " " + ord.whatBuy.name + "<br/>" +
+		"по этой сделке можно получить взамен " +  MaxBuy + " " + ord.whatSell.name + "<br/>"+
+		"по этой сделке можно отдать максимум  " + MaxSell   + " " + ord.whatBuy.name + "<br/>"
+*/
+		
+	}
+	function doTradee(key)
+	{
+		console.log(key)
+		let r = doTrade(key)
+		showAlertBox(r.result ? "Succesfully: " : "Error" + ": " + r.reason, 'INFO')
+	}
+
+	function add2SelectAllowCoins(t)
+	{
+		for (idx in coins) // forEach?
+		{
+			let coin_name = coins[idx]
+			let own_input_addr = getowninput(coin_name)
+			t.append($('<option>', {
+    				value: coin_name,
+    				text: coin_name
+			}));
+		}	
+	}
+	function changeActiveOrder_(key, status)
+	{
+		console.log(`set status ${status} to ${key}`)
+		let r = changeActiveOrder(key, status)
+		showAlertBox(r.result ? "Succesfully: " : "Error" + ": " + r.reason, 'INFO')
+	}
+//////
+// myorders.append('<ul class="order"><li>'+order.owner+'</li><li>'+order.orderMSG+'</li><li>'+order.key+'</li><li>'+ order_to_info(order) +'<li><button onclick="doTrade_("'+order.key+'")">Сделать сделку</button></li></ul>')
+// there ^^ vuln in firefox
+	var aorder = $("#active_orders")
+	var active_orders = getOrders()
+	for(IDX in active_orders)
+	{
+		let order = active_orders[IDX]
+		console.log(order.key)
+		aorder.append(`<ul class="order"><li>${order.owner}</li><li>${order.orderMSG}</li><li>${order.key}</li><li>${order_to_info(order)}<li><button onclick='doTradee("${order.key}")'>Сделать сделку</button></li></ul>`)
+
+	}
+	var myorders = $("#my_orders")
+	var ownOrders = getOwnOrders()
+	for(IDX in ownOrders)
+	{
+		let order = ownOrders[IDX]
+		console.log(order.key)
+		myorders.append(`<ul class="order"><li>${order.owner}</li><li>${order.orderMSG}</li><li>${order.key}</li><li>${order_to_info(order)}<li><button onclick='changeActiveOrder_("${order.key}", true)'>Сделать ордер активным</button><button onclick='changeActiveOrder_("${order.key}", false)'>Сделать ордер неактивным</button><button onclick='remOrder("${order.key}")'>rem order</button></li></ul>`)
+
+	}
+	add2SelectAllowCoins($("#SellNamecoin"))
+	add2SelectAllowCoins($("#BuyNamecoin"))
+</script>
