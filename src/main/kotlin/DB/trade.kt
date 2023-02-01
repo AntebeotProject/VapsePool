@@ -7,7 +7,9 @@ import org.antibiotic.pool.main.i18n.i18n
 import org.antibiotic.pool.main.telegabotEs
 import org.bson.types.ObjectId
 import org.litote.kmongo.eq
+import org.litote.kmongo.find
 import org.litote.kmongo.getCollection
+import org.litote.kmongo.gt
 import java.math.BigDecimal
 
 // trade_stata
@@ -152,12 +154,16 @@ data class trade(val buyer: String, val seller: String, val info: cryptoOrderInf
             }
         }
         fun getDoneTradeByBuyerOrSeller(who: String, skip: Int = 0, lim: Int = 5): List<trade> {
-            val col = DB.mongoDB.getCollection<trade>("doneTrade")
+            val col = DB.mongoDB.getCollection<trade>("cryptodoneTrade")
             return col.find(Filters.or(trade::buyer eq who, trade::seller eq who)).skip(skip).limit(lim).iterator().asSequence().toList() // use it instead big code
         }
         fun getDoneTradeByID(id: String): List<trade> {
-            val col = DB.mongoDB.getCollection<trade>("doneTrade")
+            val col = DB.mongoDB.getCollection<trade>("cryptodoneTrade")
             return col.find(trade::key eq id).iterator().asSequence().toList() // use it instead big code
+        }
+        fun getLastDoneTrades(skip: Int = 0, lim: Int = 5): List<trade> {
+            val col = DB.mongoDB.getCollection<trade>("cryptodoneTrade")
+            return col.find().iterator().asSequence().toList().reversed().subList(skip, skip + lim) // use it instead big code
         }
     }
 }

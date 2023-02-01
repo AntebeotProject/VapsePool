@@ -158,6 +158,11 @@ class TradeHandler : AbstractHandler() {
                     val (offset,lim) = JettyServer.getOffsetLimit(baseRequest)
                     return response.writer.print(Json.encodeToString(trade.getDoneTradeByBuyerOrSeller(session.owner, skip = offset, lim = lim)))
                 }
+                "getLastDoneTrades" ->
+                {
+                    val (offset,lim) = JettyServer.getOffsetLimit(baseRequest)
+                    return response.writer.print(Json.encodeToString(trade.getLastDoneTrades(skip = offset, lim = lim)))
+                }
 
                 else -> TODO("not fully implemented yet ")// Json{encodeDefaults=true}.encodeToString(notifications)
             }
