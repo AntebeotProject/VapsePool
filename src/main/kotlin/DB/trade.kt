@@ -4,7 +4,7 @@ import com.mongodb.client.model.Filters
 import kotlinx.serialization.Serializable
 import org.antibiotic.pool.main.WebSite.JettyServer
 import org.antibiotic.pool.main.i18n.i18n
-import org.antibiotic.pool.main.telegabot
+import org.antibiotic.pool.main.telegabotEs
 import org.bson.types.ObjectId
 import org.litote.kmongo.eq
 import org.litote.kmongo.getCollection
@@ -41,7 +41,7 @@ data class trade(val buyer: String, val seller: String, val info: cryptoOrderInf
                     throw notAllowedOrder(uLanguage.getString("sellerNotHavenEvenBalance"))
                 }
                 //
-                   val cInDecimal = count.toBigDecimal()
+                   val cInDecimal = count.trim().toBigDecimal()
                    val forOneCountSell = cInDecimal * BigDecimal.ONE
                    //ord.info.priceRatio.toBigDecimal() //(ord.whatSell.price.toBigDecimal() / ord.whatSell.lmin.toBigDecimal() ) * ord.whatSell.price.toBigDecimal()
                 //
@@ -106,6 +106,16 @@ data class trade(val buyer: String, val seller: String, val info: cryptoOrderInf
                 //synchronized(CryptoCoins.coins)
                 //{
                 // Not tested yet
+                // println("DB check")
+                if (DB.getLoginBalance(ord.owner)!!.get(coinToSell)!!.balance.toBigDecimal() - countForBuy < BigDecimal.ZERO)
+                {
+                    throw notAllowedOrder("bad balance")
+                }
+                if (DB.getLoginBalance(whoBuy)!!.get(coinToBuy)!!.balance.toBigDecimal() - countForSell < BigDecimal.ZERO)
+                {
+                    throw notAllowedOrder("bad balance")
+                }
+                // println("create notifications")
                 notification.createNewNotification(
                     whoBuy,
                     String.format(uLanguage.getString("UBuy"), coinToSell, coinToBuy, ord.info.priceRatio, countForBuy )
@@ -114,17 +124,7 @@ data class trade(val buyer: String, val seller: String, val info: cryptoOrderInf
                     ord.owner,
                     String.format(uLanguage.getString("USell"), coinToSell, coinToBuy, ord.info.priceRatio, countForSell )
                 )
-
-                q@if(Regex("TELEGRAM USER \\d+").matches(ord.owner))
-                {
-                    val s = ord.owner.split(" ")
-                    val uid = s[2].toLongOrNull()?: 0L
-                    if (uid != 0L) {
-                        telegabot.sendMsg(uid, String.format(uLanguage.getString("USell"), coinToSell, coinToBuy, ord.info.priceRatio, countForSell ))
-                    }
-                }
-
-                println("notification was created")
+                // println("notification was created")
                 userBalance.addToBalance(whoBuy, -countForSell, coinToBuy)
                 userBalance.addToBalance(ord.owner, -countForBuy, coinToSell)
                 userBalance.addToBalance(ord.owner, countForSell, coinToBuy)

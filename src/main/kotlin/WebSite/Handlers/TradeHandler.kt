@@ -118,8 +118,8 @@ class TradeHandler : AbstractHandler() {
                 "doTrade" -> {
                     // /exchange/?w=doTrade&count=1&id=63cee412d2fda05780b23c33
                     val buyer = session.owner
-                    val count = request.getParameter("count")
-                    val id = request.getParameter("id")
+                    val count = request.getParameter("count").trim()
+                    val id = request.getParameter("id").trim()
                     try {
                         val id_ = trade.doTrade(buyer, count, id)
                         response.writer.print(Json.encodeToString(JSONBooleanAnswer(true, String.format(uLanguage.getString("tradeDoneID"), id_))))

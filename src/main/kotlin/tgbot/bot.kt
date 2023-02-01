@@ -43,6 +43,7 @@ internal object prostaVapseTelegaBotSet {
  * readUpdates - проверяет обновления из телеграмма. далее вызывает внутренние приватные методы.
  * пустой конструктор использует данные из local.config
  */
+val limitRegex = Regex("(\\d+(\\.\\d+)?)(\\s+)?\\-(\\s+)?(\\d+(\\.\\d+)?)")
 class prostaVapseTelegaBot {
     private object orders
     {
@@ -50,6 +51,9 @@ class prostaVapseTelegaBot {
         {
             TODO("normal implementation")
         }
+    }
+    object settings {
+        var id: Int = 0;
     }
     private var mBot: TelegramBot? = null
     private var mProp: Properties? = null
@@ -81,7 +85,7 @@ class prostaVapseTelegaBot {
          * @throws IOException
          */
         private get() {
-            val f = File(prostaVapseTelegaBotSet.defConfigPath)
+            val f = File(prostaVapseTelegaBotSet.defConfigPath + "${settings.id}")
             if (!f.exists()) {
                 f.createNewFile()
             }
@@ -94,7 +98,7 @@ class prostaVapseTelegaBot {
         botToken = try {
             // InputStream in = getClass().getResourceAsStream(prostaVapseTelegaBotSet.defConfigPath);
             mProp!!.load(FileInputStream(filePropetry))
-            mProp!!.getProperty("BOT_TOKEN")
+            mProp!!.getProperty("BOT_TOKEN").also {settings.id++;}
         } catch (e: IOException) {
             ""
         }
@@ -231,7 +235,18 @@ class prostaVapseTelegaBot {
     }
     fun showActiveOrders(update:Update, uid: Long)
     {
-        TODO("nomarl implementation")
+        val uLanguage = getLangForUid(uid)
+        val activ_orders = order.getOrdersByActivity(true)
+        val bS = StringBuilder()
+        for(ord in activ_orders)
+        {
+            val l = String.format(
+                uLanguage.getString("tgbot_orderinfo_active"),
+                ord.owner, ord.info.toGiveName, ord.info.toGetName, ord.info.toGiveName, ord.info.priceRatio, ord.info.minVolume, ord.info.maxVolume, ord.key
+            )
+            bS.append("$l\n")
+        }
+        sendMsg(uid, bS.toString())
     }
     fun sendMsg(uid: Long, msg: String)
     {
@@ -242,7 +257,21 @@ class prostaVapseTelegaBot {
     }
     fun showMyOrders(update:Update, uid: Long)
     {
-        TODO("nomarl implementation")
+        val uLanguage = getLangForUid(uid)
+        val ownorders = order.getOrdersByOwner(userInfoToDBName(uid))
+        val bS = StringBuilder()
+        for(ord in ownorders)
+        {
+            println(uLanguage.getString("tgbot_orderinfo_self"))
+            val l = String.format(
+                uLanguage.getString("tgbot_orderinfo_self"),
+                ord.owner, ord.info.toGiveName, ord.info.toGetName, ord.info.toGiveName, ord.info.priceRatio, ord.info.minVolume, ord.info.maxVolume,
+                ord.key, ord.key, ord.key, ord.isActive, ord.key
+            )// %8s https://stackoverflow.com/questions/44192287/printf-an-argument-twice. but for now is ok.
+            bS.append("$l\n")
+        }
+        sendMsg(uid, bS.toString())
+        // mBot!!.execute(SendMessage(uid,bS.toString()))
     }
     // Основной функционал по кнопкам
     val u_on = fun(uLanguage:i18n): MutableMap<String, KFunction2<Update, Long, Unit>> {
@@ -285,18 +314,27 @@ class prostaVapseTelegaBot {
     }
     fun doTrade(uid: Long, update: Update) {
         val (uLanguage, uidForDB) = getLangAndUIDForDb(uid)
-        val key = update.message().text().split(" ")[1]
+        val s = update.message().text().split(" ")
+        val key = s[1]
+        val count = s.getOrNull(2) ?: "1"
         try {
-            val id_ = trade.doTrade(uidForDB, "1", key)
+            val id_ = trade.doTrade(uidForDB, count, key)
             sendMsg(uid, String.format(uLanguage.getString("tradeDoneID"), id_))
         } catch (e: notAllowedOrder) {
             sendMsg(uid, e.toString())
         }
     }
+    fun remOrder(uid: Long, update: Update)
+    {
+        val key = update.message().text().split(" ")[1]
+        val uidForDB = userInfoToDBName(uid)
+        order.remOrderByIDAndOwner(uidForDB, key)
+    }
     val special_commands = mutableListOf(
         "activeOrder" to ::activeOrder,
         "deactiveOrder" to ::deactiveOrder,
         "showOrders" to ::showOrders,
+        "remOrder" to ::remOrder,
         "doTrade" to ::doTrade
     )
     val uLastAction = mutableMapOf<String, String>()
@@ -336,7 +374,7 @@ class prostaVapseTelegaBot {
             }else when (msg.text())
             {
                 uLanguage.getString("tgbot_website") -> {
-                    val apiref = "http://80.64.173.196:8081/ru/ApiReference.html"
+                    val apiref = uLanguage.getString("ourWebsite") //"http://80.64.173.196:8081/ru/ApiReference.html"
                     val request = mBot!!.execute(SendMessage(msg.chat().id(), "$apiref"))
                 }
                 "/start" -> {
@@ -381,14 +419,20 @@ class prostaVapseTelegaBot {
                         }
                         "tgbot_exchange2" ->
                         { // сколько отдаете в колве
-                            if ( !Regex("\\d+(.\\d+)?").matches(msg.text()) )
+                            if ( !limitRegex.matches(msg.text()) )
                             {
                                 mBot!!.execute(SendMessage(msg.chat().id(), String.format(uLanguage.getString("NotCorrectAmmount"))))
                                 return
                             }
+                            val bal = UserCoinBalance.getLoginBalance(uidForDB)!!.get(userTemporaryData[uidForDB]!!.split(";")[0])!!.balance.toBigDecimal()
+                            if (bal < msg.text().split("-")[1].trim().toBigDecimal())
+                            {
+                                mBot!!.execute(SendMessage(msg.chat().id(), String.format(uLanguage.getString("NotEnoughBalance"))))
+                                return
+                            }
                             uLastAction[uidForDB] = "tgbot_exchange3"
                             userTemporaryData[uidForDB] = userTemporaryData[uidForDB] + ";" + msg.text()
-                            mBot!!.execute(SendMessage(uid, uLanguage.getString("SelectCountInstead")))
+                            mBot!!.execute(SendMessage(uid, uLanguage.getString("selectPriceInstead")))
                         }
                         "tgbot_exchange3" ->
                         { // сколько хотите получить
@@ -400,7 +444,7 @@ class prostaVapseTelegaBot {
                             uLastAction[uidForDB] = "tgbot_exchange4"
                             userTemporaryData[uidForDB] = userTemporaryData[uidForDB] + ";" + msg.text()
                             val s = userTemporaryData[uidForDB]!!.split(';')
-                            mBot!!.execute(SendMessage(uid, String.format(uLanguage.getString("ConfirmOrder"), s[0], s[1], s[2], s[3]) ))
+                            mBot!!.execute(SendMessage(uid, String.format(uLanguage.getString("ConfirmOrder"), s[0], s[1], s[2], s[3], s[0], s[1]) ))
                         }
                         "tgbot_exchange4" ->
                         {
@@ -409,15 +453,18 @@ class prostaVapseTelegaBot {
                             println(s)
                             val SellNamecoin = s[0]
                             val BuyNamecoin = s[1]
-                            val toGive = s[2]
-                            val toGet = s[3]
-                            println("create res")
-                            //val res = orders.createOrder(
-                            //    toGive, toGet, SellNamecoin, BuyNamecoin, uidForDB, uLanguage
-                            //)
-                            TODO("nomarl implementation")
-                            println("order was created")
-                            //mBot!!.execute(SendMessage(uid, String.format(uLanguage.getString("ResultCreateOrder"), res) ))
+                            val limits = s[2].split("-")
+                            val price = s[3]
+                            // order.addOrder(ord.owner, ord.info, ord.orderMSG, ord.isCoin2CoinTrade, ord.isFiat2CoinTrade, ord.ownerIsBuyer)
+                            val info = cryptoOrderInfo(toGiveName = SellNamecoin, toGetName = BuyNamecoin, priceRatio = price, minVolume = limits[0], maxVolume = limits[1])
+                            var err = ""
+                            try {
+                                order.addOrder(uidForDB, info = info, isCoin2CoinTrade = true)
+                            } catch(e: Exception)
+                            {
+                                err = e.toString()
+                            }
+                            mBot!!.execute(SendMessage(uid, String.format(uLanguage.getString("ResultCreateOrder"), err) ))
                             sendmainmenu(uid, uidForDB, uLanguage)
                         }
                         // End Exchange
@@ -593,7 +640,10 @@ class prostaVapseTelegaBot {
                                 {
                                     if (msg.text().startsWith("/"+com.first))
                                     {
-                                        com.second(uid, update)
+                                        try {
+                                            com.second(uid, update)
+
+                                        } catch(_: Exception) {}
                                         return
                                     }
                                 }

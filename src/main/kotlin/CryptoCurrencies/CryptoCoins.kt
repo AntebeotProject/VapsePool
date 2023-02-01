@@ -10,7 +10,7 @@ import org.antibiotic.pool.main.JSONRPC
 import org.antibiotic.pool.main.PoolServer.*
 import org.antibiotic.pool.main.WebSite.JettyServer
 import org.antibiotic.pool.main.i18n.i18n
-import org.antibiotic.pool.main.telegabot
+import org.antibiotic.pool.main.telegabotEs
 import java.io.File
 import java.math.BigDecimal
 import java.util.*
@@ -93,14 +93,7 @@ class CryptoCoins {
             synchronized(DB) {
 
                 val uLanguage = JettyServer.Users.language.getLangByUser(owner)
-                q@if(Regex("TELEGRAM USER \\d+").matches(owner))
-                {
-                    val s = owner.split(" ")
-                    val uid = s[2].toLongOrNull()?: 0L
-                    if (uid != 0L) {
-                        telegabot.sendToUid(uid, String.format(uLanguage.getString("newUnconfirmedTX"), hash, cname))
-                    }
-                }
+
                 wDebug("Add it tx ${owner}, ${cname}")
                 DB.addTX(tx(owner, cname, hash))
                 DB.createNewNotification(owner, String.format(uLanguage.getString("newUnconfirmedTX"), hash, cname))
@@ -115,14 +108,7 @@ class CryptoCoins {
                     DB.setTXConfirmed(hash, status = true)
                     wDebug("add balance $owner $bc_value")
                     DB.addToBalance(owner, bc_value, cname)
-                    q@if(Regex("TELEGRAM USER \\d+").matches(owner))
-                    {
-                        val s = owner.split(" ")
-                        val uid = s[2].toLongOrNull()?: 0L
-                        if (uid != 0L) {
-                            telegabot.sendToUid(uid, String.format(uLanguage.getString("balanceChanged"), bc_value, DB.getLoginBalance(owner)?.get(cname)?.balance, cname))
-                        }
-                    }
+
                     DB.createNewNotification(owner, String.format(uLanguage.getString("balanceChanged"), bc_value, DB.getLoginBalance(owner)?.get(cname)?.balance, cname))
                 }
             }

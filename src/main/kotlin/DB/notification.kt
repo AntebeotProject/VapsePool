@@ -6,7 +6,8 @@ import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
 import org.bson.Document
 import org.litote.kmongo.*
 import java.math.BigDecimal
-import org.antibiotic.pool.main.telegabot
+import org.antibiotic.pool.main.telegabotEs
+
 @Serializable
 data class notification(val owner: String, val msg: String, val time: Long) // , @BsonId val key: Id<notification> = newId()
 {
@@ -23,7 +24,7 @@ data class notification(val owner: String, val msg: String, val time: Long) // ,
                     val s = o.split(" ")
                     val uid = s[2].toLongOrNull() ?: 0L
                     if (uid != 0L) {
-                        telegabot.sendToUid(uid, String.format(m))
+                        for(telegabot in telegabotEs) telegabot.sendToUid(uid, String.format(m))
                     }
                 }
                 col.insertOne(notification(o, m, t))

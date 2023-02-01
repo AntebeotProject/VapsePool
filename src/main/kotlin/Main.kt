@@ -15,12 +15,12 @@ import kotlin.concurrent.thread
 // import com.github.jleskovar.*
 
 
-// const val tg_bot_token = "5961057014:AAF4kpngMlC0DCnmJYvvlz0_XkkcK4F0j6c"
-val telegabot = prostaVapseTelegaBot( /*tg_bot_token*/ )
+// const val main_tg_bot_token = "5961057014:AAF4kpngMlC0DCnmJYvvlz0_XkkcK4F0j6c"
+val telegabotEs = arrayOf(prostaVapseTelegaBot(), prostaVapseTelegaBot())
 fun main(args: Array<String>) {
     thread {
         while(true) {
-            telegabot.readUpdatesAndSaveProps()
+            for(telegabot in telegabotEs) telegabot.readUpdatesAndSaveProps()
             Thread.sleep(3000);
         }
     }

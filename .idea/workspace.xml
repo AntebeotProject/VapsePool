@@ -5,35 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9d8d29b0-6bef-4d84-833c-7d9efae7a195" name="Changes" comment="OTP">
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles" afterDir="true" />
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/7.4.2/checksums/checksums.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.4.2/checksums/checksums.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.4.2/executionHistory/executionHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.4.2/executionHistory/executionHistory.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.4.2/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.4.2/executionHistory/executionHistory.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.4.2/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.4.2/fileHashes/fileHashes.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.4.2/fileHashes/fileHashes.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.4.2/fileHashes/fileHashes.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.4.2/fileHashes/resourceHashesCache.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.4.2/fileHashes/resourceHashesCache.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/file-system.probe" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HTTPServer/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/HTTPServer/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HTTPServer/js/functions.js" beforeDir="false" afterPath="$PROJECT_DIR$/HTTPServer/js/functions.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HTTPServer/ru/ApiReference.html" beforeDir="false" afterPath="$PROJECT_DIR$/HTTPServer/ru/ApiReference.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HTTPServer/ru/empty.html" beforeDir="false" afterPath="$PROJECT_DIR$/HTTPServer/ru/empty.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HTTPServer/ru/templates/exchange.html" beforeDir="false" afterPath="$PROJECT_DIR$/HTTPServer/ru/templates/exchange.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ServerAssets/start_coins.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/ServerAssets/start_coins.ps1" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/local.config" beforeDir="false" afterPath="$PROJECT_DIR$/local.config" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/propetries.config" beforeDir="false" afterPath="$PROJECT_DIR$/propetries.config" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/CryptoCurrencies/CryptoCoins.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/CryptoCurrencies/CryptoCoins.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/CryptoCurrencies/MoneroRPC.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/CryptoCurrencies/MoneroRPC.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/DB/notification.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/DB/notification.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/DB/orders.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/DB/orders.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/DB/trade.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/DB/trade.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Main.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/WebSite/Handlers/TradeHandler.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/WebSite/Handlers/TradeHandler.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/WebSite/JettyServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/WebSite/JettyServer.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/tgbot/bot.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/tgbot/bot.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/localization.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/localization.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/localization_en_US.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/localization_en_US.properties" afterDir="false" />
