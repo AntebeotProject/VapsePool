@@ -3,6 +3,13 @@
 Use apireference if u not want use scripts.
 for now.
 </noscript>
+
+<div id="calcuvator">
+<p>Какькулятор цен:</p>
+Цена: <input type=textarea id="price_calc" value="60000" onchange="calcuvatorcalc()"/>
+Кол-во: <input type=textarea id="count_calc" value="1" onchange="calcuvatorcalc()"/>
+<p id="calcuvator_answer">60000</p>
+</div>
 <div>
 <p>Активные ордера:</p>
 <ol id="active_orders"></ol>
@@ -60,6 +67,12 @@ for now.
 	console.log(ord)
 	return `${ord.owner} желает продать ${ord.info.toGiveName} за ${ord.info.toGetName}` +
 	`он продает 1 gostcoin за ${ord.info.priceRatio}. Лимиты ${ord.info.minVolume} - ${ord.info.maxVolume}`		
+	}
+	function calcuvatorcalc()
+	{
+		let p = $("#price_calc").val()
+		let c = $("#count_calc").val()
+		$("#calcuvator_answer").text(`${p}*${c} = `+ p*c)
 	}
 	function doTradee(key)
 	{

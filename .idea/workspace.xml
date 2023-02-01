@@ -12,12 +12,8 @@
       <change beforePath="$PROJECT_DIR$/.gradle/7.4.2/fileHashes/resourceHashesCache.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.4.2/fileHashes/resourceHashesCache.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/local.config" beforeDir="false" afterPath="$PROJECT_DIR$/local.config" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/CryptoCurrencies/CryptoCoins.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/CryptoCurrencies/CryptoCoins.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/DB/notification.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/DB/notification.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/DB/trade.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/DB/trade.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Main.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/WebSite/Handlers/TradeHandler.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/WebSite/Handlers/TradeHandler.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HTTPServer/ru/empty.html" beforeDir="false" afterPath="$PROJECT_DIR$/HTTPServer/ru/empty.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HTTPServer/ru/templates/exchange.html" beforeDir="false" afterPath="$PROJECT_DIR$/HTTPServer/ru/templates/exchange.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/tgbot/bot.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/tgbot/bot.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/localization.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/localization.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/localization_en_US.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/localization_en_US.properties" afterDir="false" />

@@ -242,7 +242,7 @@ class prostaVapseTelegaBot {
         {
             val l = String.format(
                 uLanguage.getString("tgbot_orderinfo_active"),
-                ord.owner, ord.info.toGiveName, ord.info.toGetName, ord.info.toGiveName, ord.info.priceRatio, ord.info.minVolume, ord.info.maxVolume, ord.key
+                ord.owner, ord.info.toGiveName, ord.info.toGetName, ord.info.toGiveName, ord.info.priceRatio, ord.info.minVolume, ord.info.maxVolume, ord.key, ord.key
             )
             bS.append("$l\n")
         }
@@ -262,7 +262,7 @@ class prostaVapseTelegaBot {
         val bS = StringBuilder()
         for(ord in ownorders)
         {
-            println(uLanguage.getString("tgbot_orderinfo_self"))
+            // println(uLanguage.getString("tgbot_orderinfo_self"))
             val l = String.format(
                 uLanguage.getString("tgbot_orderinfo_self"),
                 ord.owner, ord.info.toGiveName, ord.info.toGetName, ord.info.toGiveName, ord.info.priceRatio, ord.info.minVolume, ord.info.maxVolume,
@@ -324,6 +324,23 @@ class prostaVapseTelegaBot {
             sendMsg(uid, e.toString())
         }
     }
+    fun calcOrder(uid: Long, update: Update) {
+        val (uLanguage, uidForDB) = getLangAndUIDForDb(uid)
+        val s = update.message().text().split(" ")
+        val key = s[1]
+        val count = s.getOrNull(2) ?: "1"
+        val o = order.getOrderByID(key)
+        if (o != null)
+        {
+            val c = o.info.priceRatio.toBigDecimal() * count.toBigDecimal()
+            val toGiveName = o.info.toGetName
+            sendMsg(uid, String.format(uLanguage.getString("priceCalc"), c, toGiveName))
+        }
+        else
+        {
+            sendMsg(uid, String.format(uLanguage.getString("orderNotFound")))
+        }
+    }
     fun remOrder(uid: Long, update: Update)
     {
         val key = update.message().text().split(" ")[1]
@@ -335,7 +352,8 @@ class prostaVapseTelegaBot {
         "deactiveOrder" to ::deactiveOrder,
         "showOrders" to ::showOrders,
         "remOrder" to ::remOrder,
-        "doTrade" to ::doTrade
+        "doTrade" to ::doTrade,
+        "calcOrder" to ::calcOrder
     )
     val uLastAction = mutableMapOf<String, String>()
     val uLastCaptchas = mutableMapOf<String, String>()

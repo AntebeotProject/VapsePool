@@ -1,0 +1,38 @@
+Что должно быть в обмене монет на монету?
+Их кол-во выставляемое на ордера
+
+Структура информации ордера:
+toGiveName: String = Название монеты что продаем = gostcoin
+toGetName: Название монеты что покупаем = bitcoin
+Price: String: Отношение gostcoin к bitcoin по цене за которую продается 1 единица gostcoin в bitcoin.
+Например цена 1 gostcoin = 0.0000068 bitcoin
+VolumeStart = 0 (сколько продавец минимально продать за раз. 0 по умолчанию)
+VolumeMax = (сколько продавец готов максимально продать)
+
+~~~
+toGiveName = gostcoin
+toGenName = bitcoin
+Price = 0.0000068
+VolumeStart = 0
+VolumeMax = 500
+key=randomstring
+~~~
+Того человеку показывается от ордера что продается gostcoin за bitcoin по цене 0.0000068 за 1 gostcoin
+он хочет купить теперь 3 gostcoin. у него баланас 0.1 BTC
+count - может быть не только натуральным числом, но и например 0.5. половинкой.
+doTrade?
+count = 3 &
+key = `somerandomstring`
+;
+nPrice = Price.toBigDecimal() * count
+xPrice = 1 * count
+= 0.0000068 * 3 (~0.0000204)
+Проверяется баланс продающего gostcoin, если его баланс меньше уже. то ордер просто удалять c ходу и ошибку об этом в лог.
+Проверяем баланс покупающего gostcoin, проверяем его баланс в toGetName. если он меньше nPrice то выдаем ошибку.
+Проверяем лимиты. Если xPrice >= VolumeStart && xPrice <= VolumeMax делается обмен. в противном случае ошибка.
+БалансПродающегоВGostcoin = БалансПродающегоВGostcoin - xPrice
+БалансПокупающегоВGostcoin = БалансПокупающегоВGostcoin + xPrice
+БалансПокупающегоВBitcoin = БалансПокупающегоВBitcoin - nPrice
+БалансПродающегоВBitcoin = БалансПродающегоВBitcoin + nPrice
+Выдаем ответ в виде key на успешный ордер в БД. в котором хранится структура информации и count.
+а так же кто и кого покупал.
