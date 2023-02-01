@@ -164,33 +164,30 @@ var exchangeData = function (w) {
     });
     return tmp;
     };
-function addOrderToSellCoin2Coin(toSellName, toSellPrice, toSellLimitMin, toSellLimitMax, toBuyName, toBuyPrice, toBuyLimitMin, toBuyLimitMax, msg = "", tIsBuyer = false)
+//function addOrderToSellCoin2Coin(toSellName, toSellPrice, toSellLimitMin, toSellLimitMax, toBuyName, toBuyPrice, toBuyLimitMin, toBuyLimitMax, msg = "", tIsBuyer = false)
+function addOrderToSellCoin2Coin(SellNamecoin, BuyNamecoin, Price, VolumeStart, VolumeMax)
 {
 	console.log("Создаем ордер")
-	console.log(toSellName)
-	console.log(toSellPrice)
-	console.log(toSellLimitMin)
-	console.log(toSellLimitMax)
-	console.log(toBuyName)
-	console.log(toBuyPrice)
-	console.log(toBuyLimitMin)
-	console.log(msg)
+		console.log(VolumeMax) // gostcoin
+	        console.log(VolumeStart) // 100
+	        console.log(Price) // 100
+	        console.log(SellNamecoin) // bitcoin
+	        console.log(BuyNamecoin) // 0.000025
 	return exchangeData ({'w': 'addOrderToSellCoin2Coin',
-		'toSellName': toSellName,
-		'toSellPrice': toSellPrice,
-		'toSellLimitMin': toSellLimitMin,
-		'toSellLimitMax': toSellLimitMax,
-		'toBuyName': toBuyName,
-		'toBuyPrice': toBuyPrice,
-		'toBuyLimitMin': toBuyLimitMin,
-		'toBuyLimitMax': toBuyLimitMax,
-		'tIsBuyer': tIsBuyer,
-		'msg': msg
+		'toGiveName': SellNamecoin,
+		'toGetName': BuyNamecoin,
+		'Price': Price,
+		'VolumeStart': VolumeStart,
+		'VolumeMax': VolumeMax,
 	});
 }
 function getMyDoneTrade()
 {
 	return exchangeData ({'w': 'getMyDoneTrade'})
+}
+function getOwnOrders()
+{
+	return exchangeData ({'w': 'getOwnOrders'})
 }
 function getReviewsByAbout(who)
 {

@@ -42,7 +42,7 @@ class MoneroRPC : JSONRPC.worker {
         if (accounts == null) return  null
         for (account in accounts)
         {
-            println(account)
+            // println(account)
             if (account.base_address.equals(adr)) return account
         }
         return null

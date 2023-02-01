@@ -16,7 +16,7 @@ import org.antibiotic.pool.main.PoolServer.debugEnabled
 import org.antibiotic.pool.main.PoolServer.deleteSquares
 import org.antibiotic.pool.main.WebSite.Handlers.*
 import org.antibiotic.pool.main.i18n.i18n
-import org.antibiotic.pool.main.telegabot
+
 import org.eclipse.jetty.server.Connector
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
@@ -28,6 +28,7 @@ import org.eclipse.jetty.server.handler.gzip.GzipHandler
 import org.eclipse.jetty.util.Callback
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.util.resource.ResourceCollection
+import org.eclipse.jetty.util.ssl.SslContextFactory
 import java.math.BigDecimal
 import java.util.*
 import javax.crypto.Cipher
@@ -177,6 +178,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                         return Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("uHaveNotConfirmedTx")))
                     } else {
                         val nadr = JettyServer.Users.genNewAddrForUser(owner, coin, search_unused = true)
+                        if (nadr == null) return Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("internal_serv_error")))
                         return Json.encodeToString(
                              JSONBooleanAnswer(
                                 true,
@@ -258,14 +260,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                             // if local transaction
                             DB.createNewNotification(oAddrInDBOwner, "input local $coinname +$cMoney")
                             DB.addToBalance(oAddrInDBOwner, cMoney.toBigDecimal(), coinname)
-                                q@if(Regex("TELEGRAM USER \\d+").matches(oAddrInDBOwner))
-                                {
-                                    val s = oAddrInDBOwner.split(" ")
-                                    val uid = s[2].toLongOrNull()?: 0L
-                                    if (uid != 0L) {
-                                        telegabot.sendToUid(uid, String.format("input local $coinname +$cMoney"))
-                                    }
-                                }
+
 
                             DB.createNewNotification(acc, "output local $coinname -$cMoney")
                             DB.addToBalance(acc, -cMoney.toBigDecimal(), coinname)
@@ -562,6 +557,14 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
         privcontx.handler = privilegiesHandlers()
         m_contextCollection.addHandler(privcontx)
     }
+    /*private  fun enableSSL()
+    {
+        val s = SslContextFactory.Server();
+        s.setKeyStorePath("C:\\wacs\\crt\\antebeot.ru-key.pem");
+        // https://www.eclipse.org/jetty/documentation/jetty-11/programming-guide/index.html
+        // https://stackoverflow.com/questions/42675033/how-to-build-a-sslsocketfactory-from-pem-certificate-and-key-without-converting
+        // very big things that can be implemented though simple reverse proxy of apache as example.
+    }*/
     init {
         server.addConnector(connector)
         EnableHandlers()
@@ -569,6 +572,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
 
         server.start()
         CryptoCoins.initCoins() //
+
 
     }
 

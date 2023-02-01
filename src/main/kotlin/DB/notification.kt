@@ -6,7 +6,7 @@ import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
 import org.bson.Document
 import org.litote.kmongo.*
 import java.math.BigDecimal
-
+import org.antibiotic.pool.main.telegabot
 @Serializable
 data class notification(val owner: String, val msg: String, val time: Long) // , @BsonId val key: Id<notification> = newId()
 {
@@ -18,7 +18,16 @@ data class notification(val owner: String, val msg: String, val time: Long) // ,
         private val col = DB.mongoDB.getCollection<notification>("notifications")
         fun createNewNotification(o: String, m: String, t: Long = System.currentTimeMillis())
         {
-            col.insertOne(notification(o, m, t))
+            try {
+                q@ if (Regex("TELEGRAM USER \\d+").matches(o)) {
+                    val s = o.split(" ")
+                    val uid = s[2].toLongOrNull() ?: 0L
+                    if (uid != 0L) {
+                        telegabot.sendToUid(uid, String.format(m))
+                    }
+                }
+                col.insertOne(notification(o, m, t))
+            } catch(_: Exception) { System.err.println("Can't to create notification"); }
         }
         /* public fun dropNotificationByKey(@BsonId key: Id<notification>) {
              createCollection("notifications")

@@ -19,36 +19,11 @@ class TradeHandler : AbstractHandler() {
         fun createOrder(tIsBuyer: Boolean,
                         owner: String, toSellName: String, toBuyName: String,
                         toSellLMax: String, toSellLMin: String,
-                        uLanguage: i18n, toS: toSellStruct, toB: toSellStruct,
+                        uLanguage: i18n,
                         ordMsg: String
         ): String
         {
-            val usrBalance =
-                if (!tIsBuyer) UserCoinBalance.getLoginBalance(owner)
-                    ?.get(toSellName)?.balance?.toBigDecimal()
-                else UserCoinBalance.getLoginBalance(owner)?.get(toBuyName)?.balance?.toBigDecimal()
-            if (usrBalance == null || usrBalance < toSellLMax.toBigDecimal() || usrBalance < toSellLMin.toBigDecimal()) {
-                println("Usr balance for coin (false/true)[$tIsBuyer] ${toSellName} / ${toBuyName} $usrBalance. limit max ${toSellLMax}")
-                println(usrBalance!! < toSellLMax.toBigDecimal())
-                println(usrBalance!! < toSellLMin.toBigDecimal())
-                throw notAllowedOrder(uLanguage.getString("uBalanceSmallerThanLimit"))
-            }
-            order.addOrder(
-                owner,
-                toSell = toS,
-                toBuy = toB,
-                orderMSG = ordMsg,
-                isFiat2CoinTrade = false,
-                isCoin2CoinTrade = true,
-                ownerIsBuyer = tIsBuyer
-            )
-            return Json.encodeToString(
-                    JSONBooleanAnswer(
-                        true,
-                        uLanguage.getString("orderWasCreated")
-                    )
-                )
-
+            TODO("nomarl implementation")
 
         }
     }
@@ -79,33 +54,18 @@ class TradeHandler : AbstractHandler() {
                 "addOrderToSellCoin2Coin" -> {
                     try {
                         println("addOrder")
-                        val toSellName = request.getParameter("toSellName").trimIndent() // coin to sell name
-                        val toSellPrice = request.getParameter("toSellPrice").trimIndent() // coin to sell price
-                        // we can to put the checks to constructor
-                        val toSellLMin = request.getParameter("toSellLimitMin").trimIndent()
-                        val toSellLMax = request.getParameter("toSellLimitMax").trimIndent()
-                        println("'$toSellPrice', $toSellName , $toSellLMin , $toSellLMax")
-                        val toS =
-                            toSellStruct(toSellName, toSellPrice, lmin = toSellLMin, lmax = toSellLMax)
-                        println("Struct created")
-                        val toBuyName = request.getParameter("toBuyName").trimIndent() // coin for buy name
-                        val toBuyPrice = request.getParameter("toBuyPrice").trimIndent() // coin for buy price
-
-                        val toBuyLMin = request.getParameter("toBuyLimitMin").trimIndent()
-                        val toBuyLMax = request.getParameter("toBuyLimitMax").trimIndent()
-
-                        val toB = toSellStruct(toBuyName, toBuyPrice, lmin = toBuyLMin, lmax = toBuyLMax)
-                        println("Struct 2 created")
-                        val tIsBuyer = request.getParameter("tIsBuyer").toBoolean() // trader is buyer or seller?
+                        val toGiveName = request.getParameter("toGiveName")
+                        val toGetName = request.getParameter("toGetName")
                         //
-                        // /exchange/?w=addOrderToSellCoin2Coin&toSellName=gostcoin&toSellPrice=0&toSellLimitMin=1&toSellLimitMax=1&toBuyName=bitcoin&toBuyPrice=0.0001&toBuyLimitMin=0&toBuyLimitMax=1&tIsBuyer=true&msg=GostcoinNaBitcoin
-                        println("tISBuyer: $tIsBuyer")
-                        val ordMsg = request.getParameter("msg").toString().delHTML()
-                        return response.writer.print(
-                            createOrder(tIsBuyer =tIsBuyer, owner = session.owner,
-                            toSellName = toSellName, toBuyName = toBuyName, toSellLMax = toSellLMax, toSellLMin = toSellLMin,
-                            uLanguage = uLanguage, toS = toS, toB = toB, ordMsg = ordMsg)
-                        )
+                        val Price = request.getParameter("Price")
+                        val VolumeStart = request.getParameter("VolumeStart")
+                        val VolumeMax = request.getParameter("VolumeMax")
+                        // order.addOrder(ord.owner, ord.info, ord.orderMSG, ord.isCoin2CoinTrade, ord.isFiat2CoinTrade, ord.ownerIsBuyer)
+                        val info = cryptoOrderInfo(toGiveName = toGiveName, toGetName = toGetName, priceRatio = Price, minVolume = VolumeStart, maxVolume = VolumeMax)
+                        order.addOrder(session.owner, info = info, isCoin2CoinTrade = true)
+                        return response.writer.print(Json.encodeToString(JSONBooleanAnswer(true, "order was create")))
+                        // TODO("nomarl implementation")
+                        
                     } catch (e: notAllowedOrder) {
                         response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, e.toString())))
                     } catch (e: java.lang.NumberFormatException) {
@@ -122,12 +82,16 @@ class TradeHandler : AbstractHandler() {
                     val orders = order.getOrdersByActivity(a, lim = lim, skip = offset)
                     return response.writer.print(Json.encodeToString(orders))
                 }
-
                 "getComissionPercent" ->
                 {
                     return response.writer.print(Json.encodeToString(comissionPercent));
                 }
-
+                "getOwnOrders" ->
+                {
+                    val (offset, lim) = JettyServer.getOffsetLimit(baseRequest)
+                    val r = order.getOrdersByOwner(session.owner, lim = lim, skip = offset)
+                    return response.writer.print(Json.encodeToString(r))
+                }
                 "removeMyOrderByID" -> {
                     // /exchange/?w=removeMyOrderByID&id=63cebdcb77a1a83abb3f7d9a
                     val id = request.getParameter("id")
@@ -170,6 +134,7 @@ class TradeHandler : AbstractHandler() {
                         val text = request.getParameter("text").toString().delHTML()
                         val isPositive = request.getParameter("isPositive").toBoolean()
                         val trade = trade.getDoneTradeByID(id).first()
+                        if (trade.isCrypto2Crypto) return JettyServer.sendJSONAnswer(false, "only fiat 2 fiat allows reviews", response)
                         if (!session.owner.equals(trade.seller) && !session.owner.equals(trade.buyer))
                         {
                             return JettyServer.sendJSONAnswer(true, uLanguage.getString("notAllowed"), response)
@@ -200,6 +165,7 @@ class TradeHandler : AbstractHandler() {
         } catch(e: notAllowedOrder) {
             return response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, e.toString().split(":")[1])))
         } catch(e: Exception) {
+            System.out.println(e.toString())
             return response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, "Not trade exc: " + e.toString())))
         }
     }

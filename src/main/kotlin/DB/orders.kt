@@ -11,26 +11,33 @@ import java.math.BigDecimal
 
 class notAllowedOrder(w: String): Exception("Not allowed order. $w");
 // zero limit is not limits.
+/*
+    Что отдаем: название
+    Что принимаем: название
+    Цена за единицу того что отдаем. Например цена 0.000025, тогда то что получаем. цена в getName.
+    countAmountForPrice сколько дается getName за giveнейм.
+
+ */
 @Serializable
-data class toSellStruct(val name: String, val price: String, val lmin: String, var lmax: String, val isCrypto: Boolean = true)
+data class cryptoOrderInfo(val toGiveName: String, val toGetName: String, val priceRatio: String, var minVolume: String, var maxVolume: String)
 {
     init
     {
         // println("init toSellStruct with $name $price $lmin $lmax $isCrypto")
-        if (isCrypto && !CryptoCoins.coins.contains(name))
+        if (!CryptoCoins.coins.contains(toGiveName) || !CryptoCoins.coins.contains(toGetName))
         {
             throw notAllowedOrder("cryptocurrency is not allowed")
         }
-        if (BigDecimal(price) <= BigDecimal.ZERO)
+        if (BigDecimal(maxVolume) <= BigDecimal.ZERO || BigDecimal(priceRatio) <= BigDecimal.ZERO)
         {
             throw notAllowedOrder("not correct coin price")
         }
-        if (lmin.toBigDecimal() == BigDecimal.ZERO && lmax.toBigDecimal() == BigDecimal.ZERO || lmax.toBigDecimal() < BigDecimal.ZERO || lmin.toBigDecimal() < BigDecimal.ZERO)
-            throw notAllowedOrder("bad limits")
+      //  if (lmin.toBigDecimal() == BigDecimal.ZERO && lmax.toBigDecimal() == BigDecimal.ZERO || lmax.toBigDecimal() < BigDecimal.ZERO || lmin.toBigDecimal() < BigDecimal.ZERO)
+         //   throw notAllowedOrder("bad limits")
     }
 }
 @Serializable
-data class order(val owner: String, val whatSell: toSellStruct, val whatBuy: toSellStruct, val orderMSG: String?,
+data class order(val owner: String, val info: cryptoOrderInfo, val orderMSG: String?,
                  val isCoin2CoinTrade: Boolean = false, val isFiat2CoinTrade: Boolean = false, val ownerIsBuyer: Boolean = false,
                  val isActive: Boolean = false, val key: String = (ObjectId().toHexString())
 ) {
@@ -48,13 +55,11 @@ data class order(val owner: String, val whatSell: toSellStruct, val whatBuy: toS
                 this.isCoin2CoinTrade == o.isCoin2CoinTrade &&
                 this.isFiat2CoinTrade == o.isFiat2CoinTrade &&
                 this.ownerIsBuyer == o.ownerIsBuyer
-                && this.whatBuy.isCrypto == o.whatBuy.isCrypto
-                && this.whatBuy.name == o.whatBuy.name
-                && this.whatBuy.price == o.whatBuy.price
-
-                && this.whatSell.isCrypto == o.whatSell.isCrypto
-                && this.whatSell.name == o.whatSell.name
-                && this.whatSell.price == o.whatSell.price
+                && this.info.toGiveName == this.info.toGiveName
+                && this.info.toGetName == this.info.toGetName
+                && this.info.priceRatio == this.info.priceRatio
+                && this.info.maxVolume == this.info.maxVolume
+                && this.info.minVolume == this.info.minVolume
         // this.key == o.key
         // return  sEq
     }
@@ -62,11 +67,14 @@ data class order(val owner: String, val whatSell: toSellStruct, val whatBuy: toS
         init {
             DB.createCollection("orders")
         }
-        fun addOrder(owner: String, toSell: toSellStruct, toBuy: toSellStruct, orderMSG: String? = null, isCoin2CoinTrade: Boolean = false, isFiat2CoinTrade: Boolean = false, ownerIsBuyer: Boolean = false)
+        fun addOrder(owner: String, info: cryptoOrderInfo, orderMSG: String? = null, isCoin2CoinTrade: Boolean = false, isFiat2CoinTrade: Boolean = false, ownerIsBuyer: Boolean = false, isActive: Boolean = false)
         {
             val col = DB.mongoDB.getCollection<order>("orders")
-            val ord = order(owner, toSell, toBuy, orderMSG, isCoin2CoinTrade, isFiat2CoinTrade, ownerIsBuyer)
+            val ord = order(owner, info, orderMSG, isCoin2CoinTrade, isFiat2CoinTrade, ownerIsBuyer, isActive = isActive)
             if (ordersExistsForOwner(owner,ord)) throw notAllowedOrder("simillar order exists already. try without another settings")
+            val ownBalance = DB.getLoginBalance(ord.owner)?.get(info.toGiveName)!!
+            if (ownBalance.balance.toBigDecimal() < info.maxVolume.toBigDecimal()) throw notAllowedOrder("bad balance")
+            if (info.toGiveName == info.toGetName) throw notAllowedOrder("toGiveName not will be equal toGetName")
             col.insertOne(ord)
         }
 

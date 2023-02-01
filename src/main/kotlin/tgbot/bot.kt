@@ -46,31 +46,9 @@ internal object prostaVapseTelegaBotSet {
 class prostaVapseTelegaBot {
     private object orders
     {
-        fun createOrder(toGive_: String, toGet_: String, SellNameCoin: String, BuyNamecoin: String, uidName: String, uLanguage: i18n, msg: String = "order from telegram"): String
+        fun createOrder(): String
         {
-            println("create orders $toGive_ $toGet_")
-            val toGive = toGive_.trimIndent().toBigDecimal() // 100
-            val toGet  = toGet_.trimIndent().toBigDecimal() // 0.0025
-            println("continue")
-            val toSellPrice = toGive
-            val toBuyPrice = toGet //toGet / toGive // 0.000025
-            val toBuyLimitMin = toGet
-            val toSellLimitMax = toGive
-            val toBuyLimitMax = toGet
-            val toSellLimitMin = toSellLimitMax
-            println("Create structs")
-            // ToDo: changed for a while. check original code in API.
-            val toS =
-                toSellStruct(SellNameCoin, toSellPrice.toString(), lmin = toSellLimitMin.toString(), lmax = toSellLimitMax.toString())
-            val toB =
-                toSellStruct(BuyNamecoin, toBuyPrice.toString(), lmin = toBuyLimitMin.toString(), lmax = toBuyLimitMax.toString())
-            val infoAboutOrder = TradeHandler.createOrder(
-                tIsBuyer = false, owner = uidName,
-                toSellName = SellNameCoin, toBuyName = BuyNamecoin, toSellLMax = toSellLimitMax.toString(), toSellLMin = toSellLimitMin.toString(),
-                uLanguage = uLanguage, toS = toS, toB = toB, ordMsg = msg
-            )
-            println("Orders was created")
-            return infoAboutOrder
+            TODO("normal implementation")
         }
     }
     private var mBot: TelegramBot? = null
@@ -253,19 +231,7 @@ class prostaVapseTelegaBot {
     }
     fun showActiveOrders(update:Update, uid: Long)
     {
-        val uLanguage = getLangForUid(uid)
-        val list_orders = order.getOrdersByActivity()
-        val full_msg = StringBuilder()
-        for (ord in list_orders)
-        {
-            val for_one_count_sell = (ord.whatSell.price.toBigDecimal() / ord.whatSell.lmin.toBigDecimal()) * ord.whatSell.price.toBigDecimal()
-            val for_one_count_buy = (ord.whatBuy.price.toBigDecimal() / ord.whatBuy.lmin.toBigDecimal()) * ord.whatBuy.price.toBigDecimal()
-            val msg = String.format(uLanguage.getString("tgbot_orderinfo_active"), ord.owner, ord.whatSell.name,
-                ord.whatBuy.name, ord.whatSell.price, ord.whatBuy.price, for_one_count_sell, ord.whatSell.name, for_one_count_buy, ord.whatBuy.name, ord.key)
-            full_msg.append(msg + "\n")
-        }// tgbot_orderinfo
-        if (list_orders.size == 0) sendMsg(uid, uLanguage.getString("tgbot_not_exists"))
-        else  sendMsg(uid, full_msg.toString())
+        TODO("nomarl implementation")
     }
     fun sendMsg(uid: Long, msg: String)
     {
@@ -276,19 +242,7 @@ class prostaVapseTelegaBot {
     }
     fun showMyOrders(update:Update, uid: Long)
     {
-        val uLanguage = getLangForUid(uid)
-        val list_orders = order.getOrdersByOwner(userInfoToDBName(uid))
-        val full_msg = StringBuilder()
-        for (ord in list_orders)
-        {
-            val for_one_count_sell = (ord.whatSell.price.toBigDecimal() / ord.whatSell.lmin.toBigDecimal()) * ord.whatSell.price.toBigDecimal()
-            val for_one_count_buy = (ord.whatBuy.price.toBigDecimal() / ord.whatBuy.lmin.toBigDecimal()) * ord.whatBuy.price.toBigDecimal()
-            val msg = String.format(uLanguage.getString("tgbot_orderinfo_self"), ord.owner, ord.whatSell.name,
-                ord.whatBuy.name, ord.whatSell.price, ord.whatBuy.price, for_one_count_sell, ord.whatSell.name, for_one_count_buy, ord.whatBuy.name, ord.key, ord.key, ord.isActive, ord.key)
-            full_msg.append(msg + "\n")
-        }// tgbot_orderinfo
-        if (list_orders.size == 0) sendMsg(uid, uLanguage.getString("tgbot_not_exists"))
-        else sendMsg(uid, full_msg.toString())
+        TODO("nomarl implementation")
     }
     // Основной функционал по кнопкам
     val u_on = fun(uLanguage:i18n): MutableMap<String, KFunction2<Update, Long, Unit>> {
@@ -327,20 +281,7 @@ class prostaVapseTelegaBot {
         sendMsg(uid, uLanguage.getString("tgbot_active_was_changed"))
     }
     fun showOrders(uid: Long, update: Update) {
-        val (uLanguage, uidForDB) = getLangAndUIDForDb(uid)
-        val offset = update.message().text().split(" ")[1].toIntOrNull()?:0
-        val list_orders = order.getOrdersByActivity(lim = 25, skip = offset)
-        val full_msg = StringBuilder()
-        for (ord in list_orders)
-        {
-            val for_one_count_sell = (ord.whatSell.price.toBigDecimal() / ord.whatSell.lmin.toBigDecimal()) * ord.whatSell.price.toBigDecimal()
-            val for_one_count_buy = (ord.whatBuy.price.toBigDecimal() / ord.whatBuy.lmin.toBigDecimal()) * ord.whatBuy.price.toBigDecimal()
-            val msg = String.format(uLanguage.getString("tgbot_orderinfo_active"), ord.owner, ord.whatSell.name,
-                ord.whatBuy.name, ord.whatSell.price, ord.whatBuy.price, for_one_count_sell, ord.whatSell.name, for_one_count_buy, ord.whatBuy.name, ord.key)
-            full_msg.append(msg + "\n")
-        }// tgbot_orderinfo
-        if (list_orders.size == 0) sendMsg(uid, uLanguage.getString("tgbot_not_exists"))
-        else  sendMsg(uid, full_msg.toString())
+        TODO("nomarl implementation")
     }
     fun doTrade(uid: Long, update: Update) {
         val (uLanguage, uidForDB) = getLangAndUIDForDb(uid)
@@ -471,11 +412,12 @@ class prostaVapseTelegaBot {
                             val toGive = s[2]
                             val toGet = s[3]
                             println("create res")
-                            val res = orders.createOrder(
-                                toGive, toGet, SellNamecoin, BuyNamecoin, uidForDB, uLanguage
-                            )
+                            //val res = orders.createOrder(
+                            //    toGive, toGet, SellNamecoin, BuyNamecoin, uidForDB, uLanguage
+                            //)
+                            TODO("nomarl implementation")
                             println("order was created")
-                            mBot!!.execute(SendMessage(uid, String.format(uLanguage.getString("ResultCreateOrder"), res) ))
+                            //mBot!!.execute(SendMessage(uid, String.format(uLanguage.getString("ResultCreateOrder"), res) ))
                             sendmainmenu(uid, uidForDB, uLanguage)
                         }
                         // End Exchange
@@ -607,7 +549,15 @@ class prostaVapseTelegaBot {
                             val c = msg.text()
                             if (i?.containsKey(c) != true)
                             {
-                                mBot!!.execute(SendMessage(msg.chat().id(), uLanguage.getString("CryptocoinNotFound")))
+                                val res = JettyServer.Users.money.genAdr(
+                                    coin = msg.text(),
+                                    uLanguage = uLanguage,
+                                    owner = uidForDB
+                                )
+                                val res_json = Json.decodeFromString<JSONBooleanAnswer>(res)
+                                val m = String.format(res_json.reason?: "internalerrror") // uLanguage.getString("urNewAddrIs"),
+                                mBot!!.execute(SendMessage(msg.chat().id(), "$m"))
+                                //mBot!!.execute(SendMessage(msg.chat().id(), uLanguage.getString("CryptocoinNotFound")))
                             } else {
                                 mBot!!.execute(SendMessage(msg.chat().id(), String.format( uLanguage.getString("YourInputAddress"), i[c]!!.inputAddress, i[c]!!.CoinName, i[c]!!.balance  )) )
                             }
@@ -681,17 +631,19 @@ class prostaVapseTelegaBot {
      * Тут происходит чтение и вызов методов updateInline для inline сообщения/ updateDo для обычного текста отправленного боту.
      */
     fun readUpdates() {
-        // System.out.printf("Last ID %d\n~~~~~~~~~~\n", mLastID);
-        val _updates = GetUpdates().limit(100).offset(mLastID).timeout(0)
-        val updatesResponse = mBot!!.execute(_updates)
-        val updates = updatesResponse.updates()
-        updateHandler@ for (update in updates) {
-            val updateId = update.updateId()
-            //val inlineQuery = update.inlineQuery()
-            //if (inlineQuery != null) updateInline(inlineQuery) else
-            updateDo(update)
-            if (mLastID <= updateId) mLastID = updateId + 1
-        }
+        try {
+            // System.out.printf("Last ID %d\n~~~~~~~~~~\n", mLastID);
+            val _updates = GetUpdates().limit(100).offset(mLastID).timeout(0)
+            val updatesResponse = mBot!!.execute(_updates)
+            val updates = updatesResponse.updates()
+            updateHandler@ for (update in updates) {
+                val updateId = update.updateId()
+                //val inlineQuery = update.inlineQuery()
+                //if (inlineQuery != null) updateInline(inlineQuery) else
+                updateDo(update)
+                if (mLastID <= updateId) mLastID = updateId + 1
+            }
+        } catch(e: Exception) {System.err.println(e.toString())}
         // System.out.println("~~~~~~~~~");
     }
     fun readUpdatesAndSaveProps()
