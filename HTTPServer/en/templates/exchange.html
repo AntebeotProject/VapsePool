@@ -1,0 +1,128 @@
+
+<noscript>
+Use apireference if u not want use scripts.
+for now.
+</noscript>
+
+<div id="calcuvator">
+<p>Calculator of price:</p>
+Price: <input type=textarea id="price_calc" value="60000" onchange="calcuvatorcalc()"/>
+Amount: <input type=textarea id="count_calc" value="1" onchange="calcuvatorcalc()"/>
+<p id="calcuvator_answer">60000</p>
+</div>
+<div>
+<p>Active orders:</p>
+<ol id="active_orders"></ol>
+</div>
+<input type=textarea" value="1" id="count" placeholder="сколько купить">
+<p>My orders</p>
+<ol id="my_orders"></ol>
+</div>
+
+<p>Add order</p>
+<div id="addOrderBox">
+	<p>Amount of max that you can give: <input type=textarea id="VolumeMax" placeholder="1"/></p>
+	<p>Minimal for sell (limit): <input type=textarea id="VolumeStart" value="0"/></p>
+	<p>Price: <input type=textarea id="Price" value="0.0000068"/></p>
+
+	<p>Sell namecoin: <select type=textarea id="SellNamecoin"></select></p>
+	<p>Buy (instead of sell) namecoin: <select type=textarea id="BuyNamecoin"></select></p>
+	<p><button onclick=addOrder_()>Add order</button></p>
+	<p>
+<pre>
+Отношение gostcoin к bitcoin по цене за которую продается 1 единица gostcoin в bitcoin.
+Например цена 1 gostcoin = 0.0000068 bitcoin
+</pre>
+	</p>
+</div>
+<p><button onclick="session_refresh()">updateSession</button></p>
+<div id='alertBox' style="display:none">
+	<p id="alertTitle"></p>
+	<b id="alertMsg"></b>
+	<p><button onclick="hideAlertBox()" id="alertButton">OK</button></p>
+</div>
+<script type="application/javascript">
+	var coins = getAllowCoins()
+	function addOrder_()
+	{
+		let VolumeMax = $("#VolumeMax").val() // 100
+		let VolumeStart  = $("#VolumeStart").val() // 0.0025
+		let Price = $("#Price").val()
+
+		/*let msg = $("#msg").val()*/
+		let SellNamecoin = $("#SellNamecoin").val()
+		let BuyNamecoin = $("#BuyNamecoin").val()
+		console.log("~~~~")
+		console.log(VolumeMax) // gostcoin
+	        console.log(VolumeStart) // 100
+	        console.log(Price) // 100
+	        console.log(SellNamecoin) // bitcoin
+	        console.log(BuyNamecoin) // 0.000025
+		let r = addOrderToSellCoin2Coin(SellNamecoin, BuyNamecoin, Price, VolumeStart, VolumeMax)
+		showAlertBox(r.result ? "Succesfully: " : "Error" + ": " +r.reason, 'INFO')
+	}
+
+	function order_to_info(ord)
+	{
+	console.log(ord)
+	return `${ord.owner} желает продать ${ord.info.toGiveName} за ${ord.info.toGetName}` +
+	`он продает 1 gostcoin за ${ord.info.priceRatio}. Лимиты ${ord.info.minVolume} - ${ord.info.maxVolume}`		
+	}
+	function calcuvatorcalc()
+	{
+		let p = $("#price_calc").val()
+		let c = $("#count_calc").val()
+		$("#calcuvator_answer").text(`${p}*${c} = `+ p*c)
+	}
+	function doTradee(key)
+	{
+		console.log(key)
+		let count = $("#count").val()
+		let r = doTrade(key, count)
+		console.log(key)
+		console.log(count)
+		showAlertBox(r.result ? "Succesfully: " : "Error" + ": " + r.reason, 'INFO')
+	}
+
+	function add2SelectAllowCoins(t)
+	{
+		for (idx in coins) // forEach?
+		{
+			let coin_name = coins[idx]
+			let own_input_addr = getowninput(coin_name)
+			t.append($('<option>', {
+    				value: coin_name,
+    				text: coin_name
+			}));
+		}	
+	}
+	function changeActiveOrder_(key, status)
+	{
+		console.log(`set status ${status} to ${key}`)
+		let r = changeActiveOrder(key, status)
+		showAlertBox(r.result ? "Succesfully: " : "Error" + ": " + r.reason, 'INFO')
+	}
+//////
+// myorders.append('<ul class="order"><li>'+order.owner+'</li><li>'+order.orderMSG+'</li><li>'+order.key+'</li><li>'+ order_to_info(order) +'<li><button onclick="doTrade_("'+order.key+'")">Сделать сделку</button></li></ul>')
+// there ^^ vuln in firefox
+	var aorder = $("#active_orders")
+	var active_orders = getOrders()
+	for(IDX in active_orders)
+	{
+		let order = active_orders[IDX]
+		console.log(order.key)
+		aorder.append(`<ul class="order"><li>${order.owner}</li><li>${order.key}</li><li>${order_to_info(order)}<li><button onclick='doTradee("${order.key}")'>Сделать сделку</button></li></ul>`)
+
+	}
+	var myorders = $("#my_orders")
+	var ownOrders = exchangeData({'w':"getOwnOrders"})
+	for(IDX in ownOrders)
+	{
+		let order = ownOrders[IDX]
+		console.log(order.key)
+		myorders.append(`<ul class="order"><li>${order.owner}</li><li>${order.key}</li><li>${order_to_info(order)}<li><button onclick='changeActiveOrder_("${order.key}", true)'>Сделать ордер активным</button><button onclick='changeActiveOrder_("${order.key}", false)'>Сделать ордер неактивным</button><button onclick='remOrder("${order.key}")'>rem order</button></li></ul>`)
+
+	}
+	add2SelectAllowCoins($("#SellNamecoin"))
+	add2SelectAllowCoins($("#BuyNamecoin"))
+</script>

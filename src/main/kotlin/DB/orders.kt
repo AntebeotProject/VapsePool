@@ -36,6 +36,7 @@ data class cryptoOrderInfo(val toGiveName: String, val toGetName: String, val pr
          //   throw notAllowedOrder("bad limits")
     }
 }
+
 @Serializable
 data class order(val owner: String, val info: cryptoOrderInfo, val orderMSG: String?,
                  val isCoin2CoinTrade: Boolean = false, val isFiat2CoinTrade: Boolean = false, val ownerIsBuyer: Boolean = false,

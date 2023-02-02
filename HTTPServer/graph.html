@@ -1,0 +1,96 @@
+<html>
+  <head>
+    <script src="/js/jquery.js" type="text/javascript"></script>
+	
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+	<script src="/js/functions.js" type="text/javascript"></script>
+    <script type="text/javascript">	 
+Date.prototype.dayOfYear= function(){
+    var j1= new Date(this);
+    j1.setMonth(0, 0);
+    return Math.round((this-j1)/8.64e7);
+}	
+  function drawChart() {
+	var doneTrades = exchangeData ({'w': 'getLastDoneTrades'}) 
+ 
+	var ordersInfo = []
+	var table = []
+	for (idx in doneTrades)
+	{
+		let trade = doneTrades[idx]
+		if (trade == undefined)
+		{
+			console.log(trade)
+			continue
+		}
+		let pair = trade.info.toGiveName + "_" + trade.info.toGetName
+		if (ordersInfo[pair] == undefined)
+		{
+			ordersInfo[pair] = []
+		}
+		ordersInfo[pair].push([Number(trade.info.priceRatio), trade.time])
+	}
+	for (idx in ordersInfo) {
+		let sData = idx.split("_")
+		$("html").append(`<center><p>${sData[0]}/${sData[1]}</p><canvas id="${idx}" style="width:100%;max-width:700px"></canvas></center>`)
+		var xValues = [];
+		var yValues = [];
+		for (x in ordersInfo[idx])
+		{
+			let p = ordersInfo[idx][x]
+			var price = p[0]
+			var time = p[1]
+			if (time == undefined) time = 0
+			xValues.push(price)
+			console.log(new Date(time))
+			yValues.push(new Date(time).getSeconds())
+		}
+		new Chart(`${idx}`, {
+				  type: "bar",
+				  data: {
+					labels: xValues,
+					datasets: [{
+					  fill: false,
+					  lineTension: 0,
+					  backgroundColor: "rgba(0,0,255,1.0)",
+					  borderColor: "rgba(0,0,255,0.1)",
+					  data: yValues
+					}],
+				  },
+				  options: {
+					legend: {display: false},
+					scales: {
+					  yAxes: [{
+					display: false,
+					scaleLabel: {
+					  display: true,
+					  labelString: 'time in seconds'
+					},    
+					ticks: {
+					  //min: 0,
+					  //max: 2147483648,
+
+					  // forces step size to be 5 units
+					  //stepSize: 85899345 // <----- This prop sets the stepSize
+					}
+				  }],
+				  xAxes: [{
+					display: true,
+					scaleLabel: {
+					  display: true,
+					  labelString: 'Price'
+					}
+				  }],
+					}
+					
+				  }
+		});// chart
+	}
+  }
+    drawChart()
+    </script>
+  </head>
+  <body>
+  
+  </body>
+</html>

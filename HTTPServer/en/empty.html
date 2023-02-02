@@ -16,6 +16,7 @@
     </div>
 </nav>
 
+
 <!-- scripts -->
 <script src="/js/jquery.js" type="text/javascript"></script>
 <script src="/js/jquery.cookie.js" type="text/javascript"></script>
@@ -29,18 +30,18 @@ function loadNavbar()
 	let navbar = $(".uk-navbar-nav")
 	if (!userIsSigned())
 	{
-	 navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('auth','Sign in')\">SignIn</a></li>")
-	 navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('reg','Registration')\">Register</a></li>")	
+	 navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('auth', 'Sign in')\">Sign in</a></li>")
+	 navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('reg', 'Registration')\">Регистрация</a></li>")	
 	}
 	else
 	{
-	  navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('user','UserPanel')\">User panel</a></li>")
+	  navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('user', 'Профиль')\">Profile</a></li>")
+	  navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('exchange', 'Обмен')\">Exchange</a></li>")
+	  navbar.append("<li><a href=\"/graph.html\"\">Price charts</a></li>")
 	}
 }
 loadNavbar()
 </script>
-<!-- refactoring will be -->
-<script type="text/javascript">changeULang("en_US");</script>
 <div id="content"></div>
 <div id='alertBox' style="display: none;">
 	<p id="alertTitle">ERROR!</p>

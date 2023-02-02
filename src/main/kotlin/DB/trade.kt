@@ -12,6 +12,7 @@ import org.litote.kmongo.getCollection
 import org.litote.kmongo.gt
 import java.math.BigDecimal
 
+
 // trade_stata
 @Serializable
 data class trade(val buyer: String, val seller: String, val info: cryptoOrderInfo, val isCrypto2Crypto: Boolean = true, val key: String = (ObjectId().toHexString()))
@@ -132,13 +133,13 @@ data class trade(val buyer: String, val seller: String, val info: cryptoOrderInf
                 userBalance.addToBalance(ord.owner, countForSell, coinToBuy)
                 userBalance.addToBalance(whoBuy, countForBuy, coinToSell)
                 DB.createCollection("cryptodoneTrade")
-                val col = DB.mongoDB.getCollection<trade>("cryptodoneTrade")
-                val doneTrade = trade(whoBuy, ord.owner, ord.info, isCrypto2Crypto = true)
-                col.insertOne(doneTrade)
+                val col = DB.mongoDB.getCollection<doneOrders>("cryptodoneTrade")
+                val doneTrade_ = trade(whoBuy, ord.owner, ord.info, isCrypto2Crypto = true)
+                col.insertOne(doneOrders(doneTrade_.buyer, doneTrade_.seller, doneTrade_.info, doneTrade_.isCrypto2Crypto, doneTrade_.key))
                 notification.createNewNotification(whoBuy,
-                    String.format(uLanguage.getString("orderIsSucc"), doneTrade.key)
+                    String.format(uLanguage.getString("orderIsSucc"), doneTrade_.key)
                 )
-                notification.createNewNotification(ord.owner, String.format(uLanguage.getString("orderIsSucc"), doneTrade.key))
+                notification.createNewNotification(ord.owner, String.format(uLanguage.getString("orderIsSucc"), doneTrade_.key))
                 changeOrderParameters(ord, countForBuy, countForSell)
                 println("Comission")
                 // Comission
@@ -149,21 +150,31 @@ data class trade(val buyer: String, val seller: String, val info: cryptoOrderInf
                 userBalance.addToBalance(NAME_OF_SERVER_BALANCE,    (countForBuy * comissionPercent.toBigDecimal()),  coinToBuy)
                 // END Commision
                 //
-                return doneTrade.key
+                return doneTrade_.key
                 //}
             }
         }
-        fun getDoneTradeByBuyerOrSeller(who: String, skip: Int = 0, lim: Int = 5): List<trade> {
-            val col = DB.mongoDB.getCollection<trade>("cryptodoneTrade")
-            return col.find(Filters.or(trade::buyer eq who, trade::seller eq who)).skip(skip).limit(lim).iterator().asSequence().toList() // use it instead big code
+        fun getDoneTradeByBuyerOrSeller(who: String, skip: Int = 0, lim: Int = 5): List<doneOrders> {
+            val col = DB.mongoDB.getCollection<doneOrders>("cryptodoneTrade")
+            return col.find(Filters.or(doneOrders::buyer eq who, doneOrders::seller eq who)).skip(skip).limit(lim).iterator().asSequence().toList() // use it instead big code
         }
-        fun getDoneTradeByID(id: String): List<trade> {
-            val col = DB.mongoDB.getCollection<trade>("cryptodoneTrade")
-            return col.find(trade::key eq id).iterator().asSequence().toList() // use it instead big code
+        fun getDoneTradeByID(id: String): List<doneOrders> {
+            val col = DB.mongoDB.getCollection<doneOrders>("cryptodoneTrade")
+            return col.find(doneOrders::key eq id).iterator().asSequence().toList() // use it instead big code
         }
-        fun getLastDoneTrades(skip: Int = 0, lim: Int = 5): List<trade> {
-            val col = DB.mongoDB.getCollection<trade>("cryptodoneTrade")
+        fun getLastDoneTrades(skip: Int = 0, lim: Int = 5): List<doneOrders> {
+            val col = DB.mongoDB.getCollection<doneOrders>("cryptodoneTrade")
             return col.find().iterator().asSequence().toList().reversed().subList(skip, skip + lim) // use it instead big code
         }
     }
 }
+// TODO: ... not duplicate of code
+@Serializable
+data class doneOrders(
+                      val buyer: String,
+                      val seller: String,
+                      val info: cryptoOrderInfo,
+                      val isCrypto2Crypto: Boolean = true,
+                      val key: String,
+                      val time:Long = System.currentTimeMillis()
+                    )

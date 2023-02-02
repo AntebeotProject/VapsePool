@@ -134,8 +134,8 @@ object DB {
     // trades
     // use forum on phpbb for reviews maybe?
     fun doTrade(whoBuy: String, count: String, orderID: String): String = trade.doTrade(whoBuy, count, orderID)
-    fun getDoneTradeByBuyerOrSeller(who: String): List<trade> = trade.getDoneTradeByBuyerOrSeller(who)
-    fun getDoneTradeByID(id: String): List<trade> = trade.getDoneTradeByID(id)
+    fun getDoneTradeByBuyerOrSeller(who: String): List<doneOrders> = trade.getDoneTradeByBuyerOrSeller(who)
+    fun getDoneTradeByID(id: String): List<doneOrders> = trade.getDoneTradeByID(id)
     // reviews
     fun addReview(reviewer: String, about: String, text: String, tradeID: String, isPositive: Boolean = false)
     = review.addReview(reviewer, about, text, tradeID, isPositive)

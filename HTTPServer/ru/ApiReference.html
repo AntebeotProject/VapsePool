@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
+
 <p>Хэндлеры</p>
 <ul>
   <li>/registration</li>
@@ -16,6 +17,7 @@
   <li>/api</li>
   <li>/captcha</li>
   <li>/dashboard</li>
+  <li>/priv</li>
 </ul>
 <p> О языке </p>
 <pre>
@@ -73,248 +75,9 @@
 <p>exchange:</p>
 <p>(нужна сессия):</p>
 <pre>
-    w parameters - addOrderToSellCoin2Coin, getOrders, getOrderByName, removeMyOrderByID, removeOrderByID, changeActiveOrder, doTrade, addReview, getReviewsByAbout, getReviewsByReviewer, getMyReviews, getMyDoneTrade, getComissionPercent
-    examples -   /exchange/?w=doTrade&count=1&id=63cee412d2fda05780b23c33
-		/exchange/?w=changeActiveOrder&id=63cebdd377a1a83abb3f7d9d&s=true
-		/exchange/?w=removeOrderByID&id=63cebdd377a1a83abb3f7d9d
-		/exchange/?w=removeMyOrderByID&id=63cebdcb77a1a83abb3f7d9a
-		/exchange/?w=getOrderByName&who=testusername
--
-		/exchange/?w=getTraderStats&who=testusername_
-                /exchange/?w=getOrders&a=true
-                /exchange/?w=getOrders&a=false
-                by default is false    
--
-/exchange/?w=addOrderToSellCoin2Coin&toSellName=gostcoin&toSellPrice=0&toSellLimitMin=1&toSellLimitMax=1&toBuyName=bitcoin&toBuyPrice=0.0001&toBuyLimitMin=0&toBuyLimitMax=1&tIsBuyer=true&msg=GostcoinNaBitcoin
--
-?w=addReview&id=63cee8febece8102ab4a0da5&text="All fine!"&isPositive=true
-/exchange/?w=getReviewsByAbout&who=testusername_
-/exchange/?w=getReviewsByReviewer&who=testusername
-/exchange/?w=getMyReviews
-/exchange/?w=getMyDoneTrade
-...
-например, пользователь dashcore хочет обменять dogecoin на биткоин
-у него баланс 371.46160727 доги.
-w=addOrderToSellCoin2Coin
-toSellName=dogecoin
-он продает догикойн по цене 1 доги к 0.0000028 btc
-toBuyName=bitcoin
-котировка такая 1 догикойн к 0.0000028 биткоинов
-toSellPrice=1
-toBuyPrice=0.0000028
-он хочет продать ровно 2 доги по такой цене и не меньше 1 за раз!
-продать минимально взамен 1 доги
-toSellLimitMin=1
-он хочет приобрести минимум 0 биткоинов
-toBuyLimitMin=0 
-а максимум приобрести 1 биткоин взамен.
-toBuyLimitMax=1
-продать взамен максимум 2 доги
-toSellLimitMax=2
-он не покупатель. он продает
-tIsBuyer=false
-сообщение быстрая сделка!
-msg=БыстраяСделка!
-/exchange/?w=addOrderToSellCoin2Coin&toSellName=dogecoin&toBuyName=bitcoin&toSellPrice=1&toBuyPrice=0.0000028&toSellLimitMin=1&toBuyLimitMin=0&toBuyLimitMax=1&toSellLimitMax=2&tIsBuyer=false&msg=БыстраяСделка!
-<hr/>
-Теперь пользователь testusername владеющий биткоинами желает купить немного догикойнов.
-у него баланс 0.01742354 btc
-он запрашивает ордера активные
-/exchange/?w=getOrders&a=true
-видит ордер. он может приобрести 0.01742354 / 0.0000028 ~ 6222.692857142858 доги
-зная что лимит за раз на приобритения от 0 до 1 (в биткоинах). а за продажу от 1 до 2 мы не сможем продать больше двух
-проверяем
-count=5
-/exchange/?w=doTrade&count=5&id=63d2e276dc3ff75fba814547
-нам выдает ошибку 	"org.antibiotic.pool.main.DB.notAllowedOrder: Not allowed order. Кол-во больше чем баланс или лимит"
-тогда мы берем count 2
-из сообщений от сервера: "
-false
-false
-false
-1 and 0.0000028
-0.0000056 and 2
-Теперь баланс testusername должен понизиться на 0.0000056 для монеты bitcoin
-Теперь баланс dashcore должен понизиться на 2 для монеты dogecoin
-Теперь баланс dashcore должен повыситься на 0.0000056 для монеты bitcoin
-Теперь баланс testusername должен повыситься на 2 для монеты dogecoin
-" 
-	"Трейд завершен. ID завершенного трейда 63d2e671f83b3136c56bcab0"
-проверяем
-ордер старый был удален. можно проверить /exchange/?w=getOrders&a=true и /exchange/?w=getOrders&a=false
-так как выкуплено всё.
-/exchange/?w=getMyDoneTrade
-
-/user/
-видим, наш баланс успешно изменен на 2.0
-при этом биткоинов у нас стало 0.01741794
-
-0.01742354 - 0.0000028*2 = 0.01741794
-ВНИМАНИЕ, используется BigDecimal, который должен решать проблемы с плавающим числом. всё же. если таково будет замечено. будет изменена логика
-в отличие от python в Java BigDecimal реализован +-. GMP так же имеется для рациональных, и так же подобных, но они далеки от реализации BigDecimal
-теперь, что бы не перелогиниться. перепроверяем через временную возможность
-/api/?w=getbalance&ac=dashcore
-видим что баланс догикойнов теперь 369.46160727
-а баланс биткоина 0.03488218
-проверяыем ещё раз. создаем теперь ордер на testusername
-продаем 1000 gostcoin по цене 0.001 BTC
-w=addOrderToSellCoin2Coin
-toSellName=gostcoin
-он продает догикойн по цене 1000 готскойн к 0.001 btc
-toBuyName=bitcoin
-котировка такая 1000 готскойн к 0.001 btc
-toSellPrice=1000
-toBuyPrice=0.001
-он хочет продать ровно 1000 gost по такой цене и не меньше 1 за раз!
-продать минимально взамен 1 гост
-toSellLimitMin=1
-он хочет приобрести минимум 0.0001 биткоинов
-toBuyLimitMin=0.0001
-а максимум приобрести 1 биткоин взамен.
-toBuyLimitMax=0.001
-продать взамен максимум 1000 gost
-toSellLimitMax=1000
-он не покупатель. он продает
-tIsBuyer=false
-сообщение быстрая сделка!
-msg=БыстраяСделка!
-/exchange/?w=addOrderToSellCoin2Coin&toSellName=gostcoin&toBuyName=bitcoin&toSellPrice=1000&toBuyPrice=0.001&toSellLimitMin=1&toBuyLimitMin=0.0001&toBuyLimitMax=0.001&toSellLimitMax=1000&tIsBuyer=false&msg=БыстраяСделка!
-изменил активность ордера
-теперь dashcore смотрит ордера
-/exchange/?w=getOrders&a=true
-видит 63d2e9c0f83b3136c56bcab6
-Login	"dashcore"
-Balances	
-bitcoin	
-owner	"dashcore"
-CoinName	"bitcoin"
-inputAddress	"tb1q6p6e363dtvq0ru9dtpx9g6cxzga377hhtv8xmr"
-balance	"0.03488218"
-isBlocked	false
-gostcoin	
-owner	"dashcore"
-CoinName	"gostcoin"
-inputAddress	"mx7o1gmjm7Tqg5sQkDsfA3KKMgJKim5wfH"
-balance	"0.0"
-isBlocked	false
-dogecoin	
-owner	"dashcore"
-CoinName	"dogecoin"
-inputAddress	"nfyPmUdjCXgzE7aeK5UCW4jjB3UXhA8iuA"
-balance	"369.46160727"
-isBlocked	false
-его балансы на настоящий момент времени
-делает покупку
-/exchange/?w=doTrade&count=1&id=63d2e9c0f83b3136c56bcab6
-Теперь баланс dashcore должен понизиться на 0.001 для монеты bitcoin
-Теперь баланс testusername должен понизиться на 1000 для монеты gostcoin
-Теперь баланс testusername должен повыситься на 0.001 для монеты bitcoin
-Теперь баланс dashcore должен повыситься на 1000 для монеты gostcoin
-reason	"Трейд завершен. ID завершенного трейда 63d2eb1af83b3136c56bcac9"
-у testusername был баланс
-{gostcoin=UserCoinBalance(owner=testusername, CoinName=gostcoin, inputAddress=mmeC7aSnedesUprPvJbTEyP3VPyEeLq4cC, balance=1001, isBlocked=false), bitcoin=UserCoinBalance(owner=testusername, CoinName=bitcoin, inputAddress=tb1q06fuf2nnks62z8yxafcs6txsj0kgseavwkats0, balance=0.01742354, isBlocked=false)}
-стал баланс
-{gostcoin=UserCoinBalance(owner=testusername, CoinName=gostcoin, inputAddress=mmeC7aSnedesUprPvJbTEyP3VPyEeLq4cC, balance=1, isBlocked=false), bitcoin=UserCoinBalance(owner=testusername, CoinName=bitcoin, inputAddress=tb1q06fuf2nnks62z8yxafcs6txsj0kgseavwkats0, balance=0.01841794, isBlocked=false), dogecoin=UserCoinBalance(owner=testusername, CoinName=dogecoin, inputAddress=null, balance=2.0, isBlocked=false)}
-у dashcore
-Login	"dashcore"
-Balances	
-bitcoin	
-owner	"dashcore"
-CoinName	"bitcoin"
-inputAddress	"tb1q6p6e363dtvq0ru9dtpx9g6cxzga377hhtv8xmr"
-balance	"0.03388218"
-isBlocked	false
-gostcoin	
-owner	"dashcore"
-CoinName	"gostcoin"
-inputAddress	"mx7o1gmjm7Tqg5sQkDsfA3KKMgJKim5wfH"
-balance	"1000.0"
-isBlocked	false
-dogecoin	
-owner	"dashcore"
-CoinName	"dogecoin"
-inputAddress	"nfyPmUdjCXgzE7aeK5UCW4jjB3UXhA8iuA"
-balance	"369.46160727"
-isBlocked	false
-ордера больше нету.
-замечен баг.
->>> 0.01841794 - 0.01742354 = 0.0009943999999999995
-в будующих версиях по возможности всё будет переводиться в сатоши перед расчетами. 
-</hr>
-UPD:
-Login	"dashcore"
-Balances	
-bitcoin	
-owner	"dashcore"
-CoinName	"bitcoin"
-inputAddress	"tb1q6p6e363dtvq0ru9dtpx9g6cxzga377hhtv8xmr"
-balance	"0.03388218"
-isBlocked	false
-gostcoin	
-owner	"dashcore"
-CoinName	"gostcoin"
-inputAddress	"mx7o1gmjm7Tqg5sQkDsfA3KKMgJKim5wfH"
-balance	"1000.0"
-isBlocked	false
-dogecoin	
-owner	"dashcore"
-CoinName	"dogecoin"
-inputAddress	"nfyPmUdjCXgzE7aeK5UCW4jjB3UXhA8iuA"
-balance	"369.46160727"
-isBlocked	false
-/exchange/?w=addOrderToSellCoin2Coin&toSellName=gostcoin&toBuyName=bitcoin&toSellPrice=1000&toBuyPrice=0.001&toSellLimitMin=1&toBuyLimitMin=0.0001&toBuyLimitMax=0.001&toSellLimitMax=1000&tIsBuyer=false&msg=БыстраяСделка!
-	
-result	true
-reason	"Ордер был создан"
----
-Login: testusername
-
-    gostcoin: 1
-
-    Input address: mmeC7aSnedesUprPvJbTEyP3VPyEeLq4cC
-
-    bitcoin: 0.01841794
-
-    Input address: tb1q06fuf2nnks62z8yxafcs6txsj0kgseavwkats0
-
-    dogecoin: 2.0
-
-    Input address: null
----
-63d2f278f83b3136c56bcacd
-/exchange/?w=doTrade&count=1&id=63d2e9c0f83b3136c56bcab6
-result	true
-reason	"Трейд завершен. ID завершенного трейда 63d2f30ff83b3136c56bcad1"
-Login	"testusername"
-Balances	
-gostcoin	
-owner	"testusername"
-CoinName	"gostcoin"
-inputAddress	"mmeC7aSnedesUprPvJbTEyP3VPyEeLq4cC"
-balance	"1001"
-isBlocked	false
-bitcoin	
-owner	"testusername"
-CoinName	"bitcoin"
-inputAddress	"tb1q06fuf2nnks62z8yxafcs6txsj0kgseavwkats0"
-balance	"0.01741794"
-isBlocked	false
-dogecoin	
-owner	"testusername"
-CoinName	"dogecoin"
-inputAddress	"null"
-balance	"2.0"
-isBlocked	false
-готскойн изменен на 1000. теперь баланс 1001 вместо 1
-биткоин изменен стал 0.01741794 и был 0.01841794
-всё честно. без сильнейших изменений.
-теперь проверяем у dashcore
-{bitcoin=UserCoinBalance(owner=dashcore, CoinName=bitcoin, inputAddress=tb1q6p6e363dtvq0ru9dtpx9g6cxzga377hhtv8xmr, balance=0.03488218, isBlocked=false), gostcoin=UserCoinBalance(owner=dashcore, CoinName=gostcoin, inputAddress=mx7o1gmjm7Tqg5sQkDsfA3KKMgJKim5wfH, balance=0.0, isBlocked=false), dogecoin=UserCoinBalance(owner=dashcore, CoinName=dogecoin, inputAddress=nfyPmUdjCXgzE7aeK5UCW4jjB3UXhA8iuA, balance=369.46160727, isBlocked=false)}
-баланс биткоина был "0.03388218" стал 0.03488218
-баланс госткойна был "1000.0" стал 0.0
-<hr/>
-теперь проблема с точностью решена?
-Обмен не до конца протестирован и запутаная логика. могут быть достойные изменения
+  ...
+  getLastDoneTrades, getMyDoneTrade, getMyReviews, getTraderStats, addReview, doTrade, changeActiveOrder, removeMyOrderByID
+  ,getOwnOrders, getComissionPercent, getOrders, addOrderToSellCoin2Coin
 </pre>
 <p>api:</p>
 <p>(нужна сессия):</p>
@@ -333,6 +96,10 @@ isBlocked	false
 <pre>
     w parameters - возвращает капчу для пользователя. пример /captcha/?w=get
     answerTest - только для теста. пример  ?w=answerTest&a=pJXhEEHIKy
+</pre>
+<p>priv</p>
+changeUserPriv, removeOrderByID, getOrderByName, getReviewsByReviewer, getReviewsByAbout, getbalance
+<pre>
 </pre>
 <p>dashboard:</p>
 <pre>
