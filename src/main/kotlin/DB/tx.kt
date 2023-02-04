@@ -2,10 +2,7 @@ package org.antibiotic.pool.main.DB
 
 import com.mongodb.client.model.Filters
 import org.bson.Document
-import org.litote.kmongo.eq
-import org.litote.kmongo.getCollection
-import org.litote.kmongo.setValue
-import org.litote.kmongo.updateOne
+import org.litote.kmongo.*
 
 // @Serializable
 data class tx(val owner: String, val coinname: String, val hash: String, val firstFound: Long = System.currentTimeMillis(), val isConfirmed: Boolean = false)
@@ -29,9 +26,16 @@ data class tx(val owner: String, val coinname: String, val hash: String, val fir
         }
 
         fun userHaveNotConfirmedTXOnCoinName(o: String, cn: String): Boolean {
+
             val list: List<Document> =
                 col.find(Filters.and(tx::owner eq o, tx::isConfirmed eq false, tx::coinname eq cn)).toList()
             return list.size > 0
+
+        }
+        fun clearOldTxs(days: Long = 1L)
+        {
+            val one_day = 86_400_000L * days
+            col.deleteMany(Filters.and(tx::isConfirmed eq false, tx::firstFound lt System.currentTimeMillis() - one_day) )
         }
 
         // not tested too. will be deleted in future realisations. not need in future

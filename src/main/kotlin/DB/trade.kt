@@ -94,7 +94,7 @@ data class trade(val buyer: String, val seller: String, val info: cryptoOrderInf
 
             }
         }
-        const val comissionPercent = 0.01
+        const val comissionPercent = 0.0001
         const val NAME_OF_SERVER_BALANCE = "!_ SERVER BALANCE _!"
         private fun doCoin2CoinTrade(whoBuy: String, countForSell: BigDecimal, countForBuy: BigDecimal, coinToSell: String, coinToBuy: String, ord: order, uLanguage: i18n): String
         {
@@ -143,11 +143,11 @@ data class trade(val buyer: String, val seller: String, val info: cryptoOrderInf
                 changeOrderParameters(ord, countForBuy, countForSell)
                 println("Comission")
                 // Comission
-                println("С учетом комиссии у всех снимает баланс на аккаунт сервера с каждой валюты по ${comissionPercent}% за сделку")
+                println("С учетом комиссии у всех снимает баланс на аккаунт сервера с каждой валюты по ${comissionPercent*100}% за сделку")
                 userBalance.addToBalance(ord.owner, -(countForSell * comissionPercent.toBigDecimal()), coinToBuy)
+                userBalance.addToBalance(NAME_OF_SERVER_BALANCE, (countForSell * comissionPercent.toBigDecimal()), coinToBuy)
                 userBalance.addToBalance(whoBuy,    -(countForBuy * comissionPercent.toBigDecimal()),  coinToSell)
-                userBalance.addToBalance(NAME_OF_SERVER_BALANCE, (countForSell * comissionPercent.toBigDecimal()), coinToSell)
-                userBalance.addToBalance(NAME_OF_SERVER_BALANCE,    (countForBuy * comissionPercent.toBigDecimal()),  coinToBuy)
+                userBalance.addToBalance(NAME_OF_SERVER_BALANCE,    (countForBuy * comissionPercent.toBigDecimal()),  coinToSell)
                 // END Commision
                 //
                 return doneTrade_.key
@@ -171,10 +171,10 @@ data class trade(val buyer: String, val seller: String, val info: cryptoOrderInf
 // TODO: ... not duplicate of code
 @Serializable
 data class doneOrders(
-                      val buyer: String,
-                      val seller: String,
-                      val info: cryptoOrderInfo,
-                      val isCrypto2Crypto: Boolean = true,
-                      val key: String,
-                      val time:Long = System.currentTimeMillis()
+    var buyer: String,
+    var seller: String,
+    val info: cryptoOrderInfo,
+    val isCrypto2Crypto: Boolean = true,
+    val key: String,
+    val time:Long = System.currentTimeMillis()
                     )

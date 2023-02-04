@@ -24,7 +24,7 @@ fun main(args: Array<String>) {
             Thread.sleep(3000);
         }
     }
-    AsyncServer.DebugEnabled = true
+    AsyncServer.DebugEnabled = false
     var s = AsyncServer("0.0.0.0", 3334) // async
     Settings.load_propetries()
     val myServ = JettyServer("0.0.0.0", 8081) // thread

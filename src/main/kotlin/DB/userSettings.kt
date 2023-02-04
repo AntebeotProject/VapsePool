@@ -146,7 +146,7 @@ data class userPrivilegies(val owner: String, val level: Int) {
             changeUserPrivilegies(o, nLvl)
         }
         fun checkUserPrivilegies(o: String, pr: privilegies): Boolean{
-            val p = getUserPrivilegies(o)!!
+            val p = getUserPrivilegies(o) ?: userPrivilegies(o, privilegies.NOT_PRIVILEGED.ordinal)
             return pr.isAllowed(p.level, pr)
         }
     }

@@ -44,7 +44,6 @@ const val defCipherInstance = "AES/CBC/PKCS5Padding"
 const val defaultPathOfHTTPFiles = "HTTPServer"
 
 const val defRPCTXFee = 0.01 // I think is ok. for now.
-const val debufEnbaled = false
 fun printIfDebug(w: String) = if (debugEnabled) println("[DEBUG JETTY] $w") else {}
 
 @Serializable
@@ -78,7 +77,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
         // maybe change key fun?
         private val KeyAESForCookie = Settings.m_propetries.getOrDefault("SecretAESKeyForCookie", "123456789ABCDEF-").toString()
         fun strToKey(key: String): SecretKey {
-            println("KEY FOR DECRYPT $key")
+            // println("KEY FOR DECRYPT $key")
             var wkey = String(key.toByteArray(), Charsets.US_ASCII)
             if (wkey.length != 16) {
                 if (wkey.length > 16) wkey = wkey.substring(0,16) // todo? salt or etc? 128 bit = 16 bytes?
@@ -175,6 +174,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                     )
                 } else {
                     if (DB.userHaveNotConfirmedTXOnCoinName(owner, coin)) {
+                        tx.clearOldTxs(1)
                         return Json.encodeToString(JSONBooleanAnswer(false, uLanguage.getString("uHaveNotConfirmedTx")))
                     } else {
                         val nadr = JettyServer.Users.genNewAddrForUser(owner, coin, search_unused = true)

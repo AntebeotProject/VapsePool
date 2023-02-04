@@ -75,7 +75,7 @@ class CryptoCoins {
                             coins.put(f.name.split(".")[0], rpc)
                         }
                         "monero" -> {
-                            println("is monero. $cMode")
+                            // println("is monero. $cMode")
                             val cPort = tPropetries.getProperty("port").toInt()
                             val rpc = cMode.init(cUser, cPass, port = cPort)
                             coins.put(f.name.split(".")[0], rpc)

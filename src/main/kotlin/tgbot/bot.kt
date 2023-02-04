@@ -242,7 +242,7 @@ class prostaVapseTelegaBot {
         {
             val l = String.format(
                 uLanguage.getString("tgbot_orderinfo_active"),
-                ord.owner, ord.info.toGiveName, ord.info.toGetName, ord.info.toGiveName, ord.info.priceRatio, ord.info.minVolume, ord.info.maxVolume, ord.key, ord.key
+                ord.info.toGiveName, ord.info.toGetName, ord.info.toGiveName, ord.info.priceRatio, ord.info.minVolume, ord.info.maxVolume, ord.key, ord.key
             )
             bS.append("$l\n")
         }
@@ -265,7 +265,7 @@ class prostaVapseTelegaBot {
             // println(uLanguage.getString("tgbot_orderinfo_self"))
             val l = String.format(
                 uLanguage.getString("tgbot_orderinfo_self"),
-                ord.owner, ord.info.toGiveName, ord.info.toGetName, ord.info.toGiveName, ord.info.priceRatio, ord.info.minVolume, ord.info.maxVolume,
+                ord.info.toGiveName, ord.info.toGetName, ord.info.toGiveName, ord.info.priceRatio, ord.info.minVolume, ord.info.maxVolume,
                 ord.key, ord.key, ord.key, ord.isActive, ord.key
             )// %8s https://stackoverflow.com/questions/44192287/printf-an-argument-twice. but for now is ok.
             bS.append("$l\n")
@@ -343,9 +343,10 @@ class prostaVapseTelegaBot {
     }
     fun remOrder(uid: Long, update: Update)
     {
-        val key = update.message().text().split(" ")[1]
+        val key = update.message().text().split(" ")[1].trim()
         val uidForDB = userInfoToDBName(uid)
         order.remOrderByIDAndOwner(uidForDB, key)
+        sendMsg(uid, String.format("done"))
     }
     val special_commands = mutableListOf(
         "activeOrder" to ::activeOrder,
@@ -386,7 +387,7 @@ class prostaVapseTelegaBot {
             val uLanguage = getLangForUid(uid)
             val uidForDB = userInfoToDBName(uid)
             if (u_on(uLanguage).containsKey(msg.text())) {
-                println("load fun")
+                // println("load fun")
                 uLastAction[uidForDB] = msg.text()
                 u_on(uLanguage)[msg.text()]!!(update, uid)
             }else when (msg.text())

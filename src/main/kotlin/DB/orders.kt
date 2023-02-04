@@ -38,7 +38,7 @@ data class cryptoOrderInfo(val toGiveName: String, val toGetName: String, val pr
 }
 
 @Serializable
-data class order(val owner: String, val info: cryptoOrderInfo, val orderMSG: String?,
+data class order(var owner: String, val info: cryptoOrderInfo, val orderMSG: String?,
                  val isCoin2CoinTrade: Boolean = false, val isFiat2CoinTrade: Boolean = false, val ownerIsBuyer: Boolean = false,
                  val isActive: Boolean = false, val key: String = (ObjectId().toHexString())
 ) {
@@ -72,7 +72,8 @@ data class order(val owner: String, val info: cryptoOrderInfo, val orderMSG: Str
         {
             val col = DB.mongoDB.getCollection<order>("orders")
             val ord = order(owner, info, orderMSG, isCoin2CoinTrade, isFiat2CoinTrade, ownerIsBuyer, isActive = isActive)
-            if (ordersExistsForOwner(owner,ord)) throw notAllowedOrder("simillar order exists already. try without another settings")
+            if (order.getOrdersByOwner(owner).size > 10) throw notAllowedOrder("you have much orders. remove some firstly")
+            //if (ordersExistsForOwner(owner,ord)) throw notAllowedOrder("simillar order exists already. try without another settings")
             val ownBalance = DB.getLoginBalance(ord.owner)?.get(info.toGiveName)!!
             if (ownBalance.balance.toBigDecimal() < info.maxVolume.toBigDecimal()) throw notAllowedOrder("bad balance")
             if (info.toGiveName == info.toGetName) throw notAllowedOrder("toGiveName not will be equal toGetName")

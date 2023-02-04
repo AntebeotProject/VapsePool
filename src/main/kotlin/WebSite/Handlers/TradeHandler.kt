@@ -80,6 +80,14 @@ class TradeHandler : AbstractHandler() {
                     val a = request.getParameter("a").toBoolean()
                     val (offset, lim) = JettyServer.getOffsetLimit(baseRequest)
                     val orders = order.getOrdersByActivity(a, lim = lim, skip = offset)
+                    //val priv = userPrivilegies.getUserPrivilegies(session.owner)?: userPrivilegies(session.owner,
+                    //    userPrivilegies.privilegies.NOT_PRIVILEGED.ordinal);
+                    if (!userPrivilegies.checkUserPrivilegies(session.owner, userPrivilegies.privilegies.SHOW_ORDERS)) {
+                      for(idx in 0 until orders.size)
+                      {
+                          orders[idx].owner = ""
+                      }
+                    }
                     return response.writer.print(Json.encodeToString(orders))
                 }
                 "getComissionPercent" ->
@@ -161,7 +169,15 @@ class TradeHandler : AbstractHandler() {
                 "getLastDoneTrades" ->
                 {
                     val (offset,lim) = JettyServer.getOffsetLimit(baseRequest)
-                    return response.writer.print(Json.encodeToString(trade.getLastDoneTrades(skip = offset, lim = lim)))
+                    val orders = trade.getLastDoneTrades(skip = offset, lim = lim)
+                    if (!userPrivilegies.checkUserPrivilegies(session.owner, userPrivilegies.privilegies.SHOW_ORDERS)) {
+                        for(idx in 0 until orders.size)
+                        {
+                            orders[idx].buyer=""
+                            orders[idx].seller=""
+                        }
+                    }
+                    return response.writer.print(Json.encodeToString(orders))
                 }
                 else -> {
                     return response.writer.print(Json.encodeToString(JSONBooleanAnswer(true)))
