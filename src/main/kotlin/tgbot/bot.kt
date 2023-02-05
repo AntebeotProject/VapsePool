@@ -345,7 +345,7 @@ class prostaVapseTelegaBot {
     {
         val key = update.message().text().split(" ")[1].trim()
         val uidForDB = userInfoToDBName(uid)
-        order.remOrderByIDAndOwner(uidForDB, key)
+        order.remOrderByIDAndOwner(key, uidForDB)
         sendMsg(uid, String.format("done"))
     }
     val special_commands = mutableListOf(
