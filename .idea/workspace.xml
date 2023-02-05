@@ -7,7 +7,7 @@
     <list default="true" id="9d8d29b0-6bef-4d84-833c-7d9efae7a195" name="Changes" comment="OTP">
       <change beforePath="$PROJECT_DIR$/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/file-system.probe" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/tgbot/bot.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/tgbot/bot.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/DB/trade.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/DB/trade.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

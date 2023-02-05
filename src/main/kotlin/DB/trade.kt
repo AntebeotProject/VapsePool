@@ -52,8 +52,9 @@ data class trade(val buyer: String, val seller: String, val info: cryptoOrderInf
 
             val ownerBalanceLessThanCountToBuy = (ownBalanceInDecimal < forOneCountSell)
             val countMoreThanLimit = (forOneCountSell > ord.info.maxVolume.toBigDecimal())
+            val countLessThanLimit = (forOneCountSell < ord.info.minVolume.toBigDecimal())
 
-            if (ownerBalanceLessThanCountToBuy || countMoreThanLimit) throw notAllowedOrder(uLanguage.getString("countMoreThanLimit"))
+            if (ownerBalanceLessThanCountToBuy || countMoreThanLimit || countLessThanLimit) throw notAllowedOrder(uLanguage.getString("countMoreThanLimit"))
 
             if (ord.isCoin2CoinTrade) {
                 // is auto
