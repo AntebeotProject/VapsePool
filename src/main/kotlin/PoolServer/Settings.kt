@@ -11,6 +11,8 @@ const val defDBType = "mongodb"
 const val defDBName = "VAPSEPOOL"
 object Settings {
     public val m_propetries = Properties()
+    const val defAllowFiat = "rub"
+    var allowFiatList = mutableListOf<String>()
     public fun load_propetries(fPath: String = "propetries.config") {
         val configFile = File(fPath)
         if (configFile.exists()) {
@@ -27,6 +29,8 @@ object Settings {
             m_propetries.setProperty("DatabaseName", defDBName) // magic name. for now is ok i think.
             m_propetries.setProperty("SecretSalt", defSalt)
             m_propetries.store(FileOutputStream(fPath), null)
+            m_propetries.setProperty("allowFiat", defAllowFiat)
         }
+        allowFiatList = m_propetries.getOrDefault("allowFiat", defAllowFiat).toString().split(",").toMutableList()
     }
 }

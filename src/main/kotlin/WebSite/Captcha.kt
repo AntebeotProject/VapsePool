@@ -15,8 +15,8 @@ import kotlin.concurrent.thread
 import kotlin.random.Random
 
 const val DotSize = 5
-const val DotsCountRand = 250
-const val LinesCountRand = 250
+const val DotsCountRand = 25
+const val LinesCountRand = 25
 const val defCaptchaCookie = "captcha_id"
 // typealias CaptchaID = Pair<String, Long> // text ID and timemilliseconds
 class Captcha(width: Int, height: Int, type: Int = BufferedImage.TYPE_INT_RGB) {
@@ -29,11 +29,26 @@ class Captcha(width: Int, height: Int, type: Int = BufferedImage.TYPE_INT_RGB) {
         private val lastCatches = mutableSetOf<CaptchaData>()
         private var threadForCleanWorks = false
         fun checkCaptcha(par: String, baseRequest: Request, request: HttpServletRequest?, response: HttpServletResponse, delCaptchaAfter: Boolean = true): Boolean {
-            val cookie_id = JettyServer.Cookie.getCookie(defCaptchaCookie, baseRequest, encrypt = false)
-            if (cookie_id == null) JettyServer.sendJSONAnswer(false, "Not found cookie_id. ask before though ?w=get", response)
-            val answer = request?.getParameter(par)
-            val isCorrect = Captcha.isCaptchaCorrect(cookie_id!!, answer = answer!!, delCaptchaAfter = delCaptchaAfter)
-            return isCorrect
+            try {
+                val cookie_id = JettyServer.Cookie.getCookie(defCaptchaCookie, baseRequest, encrypt = false)
+                if (cookie_id == null) JettyServer.sendJSONAnswer(
+                    false,
+                    "Not found cookie_id. ask before though ?w=get",
+                    response
+                )
+                val answer = request?.getParameter(par)
+                val isCorrect =
+                    Captcha.isCaptchaCorrect(cookie_id!!, answer = answer!!, delCaptchaAfter = delCaptchaAfter)
+                return isCorrect
+            } catch(_: Exception)
+            {
+                JettyServer.sendJSONAnswer(
+                    false,
+                    "Not found cookie_id. ask before though ?w=get",
+                    response
+                )
+                return false;
+            }
         }
         fun runThreadToCleanLastCaptches() {
             if (threadForCleanWorks) return
@@ -120,7 +135,7 @@ class Captcha(width: Int, height: Int, type: Int = BufferedImage.TYPE_INT_RGB) {
         val allowedColor = listOf(Color.WHITE, Color.CYAN, Color.GREEN, Color.MAGENTA)
         m_g2d.setColor(Color.WHITE)
         m_g2d.font = Font("Arial", Font.BOLD, 20)
-        println("draw text $text")
+        // println("draw text $text")
         var pointX = 15
         var pointY = m_height / 2
         for(l in text) {

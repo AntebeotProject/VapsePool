@@ -6,6 +6,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.antibiotic.pool.main.DB.*
 import org.antibiotic.pool.main.DB.trade.Companion.comissionPercent
+import org.antibiotic.pool.main.PoolServer.Settings
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.antibiotic.pool.main.WebSite.JSONBooleanAnswer
@@ -71,6 +72,59 @@ class TradeHandler : AbstractHandler() {
                     } catch (e: java.lang.NumberFormatException) {
                         response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, "WrongNumber")))
                     }
+                }
+                "addP2POrderToSellCoin" -> {
+                    TODO("...")
+                    val toGiveName = request.getParameter("toGiveName")
+                    val fiatName = request.getParameter("fiatName")
+                    val Price = request.getParameter("Price")
+                    val VolumeStart = request.getParameter("VolumeStart")
+                    val VolumeMax = request.getParameter("VolumeMax")
+                    val orderMSG = request.getParameter("msg")
+                    val info = cryptoOrderInfo(toGiveName = toGiveName, toGetName = fiatName, priceRatio = Price, minVolume = VolumeStart, maxVolume = VolumeMax)
+                    if (!Settings.allowFiatList.contains(fiatName))
+                    {
+                        return response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, "this fiat type dissalowed")))
+                    }
+                    else
+                    {
+                        order.addOrder(session.owner, info = info, isFiat2CoinTrade = true, orderMSG = orderMSG!!)
+                        return response.writer.print(Json.encodeToString(JSONBooleanAnswer(true, "order was create")))
+                    }
+                }
+                "cofirmOutput" ->
+                {
+                    TODO("...")
+                    val id = request.getParameter("id").toString()
+                    val toSet = request.getParameter("toSet").toBoolean()
+                    val ord = trade.getP2PTradeById(id)
+                        ?: return response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, "ord not found")))
+                    if (ord.isCrypto2Crypto == false ||
+                        (ord.buyer.equals(session.owner) || ord.seller.equals(session.owner)) == false) return response.writer.print(Json.encodeToString(JSONBooleanAnswer(false, "not yours order")))
+                    else if (ord.buyer.equals(session.owner))
+                    {
+                        trade.changeAllowOutputBuyer(id, true)
+                        DB.createNewNotification(ord.seller, "${ord.buyer} подтверждает что перевел вам средства по сделке с ID: ${ord.key}")
+                        response.writer.print(JSONBooleanAnswer(true))
+                    } else
+                    {
+                        // is seller
+                        trade.changeAllowOutputSeller(id, true)
+                        DB.createNewNotification(ord.buyer, "${ord.seller} подтверждает что вы перевели средства по сделке с ID: ${ord.key}")
+                        val ord_ = trade.getP2PTradeById(id)!!
+                        if (ord_.buyerAllowOutput == true && ord_.sellerAllowOutput == true)
+                        {
+                            trade.checkTrade(id, uLanguage = uLanguage)
+                            response.writer.print(JSONBooleanAnswer(true, "Сделка подтверждена. Перевод покупателю средств от продавца должен был быть осуществим"))
+                        }
+                        else
+                        {
+                            response.writer.print(JSONBooleanAnswer(true, "Ожидаем подтверждения второго участника. Теперь ордер не закроется по истечению времени"))
+                        }
+
+                    }
+
+                    //if (ord.isFiat2CoinTrade && ord)
                 }
 
                 "getOrders" -> {

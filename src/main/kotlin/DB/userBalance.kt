@@ -31,6 +31,12 @@ data class userBalance(val Login: String,
             m_col.updateOne(Filters.and(userBalance::Login eq Login, userBalance::coinname eq coinname), setValue(userBalance::Balance, Balance))
         }
 
+        fun setBlockOutputForCoinName(Login: String, coinName: String, isBlocked: Boolean = true)
+        {
+            createUserBalanceIfNotExists(Login, coinName)
+            m_col.updateOne(Filters.and(userBalance::Login eq Login, userBalance::coinname eq coinName), setValue(userBalance::outputBlocked, isBlocked));
+        }
+
         fun changeLoginBalance(Login: String, Balance: Double, coinName: String) = changeLoginBalance(Login, BigDecimal(Balance.toString()), coinName)
         const val toSatoshiNums = 8
         // toString and after to BigDecimal better
