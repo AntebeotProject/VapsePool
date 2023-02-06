@@ -20,7 +20,11 @@ val telegabotEs = arrayOf(prostaVapseTelegaBot(), prostaVapseTelegaBot())
 fun main(args: Array<String>) {
     thread {
         while(true) {
-            for(telegabot in telegabotEs) telegabot.readUpdatesAndSaveProps()
+            try {
+                for (telegabot in telegabotEs) telegabot.readUpdatesAndSaveProps()
+            } catch(_: Exception) {}
+            catch(_: kotlin.NotImplementedError)
+            {}
             Thread.sleep(3000);
         }
     }

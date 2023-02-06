@@ -310,7 +310,8 @@ class prostaVapseTelegaBot {
         sendMsg(uid, uLanguage.getString("tgbot_active_was_changed"))
     }
     fun showOrders(uid: Long, update: Update) {
-        TODO("nomarl implementation")
+        // TODO("nomarl implementation")
+        sendMsg(uid, "use menu.")
     }
     fun doTrade(uid: Long, update: Update) {
         val (uLanguage, uidForDB) = getLangAndUIDForDb(uid)
