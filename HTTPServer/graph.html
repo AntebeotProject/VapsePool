@@ -1,5 +1,6 @@
 <html>
   <head>
+	<meta charset="UTF-8"/>
     <script src="/js/jquery.js" type="text/javascript"></script>
 	
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
@@ -10,8 +11,19 @@ Date.prototype.dayOfYear= function(){
     j1.setMonth(0, 0);
     return Math.round((this-j1)/8.64e7);
 }	
+const limitTrades = 666
   function drawChart() {
-	var doneTrades = exchangeData ({'w': 'getLastDoneTrades'}) 
+    // exchangeData ({'w': 'getLastDoneTrades', "offset":50, "lim":25} ) 
+	var doneTrades = []
+	var offset = 0
+	while(true)
+	{
+		let tmp = exchangeData ({'w': 'getLastDoneTrades', "offset": offset, "lim":25})
+		if (tmp.length == 0) break
+		doneTrades = doneTrades.concat(tmp)
+		offset += 25
+		if (doneTrades.length > limitTrades) break; // is last. is ok
+	}
  
 	var ordersInfo = []
 	var table = []
@@ -47,12 +59,12 @@ Date.prototype.dayOfYear= function(){
 			console.log(new Date(time))
 			// yValues.push(new Date(time).getSeconds())
 			yValues.push(y)
-			if (last_balance < price) y++
-			else if (last_balance > price) y--
+			if (last_balance < price) y--
+			else if (last_balance > price) y++
 			last_balance = price
 		}
 		new Chart(`${idx}`, {
-				  type: "bar",
+				  type: "line",
 				  data: {
 					labels: xValues,
 					datasets: [{
@@ -97,6 +109,6 @@ Date.prototype.dayOfYear= function(){
     </script>
   </head>
   <body>
-  
+	<center>ТУТ БУДЕТ В БУДУЮЩЕМ JPEG КАРТИНКИ С НАРИСОВАННЫМ ГРАФИКОМ</center>
   </body>
 </html>

@@ -1,0 +1,86 @@
+<div id="OutputMoneyBox">
+	<p> секция вывода средств </p>
+	<p>Your balance: <span id="balance"></span></p>
+	<p class="sectionWithout2fa">Login: <input type=textarea id="outputLogin"/></p>
+	<p class="sectionWithout2fa">Password: <input type=textarea id="outputPassword"/></p>
+	<p>Output address: <input type=textarea id="outputAddr"/></p>
+	<p>Count for send: <input type=textarea id="outputCMoney"/></p>
+	<p>Name of cryptocoin: <select id="coins_for_output" onchange="showBalance()"></select></p>
+	<p class="sectionWithout2fa">Text of captcha: <input type=textarea id="captchaText"/></p>
+	<p class="sectionWith2fa">2fa-code: <input type=textarea id="_2faCode"/></p>
+	<p class="sectionWithout2fa"><img src="" id="catpcha" /></p>
+	<p><button onclick=outputMoney_()>Send</button></p>
+	
+</div>
+<div id='alertBox' style="display:none">
+	<p id="alertTitle"></p>
+	<b id="alertMsg"></b>
+	<p><button onclick="hideAlertBox()" id="alertButton">OK</button></p>
+</div>
+<!-- scripts -->
+<script src="/js/userpanel.js" type="text/javascript"></script>
+<script type="text/javascript">
+//
+	var udata = userData()
+	function showBalance()
+	{
+		let coin_name = $("#coins_for_output").val()
+		
+		let balance = udata["Balances"][coin_name]["balance"]
+		$("#balance").text(balance + " " + udata["Balances"][coin_name]["CoinName"])
+	}
+	var updateUData = function() { udata = userData() } 
+	function outputMoney_()
+	{
+		let login = $("#outputLogin").val()
+		let pass =  $("#outputPassword").val()
+		let addr = $("#outputAddr").val()
+		let count_of_money = $("#outputCMoney").val()
+		let coin_name = $("#coins_for_output").val()
+		let captchaText = $("#captchaText").val()
+		let _2faCode = $("#_2faCode").val()
+		if (!userHave2FA()) {
+			let res = outputMoney(login, pass, addr, count_of_money, coin_name, captchaText)
+			showAlertBox(res.reason, "Info")
+			reloadCaptcha()
+			$("#captchaText").val("")
+		} else
+		{
+			// tb1q5tfcawds0nx20qqlstyqu34pneumt7wjr2txhx
+			//?w=outByOTP&code=666999&oAdr=mraKgrx4QKTrrWpiAXKke9VQx2bRR3uU9B&cMoney=1.0&coinname=gostcoin
+			let res = userData( {"w":"outByOTP", "code": _2faCode, "oAdr":addr, "cMoney": count_of_money, "coinname": coin_name} )
+			showAlertBox(res.reason, "Info")
+		}
+		updateUData()
+		showBalance()
+	}
+	// userHave2FA()
+	function hideShowAll(what, hide=true)
+	{
+		var idx = 0
+		while (idx < what.length)
+		{
+			let e = $(what[idx])
+			if (hide) 
+			{
+				e.hide(); 
+			} else { 
+				e.show();
+			}
+			idx++
+		}
+	}
+	
+	if (userHave2FA())
+	{
+		hideShowAll( $(".sectionWithout2fa") )
+		//$("#OutputMoneyBoxOTP").css("display", "block")
+	}
+	else
+	{
+		// $("#captcha").attr("src","/captcha?w=get")
+		hideShowAll( $(".sectionWith2fa") )
+		reloadCaptcha()
+	}
+	showBalance()
+</script>

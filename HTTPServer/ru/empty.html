@@ -37,10 +37,13 @@ function loadNavbar()
 	{
 	  navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('user', 'Профиль')\">Профиль</a></li>")
 	  navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('exchange', 'Обмен')\">Обмен</a></li>")
+	  navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('withdraw', 'Вывод')\">Вывод</a></li>")
+	  navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('usersettings', 'Настройки пользователя')\">Настройки</a></li>")
 	  navbar.append("<li><a href=\"/graph.html\"\">График</a></li>")
 	}
 }
 loadNavbar()
+startTimerForSessionRefresh(25)
 </script>
 <div id="content"></div>
 <div id='alertBox' style="display: none;">

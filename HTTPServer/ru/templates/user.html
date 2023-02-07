@@ -12,31 +12,7 @@ for now.
 <ul class=coins>
 </ul>
 </div>
-<div id="changePassBox">
-<p> секция смены пароля </p>
-Старый пароль: <input type=textarea id="last_pass"/></br>
-Новый пароль: <input type=textarea id="new_pass"/></br>
-<button onclick=changePass()>Change password</button>
-</div>
 
-<div id="OutputMoneyBox">
-<p> секция вывода средств </p>
-Логин: <input type=textarea id="outputLogin"/></br>
-Пароль: <input type=textarea id="outputPassword"/></br>
-Адрес получателя: <input type=textarea id="outputAddr"/></br>
-Кол-во средств для вывода: <input type=textarea id="outputCMoney"/></br>
-Название криптовалюты: <select id="coins_for_output"></select></br>
-Текст капчи: <input type=textarea id="captchaText"/></br>
-<img src="/captcha?w=get" id="catpcha"/></br>
-<button onclick=outputMoney_()>send money</button>
-</div>
-
-
-<p><button onclick="session_refresh()">updateSession</button></p>
-<div id='alertBox' style="display:none">
-	<p id="alertTitle"></p>
-	<b id="alertMsg"></b>
-	<p><button onclick="hideAlertBox()" id="alertButton">OK</button></p>
-</div>
+<!--<p><button onclick="session_refresh()">updateSession</button></p>-->
 <!-- scripts -->
 <script src="/js/userpanel.js" type="text/javascript"></script>

@@ -1,0 +1,75 @@
+<div id="changePassBox">
+<p> секция смены пароля </p>
+Старый пароль: <input type=textarea id="last_pass"/></br>
+Новый пароль: <input type=textarea id="new_pass"/></br>
+<button onclick=changePass()>Change password</button>
+</div>
+
+<p> Секция установки 2fa </p>
+<div id="delOTPSection" style="display:none">
+    <p>Секция удаления 2-фа</p>
+	Введите ваш код: <input type=textarea id="oldcode" /><button onclick="delOTP()">Подтвердить</button>
+</div>
+<div id="setOTPSection" style="display:none">
+    <p><button onclick="refreshQR()">Получить QR код</button></p>
+	<div id="setOTPSectionHiddenPart" style="display:none">
+		<p id="otpCode"></p>
+		<img src="" id="otpQR" /></br>
+		Введите код, можно из Гугл Аутентификатора: <input type=textarea id="code" /><button onclick="updateOTP()">Подтвердить</button>
+	</div>
+</div>
+<script type="text/javascript">
+function changePass()
+{
+	let lpass = $("#last_pass").val() 
+	let npass = $("#new_pass").val() 
+	let res = changePassword(lpass, npass)
+	showAlertBox(res.reason, "Info")
+}
+// OTP (2-fa)
+function getOTP()
+{
+	return userData({"w":"genOTP"});
+	
+}
+function refreshQR()
+{
+	$("#setOTPSectionHiddenPart").css("display", "block")
+	let section = $("#setOTPSection")
+	section.css("display", "block")
+	let otpcode=$("#otpCode")
+	let nOTP = getOTP()
+	let otpQR = $("#otpQR")
+	otpQR.attr("src", "/user/?w=GetQR&otp="+nOTP)
+	otpcode.text(nOTP)
+}
+function updateOTP()
+{
+	let res =  userData({"w":"setOTP", "otp": $("#otpCode").text().trim(), "code":  $("#code").val().trim() });
+	// showAlertBox(res.reason, "Info")
+	if (res)
+	{
+ 		$("#delOTPSection").css("display", "block")
+		$("#setOTPSection").css("display", "none") 
+	}
+}
+function delOTP()
+{
+	let otpcode=$("#oldcode").val()
+	let res = userData({"w":"remOTP", "code": otpcode});
+	if (res) 
+	{
+		$("#delOTPSection").css("display", "none")
+		$("#setOTPSection").css("display", "block")
+	}
+	
+}
+if (userHave2FA())
+{
+	$("#delOTPSection").css("display", "block")
+}
+else
+{
+	$("#setOTPSection").css("display", "block")
+}
+</script>

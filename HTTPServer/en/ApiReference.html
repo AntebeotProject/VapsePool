@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Api reference</title>
     <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
-<p>Handlers</p>
+
+<p>Хэндлеры</p>
 <ul>
   <li>/registration</li>
   <li>/user</li>
@@ -18,54 +19,64 @@
   <li>/dashboard</li>
   <li>/priv</li>
 </ul>
-<p> about lang </p>
+<p> О языке </p>
 <pre>
-	for language, where not need session use ?lang parameter. example. ?...&lang=ru_RU 
+	For set language where not exists session use lang GET parameter Example. ?...&lang=ru_RU 
 	?...&lang=en_EN
-	where need. for change use /user/?w=changeLanguage&lang=en_US or /user/?w=changeLanguage&lang=ru_RU
+	for pages where exists and use sessions. use user settings for language. example for change
+ /user/?w=changeLanguage&lang=en_US or /user/?w=changeLanguage&lang=ru_RU
+warning, notifications that was on old language not will be translated after change language. only new notifications will be on new language.
 	or /user/?changeLanguage=ru_RU
-	for get supports language /api/?w=getSupportsLanguage
+	For get list of all supports language use /api/?w=getSupportsLanguage
 </pre>
-<p>registration</p>
-<p>parameters:</p>
+<p>REGISTRATION</p>
+<p>GET Parameters:</p>
 <ol>
-    <li>workname (userlogin)</li>
-    <li>workpass (userpassword)</li>
+    <li>Name of miner (workname)</li>
+    <li>Password of miner (workpass)</li>
+    <li>Password for confirmation (workpass2)</li>
+    <li>Text of captcha (captchaText)</li>
 </ol>
 <p>signin:</p>
 <p>parameters:</p>
 <ol>
-    <li>workname (userlogin)</li>
-    <li>workpass (userpassword)</li>
+    <li>Name of miner (workname)</li>
+    <li>Password of miner (workpass)</li>
+    <li>2-Factor OTP (code) [[disabled by default]]</li>
+    <li>Captcha text (captchaText)</li>
 </ol>
 <p>user:</p>
-<p>(need session) (auth before):</p>
+<p>(Need session):</p>
 <pre>
-    supports = getowninput, genAddress, updateSession, changePassword, checkOTP, genOTP, setOTP, GetQR, outByOTP
-    getowninput - returns input address for cryptocoin by parameter ?cryptocoin example /user?w=getowninput&cryptocoin=bitcoin
-    genAddress - returns new input address for cryptocoin by parameter ?cryptocoin example /user?w=genAddress&cryptocoin=gostcoin
-    updateSession - just update last activity by session. for session life. without parameters
+    Supports = getowninput, genAddress, updateSession, changePassword, checkOTP, genOTP, setOTP, GetQR, outByOTP
+    getowninput - returns own input address for cryptocoin ?cryptocoin example /user?w=getowninput&cryptocoin=bitcoin
+    genAddress - generate new input address for cryptocoin (will change old) ?cryptocoin example /user?w=genAddress&cryptocoin=gostcoin
+    updateSession - updateSession. update session of user
     changePassword - for change password ?w=changePassword&last_pass={userlastpassword}&new_pass={new password of user}
-    In future versions for all things of users that do updates need be captcha before. for now its can be skip
 
 /user/?w=setOTP&otp=ZSM6TF66FPZ7WX57VGJQHGP22CRJZ6TV&code=138862
-where code is old code
+code - is old code.
 /user/?w=setOTP&otp=ZSM6TF66FPZ7WX57VGJQHGP22CRJZ6TV
 /user/?w=GetQR&otp=ZSM6TF66FPZ7WX57VGJQHGP22CRJZ6TV
 /user/?w=genOTP
-/user/?w=outByOTP&code=666999&oAdr=mraKgrx4QKTrrWpiAXKke9VQx2bRR3uU9B&cMoney=1.0&coinname=gostcoin
-    bydefault returns all input addresses of user and balances.
+/user/?w=remOTP&code=000000 - delete 2fa code
+/user/?w=outByOTP&code=000000&oAdr=mraKgrx4QKTrrWpiAXKke9VQx2bRR3uU9B&cMoney=1.0&coinname=gostcoin
+by default returns all addresses of user and balances
 </pre>
 <p>notify:</p>
-<p>(need session) (auth before):</p>
+<p>(need session):</p>
 <pre>
-    getByTime - time in milliseconds for skip example /notify?w=getByTime&t=304003040340
+    getByTime - Get notifications by milliseconds /notify?w=getByTime&t=304003040340
+    offset - for skip.
+    lim - limit from 5 to 25
+    by default returns last 5 notifications of 24 hours.
+    /notify/?w=get&lim=25&offset=0
 
-    bydefault returns notification of one day. for last 24 hours
 </pre>
 <p>exchange:</p>
-<p>(need session) (auth before):</p>
+<p>(need session):</p>
 <pre>
+  ...
   getLastDoneTrades, getMyDoneTrade, getMyReviews, getTraderStats, addReview, doTrade, changeActiveOrder, removeMyOrderByID
   ,getOwnOrders, getComissionPercent, getOrders, addOrderToSellCoin2Coin
   UPD:
@@ -73,36 +84,37 @@ where code is old code
   /exchange/?w=getOrdersByActivityAndCoin&a=true&coin=monero
 </pre>
 <p>api:</p>
-<p>(need session) (auth before):</p>
+<p>(нужна сессия):</p>
 <pre>
-    w parameters - getbalance, getallowcoins, output, BitcoinBroadcast, ReserveGet,
-    getbalance - returns balance of user [[will be in future version only for on privileges people]]
-    getallowcoins - returns cryptocoins that accept server
-    output - for money output. parameters: acc - account login, pass - account password, oAdr - output address, cMoney - count for send, coinname - name of cryptocoin
-    example: ?w=output&acc=testusername&pass=testusername&oAdr=mraKgrx4QKTrrWpiAXKke9VQx2bRR3uU9B&cMoney=1.0&coinname=gostcoin
-    UPD: For now this works only with captchaText
-    BitcoinBroadcast - broardcast tx. parameters tx. example ?w=BitcoinBroadcast&tx={Tx for broadcast in network bitcoin. as example from electrum offline wallet}
-    ReserveGet - info about server money. will be allowed in future version only for privilleged users.
+    w parameters - getbalance, getallowcoins, output, BitcoinBroadcast,
+    getallowcoins - возвращает список криптовалют поддерживаемых сервером
+    output - Вывод средств. Параметры: acc - логин аккаунта, pass - пароль пользователя, oAdr - адрес получателя, cMoney - кол-во для отправки, coinname - название криптовалюты
+    example: ?w=output&acc=testusername&pass=testusername&oAdr=mraKgrx4QKTrrWpiAXKke9VQx2bRR3uU9B&cMoney=1.0&coinname=gostcoin&captchaText=abcdef
+    BitcoinBroadcast - добавление транзакции биткоина в сеть. пример ?w=BitcoinBroadcast&tx=Транзакция
 </pre>
 <p>captcha:</p>
-<p>(need session) (auth before):</p>
+<p>(нужна сессия):</p>
 <pre>
-    w parameters - get returns new captcha for user. example /captcha/?w=get
-    answerTest - for test example. example. example ?w=answerTest&a=pJXhEEHIKy where a is answer of last captcha of user
+    w parameters - возвращает капчу для пользователя. пример /captcha/?w=get
+    answerTest - только для теста. пример  ?w=answerTest&a=pJXhEEHIKy
 </pre>
-<p>dashboard:</p>
 <p>priv</p>
 changeUserPriv, removeOrderByID, getOrderByName, getReviewsByReviewer, getReviewsByAbout, getbalance
 <pre>
+</pre>
+<p>dashboard:</p>
 <pre>
-    Just returns dashboard of pool
+    Возвращает информацию о состояние пула.
+</pre>
+<p>дополнительные параметры</p>
+<pre>
+К "гетерам" где может быть большой вывод добавлен offset и lim. ?...&offset=22&lim=25 
+Могут вовзращать значения в обратном порядке, не обязательно использовать offset и lim
 </pre>
 <div id="footer"></div>
 <!-- scripts -->
 <script src="/js/jquery.js" type="text/javascript"></script>
 <script src="/js/cursor.js" type="text/javascript"></script>
 <script src="/js/functions.js" type="text/javascript"></script>
-<!-- refactoring will be -->
-<script type="text/javascript">changeULang("en_US");</script>
 </body>
 </html>

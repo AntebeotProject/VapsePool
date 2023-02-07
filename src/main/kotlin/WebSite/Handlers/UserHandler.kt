@@ -88,7 +88,19 @@ class UserHandler : AbstractHandler() {
                 "setOTP" -> {
                     val otp = request.getParameter("otp")
                     val code = request.getParameter("code")
+                    if (userOTP.getCode(otp) != code) throw Exception(uLanguage.getString("OTPNotCorrect"))
                     userOTP.set(session.owner, otp, code)
+                    Json.encodeToString((JSONBooleanAnswer(true)))
+                }
+                "remOTP" ->
+                {
+                    if (!userOTP.userOTPExistsForUser(session.owner)) Json.encodeToString((JSONBooleanAnswer(true)))
+                    else
+                    {
+                        val code = request.getParameter("code")
+                        if (userOTP.getCodeForUser(session.owner) != code ) throw Exception(uLanguage.getString("OTPNotCorrect"))
+                        userOTP.dropFor(session.owner)
+                    }
                     Json.encodeToString((JSONBooleanAnswer(true)))
                 }
                 // ZSM6TF66FPZ7WX57VGJQHGP22CRJZ6TV
@@ -97,7 +109,7 @@ class UserHandler : AbstractHandler() {
                     Json.encodeToString(secret)
                 }
                 "checkOTP" -> {
-                    Json.encodeToString(userOTP.getCodeForUser(session.owner))
+                    Json.encodeToString(userOTP.userOTPExistsForUser(session.owner))
                 }
                 "GetQR" -> {
                     response!!.setContentType("image/png; charset=UTF-8");
@@ -114,7 +126,7 @@ class UserHandler : AbstractHandler() {
                     return QRCode(qr_code).render(cellSize = 5, margin = 0).writeImage(imageOut)
                 }
                 "outByOTP" -> {
-                    if (userOTP.userOTPExistsForUser(session.owner) ) {
+                    if (!userOTP.userOTPExistsForUser(session.owner) ) {
                         Json.encodeToString((JSONBooleanAnswer(false, uLanguage.getString("OTPNotExists"))))
                     }
                     else if (request.getParameter("code").equals(userOTP.getCodeForUser(session.owner))) {

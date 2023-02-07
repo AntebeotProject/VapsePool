@@ -4,17 +4,31 @@ Use apireference if u not want use scripts.
 for now.
 </noscript>
 
+<div id="pricespair">
+	<p>Пара: <select id="coinpairs" onchange="showOrderByPair()"></select></p>
+</div>
 <div id="calcuvator">
 <p>Какькулятор цен:</p>
 Цена: <input type=textarea id="price_calc" value="60000" onchange="calcuvatorcalc()"/>
 Кол-во: <input type=textarea id="count_calc" value="1" onchange="calcuvatorcalc()"/>
 <p id="calcuvator_answer">60000</p>
 </div>
+	<p>
+		<pre>
+Инструкция. 
+Например, 1 monero стоит 96 dogecoin. 
+В цену вставляем 96. В кол-во сколько предпалагаете брать по этой цене. 
+Вам должно расчитать сколько вы отдадите dogecoin'ов за такое кол-во monero.
+		</pre>
+	</p>
 <div>
 <p>Активные ордера:</p>
 <ol id="active_orders"></ol>
 </div>
-<input type=textarea" value="1" id="count" placeholder="сколько купить">
+Сколько берете по этой цене: <input type=textarea" value="1" id="count" placeholder="сколько купить">
+<br/>
+<p><button onclick="getBackOrders()">Предыдущие</button><button onclick="getNextOrders()">Следующие</button></p>
+<hr/>
 <p>Мои ордера</p>
 <ol id="my_orders"></ol>
 </div>
@@ -28,12 +42,6 @@ for now.
 	<p>Что отдаете взамен: <select type=textarea id="SellNamecoin"></select></p>
 	<p>Что получаете взамен: <select type=textarea id="BuyNamecoin"></select></p>
 	<p><button onclick=addOrder_()>Добавить ордер</button></p>
-	<p>
-<pre>
-Отношение gostcoin к bitcoin по цене за которую продается 1 единица gostcoin в bitcoin.
-Например цена 1 gostcoin = 0.0000068 bitcoin
-</pre>
-	</p>
 </div>
 <p><button onclick="session_refresh()">updateSession</button></p>
 <div id='alertBox' style="display:none">
@@ -43,6 +51,85 @@ for now.
 </div>
 <script type="application/javascript">
 	var coins = getAllowCoins()
+	var curOffset = 0
+	
+	function getOrderByPair(coin1, coin2 ,offset=-1, lim=25)
+	{
+		if (offset == -1) offset = curOffset
+		// console.log(offset)
+		return exchangeData( {'w':"getOrdersByCoinPair", "a": true, "coin1": coin1, "coin2": coin2, "lim": lim, "offset": offset} )
+	}
+	function getBackOrders(lim = 25)
+	{
+		console.log("back")
+		if (curOffset - lim < 0) curOffset = 0
+		else curOffset-=lim
+	}
+	function getNextOrders(lim=25, name = "#coinpairs")
+	{
+		let sel = $(name)
+		let pair = sel.val().split("/")
+		// /exchange/?w=getOrdersByCoinPair&a=true&coin1=monero&coin2=dogecoin
+		var ords = getOrderByPair(pair[0], pair[1], curOffset+lim, lim)
+		if (ords.length == 0) {
+			// console.log("is all. because return")
+			return
+		}
+		curOffset += lim
+	}
+	function showOrderByPair(offset=-1, lim=25, name = "#coinpairs")
+	{
+		let sel = $(name)
+		let pair = sel.val().split("/")
+		// /exchange/?w=getOrdersByCoinPair&a=true&coin1=monero&coin2=dogecoin
+		var active_orders = getOrderByPair(pair[0], pair[1], offset, lim)
+		var aorder = $("#active_orders")
+		// aorder.clear()
+		aorder.empty();
+		for(IDX in active_orders)
+		{
+			let order = active_orders[IDX]
+			console.log(order.key)
+			aorder.append(`<ul class="order"><li>ID: ${order.key}</li><li>${order_to_info(order)}<li><button onclick='doTradee("${order.key}")'>Сделать сделку</button></li></ul>`)
+		}
+	}
+	function addPairs(name = "#coinpairs")
+	{
+		let sel = $(name)
+		console.log(sel)
+		let pairs = getPairs()
+		for (idx in pairs) {
+			console.log("add pair")
+			let pair = pairs[idx]
+			console.log(pair)
+			sel.append($('<option>', {
+				value: pair,
+				text: pair
+			}));
+			
+		}
+
+	}
+	function getPairs()
+	{
+		var x = 0
+		var y = 0
+		var fPairs = []
+		while(x < coins.length)
+		{
+			let fCoin = coins[x]
+			while(y < coins.length)
+			{
+				let sCoin = coins[y++]
+				if (fCoin === sCoin) continue
+				if (fPairs.includes(fCoin+"/"+sCoin) || fPairs.includes(sCoin+"/"+fCoin)) continue
+				fPairs.push(fCoin+"/"+sCoin)
+			}
+			y = 0;
+			x++;
+		}
+		return fPairs
+	}
 	function addOrder_()
 	{
 		let VolumeMax = $("#VolumeMax").val() // 100
@@ -65,7 +152,7 @@ for now.
 	function order_to_info(ord)
 	{
 	console.log(ord)
-	return `${ord.owner} желает продать ${ord.info.toGiveName} за ${ord.info.toGetName}` +
+	return `${ord.owner} желают продать ${ord.info.toGiveName} за ${ord.info.toGetName}<br/>` +
 	`1${ord.info.toGiveName} = ${ord.info.priceRatio}${ord.info.toGetName}. Лимиты ${ord.info.minVolume} - ${ord.info.maxVolume}`		
 	}
 	function calcuvatorcalc()
@@ -96,6 +183,18 @@ for now.
 			}));
 		}	
 	}
+	function showMyOrders()
+	{
+		var myorders = $("#my_orders")
+		var ownOrders = exchangeData({'w':"getOwnOrders"})
+		for(IDX in ownOrders)
+		{
+			let order = ownOrders[IDX]
+			console.log(order.key)
+			myorders.append(`<ul class="order"><li>${order.owner}</li><li>${order.key}</li><li>${order_to_info(order)}<li><button onclick='changeActiveOrder_("${order.key}", true)'>Сделать ордер активным</button><button onclick='changeActiveOrder_("${order.key}", false)'>Сделать ордер неактивным</button><button onclick='remOrder("${order.key}")'>rem order</button></li></ul>`)
+
+		}
+	}
 	function changeActiveOrder_(key, status)
 	{
 		console.log(`set status ${status} to ${key}`)
@@ -105,24 +204,9 @@ for now.
 //////
 // myorders.append('<ul class="order"><li>'+order.owner+'</li><li>'+order.orderMSG+'</li><li>'+order.key+'</li><li>'+ order_to_info(order) +'<li><button onclick="doTrade_("'+order.key+'")">Сделать сделку</button></li></ul>')
 // there ^^ vuln in firefox
-	var aorder = $("#active_orders")
-	var active_orders = getOrders()
-	for(IDX in active_orders)
-	{
-		let order = active_orders[IDX]
-		console.log(order.key)
-		aorder.append(`<ul class="order"><li>${order.owner}</li><li>${order.key}</li><li>${order_to_info(order)}<li><button onclick='doTradee("${order.key}")'>Сделать сделку</button></li></ul>`)
-
-	}
-	var myorders = $("#my_orders")
-	var ownOrders = exchangeData({'w':"getOwnOrders"})
-	for(IDX in ownOrders)
-	{
-		let order = ownOrders[IDX]
-		console.log(order.key)
-		myorders.append(`<ul class="order"><li>${order.owner}</li><li>${order.key}</li><li>${order_to_info(order)}<li><button onclick='changeActiveOrder_("${order.key}", true)'>Сделать ордер активным</button><button onclick='changeActiveOrder_("${order.key}", false)'>Сделать ордер неактивным</button><button onclick='remOrder("${order.key}")'>rem order</button></li></ul>`)
-
-	}
+	// var active_orders = getOrders()
+	showMyOrders()
 	add2SelectAllowCoins($("#SellNamecoin"))
 	add2SelectAllowCoins($("#BuyNamecoin"))
+	addPairs()
 </script>

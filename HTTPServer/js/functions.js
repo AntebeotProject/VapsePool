@@ -11,6 +11,34 @@ function getAlertText() {
 function getAlertBox() {
 	return $("#alertBox")
 }
+function expireCookie(name)
+{
+	var tmp = ""
+	let cookies = document.cookie.split(";")
+	for(idx in cookies) 
+	{
+		let cookie = cookies[idx]
+		let pair = cookie.split("=")
+		if (pair[0].trim() === name)
+		{
+			console.log("add expires")
+			const d = new Date();
+			d.setTime(d.getTime() + (1*24*60*60*1000));
+			let expires = "expires="+ d.toUTCString();
+			tmp = tmp + pair[0].trim()+"="+pair[1]+";"+ expires + ";path=/";
+			continue
+		}
+		tmp = tmp + pair[0]+"="+pair[1]+";"
+		// let idx = console.log(idx) 
+	}	
+}
+function startTimerForSessionRefresh(seconds = 25)
+{
+	console.log("Session was updated")
+	expireCookie("usession")
+	// $.cookie("usession", val, { path: '/', expires: expDate })
+	setTimeout(function() {updateSession(); startTimerForSessionRefresh(seconds);}, 1000 * seconds);
+}
 function reloadCaptcha() {
             var captcha = document.getElementById("catpcha")
             captcha.src="/captcha?w=get&" + new Date().getTime();
@@ -120,6 +148,8 @@ var genNewAddress = function (cryptocoin) { return userData ({'w':"genAddress", 
 var updateSession = function () { return userData ({'w':"updateSession"}) };
 var changePassword = function (last_pass, new_pass) { return userData ({'w':"changePassword", 'last_pass':last_pass, 'new_pass':new_pass}) };
 var getowninput  = function (cryptocoin) { return userData ({'w':"getowninput", 'cryptocoin': cryptocoin}) };
+var userHave2FA = function() { return userData({"w":"checkOTP"}) };
+var userHaveOTP = userHave2FA;
 function GetUserInfo(w = {}) {
    return userData(w)
 }

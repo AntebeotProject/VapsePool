@@ -31,13 +31,15 @@ function loadNavbar()
 	if (!userIsSigned())
 	{
 	 navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('auth', 'Sign in')\">Sign in</a></li>")
-	 navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('reg', 'Registration')\">Регистрация</a></li>")	
+	 navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('reg', 'Registration')\">Registration</a></li>")	
 	}
 	else
 	{
-	  navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('user', 'Профиль')\">Profile</a></li>")
-	  navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('exchange', 'Обмен')\">Exchange</a></li>")
-	  navbar.append("<li><a href=\"/graph.html\"\">Price charts</a></li>")
+	  navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('user', 'Profile')\">Profile</a></li>")
+	  navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('exchange', 'Exchange')\">Exchange</a></li>")
+	  navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('withdraw', 'Withdraw')\">Widthdraw</a></li>")
+	  navbar.append("<li><a href=\"#\" onclick=\"loadTemplate('usersettings', 'User settings')\">Settings</a></li>")
+	  navbar.append("<li><a href=\"/graph.html\"\">Charts</a></li>")
 	}
 }
 loadNavbar()

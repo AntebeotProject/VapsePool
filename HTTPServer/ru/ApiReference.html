@@ -86,19 +86,16 @@
 <p>(нужна сессия):</p>
 <pre>
     w parameters - getbalance, getallowcoins, output, BitcoinBroadcast, ReserveGet,
-    getbalance - возвращает баланс пользователя [[ Должно быть в будующем запрещено не для привилигированных ]]
-    getallowcoins - возвращает список криптовалют поддерживаемых сервером
-    output - Вывод средств. Параметры: acc - логин аккаунта, pass - пароль пользователя, oAdr - адрес получателя, cMoney - кол-во для отправки, coinname - название криптовалюты
-    example: ?w=output&acc=testusername&pass=testusername&oAdr=mraKgrx4QKTrrWpiAXKke9VQx2bRR3uU9B&cMoney=1.0&coinname=gostcoin
-    UPD: В настоящее время ещё нужен параметр captchaText
+    getallowcoins - get cryptocoins that supports by server
+    output - withdraw. Parameters: acc - Login, pass - Password, oAdr - Output address, cMoney - count of, coinname - coinname
+    example: ?w=output&acc=testusername&pass=testusername&oAdr=mraKgrx4QKTrrWpiAXKke9VQx2bRR3uU9B&cMoney=1.0&coinname=gostcoin&captchaText=abcde
     BitcoinBroadcast - добавление транзакции биткоина в сеть. пример ?w=BitcoinBroadcast&tx=Транзакция
-    ReserveGet - Резерв сервера. в будующем будет доступно только привилигированным
 </pre>
 <p>captcha:</p>
 <p>(нужна сессия):</p>
 <pre>
-    w parameters - возвращает капчу для пользователя. пример /captcha/?w=get
-    answerTest - только для теста. пример  ?w=answerTest&a=pJXhEEHIKy
+    w parameters - get captcha., example /captcha/?w=get
+    answerTest - only for test  ?w=answerTest&a=pJXhEEHIKy
 </pre>
 <p>priv</p>
 changeUserPriv, removeOrderByID, getOrderByName, getReviewsByReviewer, getReviewsByAbout, getbalance
@@ -106,7 +103,7 @@ changeUserPriv, removeOrderByID, getOrderByName, getReviewsByReviewer, getReview
 </pre>
 <p>dashboard:</p>
 <pre>
-    Возвращает информацию о состояние пула.
+    dashboard of pool server.
 </pre>
 <p>дополнительные параметры</p>
 <pre>

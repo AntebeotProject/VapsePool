@@ -8,35 +8,11 @@ for now.
 <p class="IsBlockedStatus"></p>
 <ul class="Balances">
 </ul>
-Cryptocoins that allows on server for now
+Cryptocoins that allows
 <ul class=coins>
 </ul>
 </div>
-<div id="changePassBox">
-<p> section for change pass </p>
-Old pass: <input type=textarea id="last_pass"/></br>
-new pass: <input type=textarea id="new_pass"/></br>
-<button onclick=changePass()>Change password</button>
-</div>
 
-<div id="OutputMoneyBox">
-<p> section for withdraw money </p>
-Login: <input type=textarea id="outputLogin"/></br>
-Pass: <input type=textarea id="outputPassword"/></br>
-output address: <input type=textarea id="outputAddr"/></br>
-amount: <input type=textarea id="outputCMoney"/></br>
-coin: <select id="coins_for_output"></select></br>
-captcha: <input type=textarea id="captchaText"/></br>
-<img src="/captcha?w=get" id="catpcha"/></br>
-<button onclick=outputMoney_()>send money</button>
-</div>
-
-
-<p><button onclick="session_refresh()">updateSession</button></p>
-<div id='alertBox' style="display:none">
-	<p id="alertTitle"></p>
-	<b id="alertMsg"></b>
-	<p><button onclick="hideAlertBox()" id="alertButton">OK</button></p>
-</div>
+<!--<p><button onclick="session_refresh()">updateSession</button></p>-->
 <!-- scripts -->
 <script src="/js/userpanel.js" type="text/javascript"></script>
