@@ -92,6 +92,7 @@ class TradeHandler : AbstractHandler() {
                         return response.writer.print(Json.encodeToString(JSONBooleanAnswer(true, "order was create")))
                     }
                 }
+
                 "cofirmOutput" ->
                 {
                     TODO("...")
@@ -126,7 +127,36 @@ class TradeHandler : AbstractHandler() {
 
                     //if (ord.isFiat2CoinTrade && ord)
                 }
+                "getOrdersByActivityAndCoin" ->
+                {
+                    val a = request.getParameter("a").toBoolean()
+                    val coin = request.getParameter("coin").toString()
+                    val (offset, lim) = JettyServer.getOffsetLimit(baseRequest)
+                    val orders = order.getOrdersByActivityAndCoin(coin, a, lim = lim, skip = offset)
+                    if (!userPrivilegies.checkUserPrivilegies(session.owner, userPrivilegies.privilegies.SHOW_ORDERS)) {
+                        for(idx in 0 until orders.size)
+                        {
+                            orders[idx].owner = ""
+                        }
+                    }
+                    return response.writer.print(Json.encodeToString(orders))
+                }
+                "getOrdersByCoinPair" ->
+                {
+                    val a = request.getParameter("a").toBoolean()
+                    val coin2 = request.getParameter("coin2").toString()
+                    val coin1 = request.getParameter("coin1").toString()
+                    val (offset, lim) = JettyServer.getOffsetLimit(baseRequest)
+                    val orders = order.getOrdersByCoinPairAndActivity(Pair(coin1, coin2), a, lim = lim, skip = offset)
+                    if (!userPrivilegies.checkUserPrivilegies(session.owner, userPrivilegies.privilegies.SHOW_ORDERS)) {
+                        for(idx in 0 until orders.size)
+                        {
+                            orders[idx].owner = ""
+                        }
+                    }
+                    return response.writer.print(Json.encodeToString(orders))
 
+                }
                 "getOrders" -> {
                     // /exchange/?w=getOrders&a=true
                     // /exchange/?w=getOrders&a=false

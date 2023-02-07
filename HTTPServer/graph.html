@@ -35,6 +35,8 @@ Date.prototype.dayOfYear= function(){
 		$("html").append(`<center><p>${sData[0]}/${sData[1]}</p><canvas id="${idx}" style="width:100%;max-width:700px"></canvas></center>`)
 		var xValues = [];
 		var yValues = [];
+		y=1;
+		last_balance=0;
 		for (x in ordersInfo[idx])
 		{
 			let p = ordersInfo[idx][x]
@@ -43,7 +45,11 @@ Date.prototype.dayOfYear= function(){
 			if (time == undefined) time = 0
 			xValues.push(price)
 			console.log(new Date(time))
-			yValues.push(new Date(time).getSeconds())
+			// yValues.push(new Date(time).getSeconds())
+			yValues.push(y)
+			if (last_balance < price) y++
+			else if (last_balance > price) y--
+			last_balance = price
 		}
 		new Chart(`${idx}`, {
 				  type: "bar",
@@ -52,8 +58,8 @@ Date.prototype.dayOfYear= function(){
 					datasets: [{
 					  fill: false,
 					  lineTension: 0,
-					  backgroundColor: "rgba(0,0,255,1.0)",
-					  borderColor: "rgba(0,0,255,0.1)",
+					  backgroundColor: "rgba(0,100,100,1.0)",
+					  borderColor: "rgba(0,100,0,1)",
 					  data: yValues
 					}],
 				  },

@@ -65,8 +65,8 @@ Amount: <input type=textarea id="count_calc" value="1" onchange="calcuvatorcalc(
 	function order_to_info(ord)
 	{
 	console.log(ord)
-	return `${ord.owner} желает продать ${ord.info.toGiveName} за ${ord.info.toGetName}` +
-	`он продает 1 gostcoin за ${ord.info.priceRatio}. Лимиты ${ord.info.minVolume} - ${ord.info.maxVolume}`		
+	return `${ord.owner} want to sell ${ord.info.toGiveName} by ${ord.info.toGetName}` +
+	`1${ord.info.toGiveName} = ${ord.info.priceRatio}${ord.info.toGetName}. Limits ${ord.info.minVolume} - ${ord.info.maxVolume}`		
 	}
 	function calcuvatorcalc()
 	{

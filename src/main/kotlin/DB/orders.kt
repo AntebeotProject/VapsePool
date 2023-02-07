@@ -1,10 +1,13 @@
 package org.antibiotic.pool.main.DB
 
+import com.mongodb.client.FindIterable
 import com.mongodb.client.model.Filters
 import kotlinx.serialization.Serializable
 import org.antibiotic.pool.main.CryptoCurrencies.CryptoCoins
+import org.antibiotic.pool.main.WebSite.JettyServer
 import org.bson.types.ObjectId
 import org.litote.kmongo.eq
+import org.litote.kmongo.find
 import org.litote.kmongo.getCollection
 import org.litote.kmongo.setValue
 import java.math.BigDecimal
@@ -136,18 +139,52 @@ data class order(var owner: String, val info: cryptoOrderInfo, val orderMSG: Str
             if (!it.hasNext()) return null
             return it.next()
         }
+        fun FindIterable<order>.toList_(): List<order>
+        {
+            val it = this.iterator()
+            val r = mutableListOf<order>()
+            while(it.hasNext())
+            {
+                val i = it.next()
+                r.add(i)
+            }
+            return r.toList()
+        }
+        fun getOrdersByActivityAndCoin(coin: String, s: Boolean = true, lim: Int = 25, skip: Int = 0): List<order>
+        {
+            val col = DB.mongoDB.getCollection<order>("orders")
+            //
+            if (!CryptoCoins.coins.contains(coin))
+            {
+                throw notAllowedOrder("cryptocurrency is not allowed")
+            }
+            val act = col.find("{isActive: $s, \$or: [{\"info.toGiveName\": \"$coin\"}, {\"info.toGetName\": \"$coin\"}] }")
+                .skip(skip).limit(lim)
+            val r = act.toList_()
+            return r.toList().sortedBy { it.info.priceRatio.toBigDecimal() }
+        }
+        fun getOrdersByCoinPairAndActivity(coins: Pair<String, String>, s: Boolean = true, lim: Int = 25, skip: Int = 0): List<order>
+        {
+            val (coin1, coin2) = coins;
+            val col = DB.mongoDB.getCollection<order>("orders")
+            //
+            if (!CryptoCoins.coins.contains(coin1) || !CryptoCoins.coins.contains(coin2))
+            {
+                throw notAllowedOrder("cryptocurrency is not allowed")
+            }
+            val act = col.find("{isActive: $s, \$or: [\n" +
+                    "  {\$and: [{\"info.toGiveName\": \"$coin1\"}, {\"info.toGetName\": \"$coin2\"}]},\n" +
+                    "  {\$and: [{\"info.toGiveName\": \"$coin2\"}, {\"info.toGetName\": \"$coin1\"}]}\n" +
+                    "    ] }")
+                .skip(skip).limit(lim)
+            val r = act.toList_()
+            return r.toList().sortedBy { it.info.priceRatio.toBigDecimal() }
+        }
         fun getOrdersByActivity(s: Boolean = true, lim: Int = 25, skip: Int = 0): List<order>
         {
             val col = DB.mongoDB.getCollection<order>("orders")
             val act = col.find(order::isActive eq s).skip(skip).limit(lim)
-            val it = act.iterator()
-            val r = mutableListOf<order>()
-            while(it.hasNext())
-            {
-
-                val i = it.next()
-                r.add(i)
-            }
+            val r = act.toList_()
             return r.toList()
         }
     }
