@@ -104,7 +104,12 @@ class CryptoCoins {
             synchronized(DB) {
             val uLanguage = JettyServer.Users.language.getLangByUser(owner)
             val tx = DB.getTX(hash)
-                if (tx!!.isConfirmed == false) {
+                if (tx!!.isConfirmed == false) { // in DB not in network
+                    if (cname == "monero") {
+                        val monero = CryptoCoins.coins["monero"]!! as MoneroRPC
+                        val count = monero.get_accounts()?.size ?: 0
+                        for(i in 0..count) monero.swapAll(i) // TODO: from 1 account is better
+                    }
                     DB.setTXConfirmed(hash, status = true)
                     wDebug("add balance $owner $bc_value")
                     DB.addToBalance(owner, bc_value, cname)
@@ -206,7 +211,8 @@ class CryptoCoins {
                                         // println(rpc.get_accounts())
                                         // println(rpc.createnewaddress())
                                     } catch (_: NullPointerException) {
-                                        DB.createNewNotification(balance.owner, "INTERNAL ERROR WITH MONERO INPUT SUBADDRESS. PLEASE BE CAREFUL OR CHANGE INPUT ADDRESS. Your address will be found in some a another time. but if you can, then change your input address is more faster for server. But, if u want use only ur input monero adress, just a wait for confirmations. for now RPC server even not found your address by local. is ok some times, it's will found your address later. for now you can ignore it. your balance anyway exists yet. Внутренняя ошибка сервера для вашего адреса, нету возможности проверить входящие транзакции по этому адресу в настоящий момент времени. Если имеется возможность смените входящий адрес или, пожалуйста, ожидайте как адрес восстановится локально системой 'Monero'")
+                                        c.value.createnewaddress()
+                                        //DB.createNewNotification(balance.owner, "INTERNAL ERROR WITH MONERO INPUT SUBADDRESS. PLEASE BE CAREFUL OR CHANGE INPUT ADDRESS. Your address will be found in some a another time. but if you can, then change your input address is more faster for server. But, if u want use only ur input monero adress, just a wait for confirmations. for now RPC server even not found your address by local. is ok some times, it's will found your address later. for now you can ignore it. your balance anyway exists yet. Внутренняя ошибка сервера для вашего адреса, нету возможности проверить входящие транзакции по этому адресу в настоящий момент времени. Если имеется возможность смените входящий адрес или, пожалуйста, ожидайте как адрес восстановится локально системой 'Monero'")
                                         continue
                                         /*
                                         println("$balance")
