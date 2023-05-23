@@ -94,10 +94,18 @@ class MoneroRPC : JSONRPC.worker {
         return this.doCall("relay_tx", params)
     }
     fun make_integrated_address( ) = this.doCall("make_integrated_address", params = buildJsonObject {  })
+    fun swapAll(idx: Int = 1): JsonElement {
+        val bAdr = this.get_accounts()!![0].base_address
+        val params = buildJsonObject { put("address", bAdr); put("account_index", idx) }
+        return this.doCall("sweep_all", params)
+    }
     fun transfer(dest: String, ammount: BigDecimal, do_not_relay: Boolean = false): JsonElement
     {
+        println()
+        println(this.getbalance())
         //println("our balance: ${this.get_balance(0)}")
         val ammount_big = this.toAtomic(ammount)
+        println("amount is $ammount_big")
         val destinations = buildJsonArray { add(buildJsonObject { put("amount", ammount_big); put("address", dest) }) }
         return this.doCall("transfer", buildJsonObject { put("destinations", destinations); put("do_not_relay", do_not_relay); put("get_tx_metadata", do_not_relay) })
     }
