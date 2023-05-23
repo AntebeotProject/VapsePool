@@ -230,7 +230,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                     if (isValidAddress(oAdr=oAdr, coinname = coinname) == false) {
                         return getJSONAnswer(false, "$oAdr Is not valid address for $coinname ")
                     }
-                    printIfDebug("now synchronized")
+                    printIfDebug("now synchronized; $coinname")
                     var txMonero: JsonElement? = null
                     synchronized(CryptoCoins.coins[coinname]!!) {
                         // do User not blocked. output is enabled. coinname is enabled?
@@ -242,6 +242,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                         // get TX Fee or set.
                         printIfDebug("txFee")
                         val (txFee, txMonero_) = getTXFee(coinname, oAdr, cMoney)
+                        printIfDebug("getTXFee is ok")
                         txMonero = txMonero_
                         printIfDebug("txmonero now is $txMonero; $cMoney")
                         // Do user have enough money?
@@ -273,6 +274,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                                 printIfDebug("txMonero not equal null")
                                 val monero = CryptoCoins.coins[coinname]!! as MoneroRPC
                                 // println("send tx_metadata from $txMonero")
+
                                 val tx_metadata = txMonero!!.jsonObject.toMap()["result"]!!.jsonObject.toMap()["tx_metadata"].toString().deleteSquares()
                                 printIfDebug(tx_metadata)
                                 val ret = monero.relay_tx(tx_metadata)
@@ -319,10 +321,11 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
                         (CryptoCoins.coins[coinname]!! as ElectrumRPC).satoshiToBTC(tx_) //tx_.toBigDecimal() //?: defRPCTXFee.toBigDecimal() // 0.01 is very big for Electrum. so
                 } else if (CryptoCoins.coins[coinname]!!.getisMonero()) {
                     //
+                    printIfDebug("Is monero")
                     val adr = oAdr!!
                     val rpc = CryptoCoins.coins[coinname]!! as MoneroRPC
                     val tx = rpc.transfer(adr, cMoney!!.toBigDecimal(), do_not_relay = true)
-                    printIfDebug(tx.toString())
+                    printIfDebug("Tx is: " + tx.toString())
                     val fee = rpc.fromAtomic( tx.jsonObject.toMap()["result"]?.jsonObject?.toMap()?.get("fee")!!.toString().toBigDecimal() )
                     printIfDebug("fee ${fee}") // can be wrong? maybe better tx_relay
                     return Pair(fee, tx)
@@ -407,7 +410,7 @@ class JettyServer(host: String = "0.0.0.0", port: Int = 8081) {
             {
                 //printIfDebug(it)
                 //printIfDebug(it.base_address)
-                if (!DB.isUsedAddress(it.base_address)) {
+                if (!DB.isUsedAddress(it.base_address) && it.account_index != 0) { // primary account is for swaps
                     return it.base_address
                 }
             }
