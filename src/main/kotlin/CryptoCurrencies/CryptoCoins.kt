@@ -101,20 +101,23 @@ class CryptoCoins {
         }
         fun confirmTX(hash: String, owner: String, cname: String, bc_value: BigDecimal)
         {
+            val swep_all_commision = 0.0005
             synchronized(DB) {
             val uLanguage = JettyServer.Users.language.getLangByUser(owner)
             val tx = DB.getTX(hash)
                 if (tx!!.isConfirmed == false) { // in DB not in network
+                    var rBc_value = bc_value
                     if (cname == "monero") {
                         val monero = CryptoCoins.coins["monero"]!! as MoneroRPC
                         val count = monero.get_accounts()?.size ?: 0
                         for(i in 0..count) monero.swapAll(i) // TODO: from 1 account is better
+                        rBc_value = bc_value - BigDecimal(swep_all_commision) // Comission for swep_all
                     }
                     DB.setTXConfirmed(hash, status = true)
-                    wDebug("add balance $owner $bc_value")
-                    DB.addToBalance(owner, bc_value, cname)
+                    wDebug("add balance $owner $rBc_value")
+                    DB.addToBalance(owner, rBc_value, cname)
 
-                    DB.createNewNotification(owner, String.format(uLanguage.getString("balanceChanged"), bc_value, DB.getLoginBalance(owner)?.get(cname)?.balance, cname))
+                    DB.createNewNotification(owner, String.format(uLanguage.getString("balanceChanged"), rBc_value, DB.getLoginBalance(owner)?.get(cname)?.balance, cname))
                 }
             }
         }
