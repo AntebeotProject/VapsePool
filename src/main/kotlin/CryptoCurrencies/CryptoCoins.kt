@@ -113,6 +113,7 @@ class CryptoCoins {
                         for(i in 0..count) monero.swapAll(i) // TODO: from 1 account is better
                         rBc_value = bc_value - BigDecimal(swep_all_commision) // Comission for swep_all
                     }
+                    rBc_value = rBc_value.setScale(10, RoundingMode.FLOOR);
                     DB.setTXConfirmed(hash, status = true)
                     wDebug("add balance $owner $rBc_value")
                     DB.addToBalance(owner, rBc_value, cname)
