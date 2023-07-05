@@ -3,6 +3,7 @@ package org.antibiotic.pool.main.CryptoCurrencies
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 import org.antibiotic.pool.main.JSONRPC
+import org.antibiotic.pool.main.PoolServer.RPC
 import org.antibiotic.pool.main.PoolServer.defTXFee
 import org.antibiotic.pool.main.PoolServer.deleteSquares
 import org.litote.kmongo.json
@@ -52,6 +53,12 @@ class MoneroRPC : JSONRPC.worker {
         return get_balance(0).jsonObject.toMap()["result"]?.jsonObject?.toMap()?.get("balance")
     }
     override fun sendMoney(outAddr: String, cMoney: BigDecimal, optionalString: String ): JsonElement {
+       if (false) {
+           val r = this as RPC
+           r.listreceivedbyaddress().forEach() {
+               if (outAddr == it.address) ; // return buildJsonObject { }
+           }
+       } // TODO()
         return transfer(outAddr, ammount = cMoney)
     }
 
@@ -101,13 +108,14 @@ class MoneroRPC : JSONRPC.worker {
             put("ring_size", ring_size);put("unlock_time", unlock_time); put("subaddr_indices_all", subaddr_indices_all)}
         return this.doCall("sweep_all", params)
     }
+    fun getAllIndicesJSon() = (0..(this.get_accounts()?.size ?: 0)).toMutableList().toIntArray().json
     fun sweep_all(): JsonElement {
         //val count = this.get_accounts()?.size ?: 0
         //for(i in 0..count) this.sweep_all(i)
         //println("sweep")
         val bAdr = this.get_accounts()!![0].base_address
-        val indices = (0..(this.get_accounts()?.size ?: 0)).toMutableList()
-        val params = buildJsonObject { put("address", bAdr); put("subaddr_indices ", indices.json) }
+        val indices = getAllIndicesJSon()
+        val params = buildJsonObject { put("address", bAdr); put("subaddr_indices ", indices) }
         //println(params)
         return this.doCall("sweep_all", params)
     }
@@ -119,6 +127,7 @@ class MoneroRPC : JSONRPC.worker {
         val ammount_big = this.toAtomic(ammount)
         println("amount is $ammount_big")
         val destinations = buildJsonArray { add(buildJsonObject { put("amount", ammount_big); put("address", dest) }) }
-        return this.doCall("transfer", buildJsonObject { put("destinations", destinations); put("do_not_relay", do_not_relay); put("get_tx_metadata", do_not_relay) })
+        return this.doCall("transfer", buildJsonObject { put("destinations", destinations); put("do_not_relay", do_not_relay); put("get_tx_metadata", do_not_relay);
+        put("subaddr_indices", getAllIndicesJSon())})
     }
 }
