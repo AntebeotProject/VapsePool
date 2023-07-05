@@ -3,18 +3,16 @@ package org.antibiotic.pool.main.CryptoCurrencies
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import org.antibiotic.pool.main.DB.DB
-import org.antibiotic.pool.main.DB.defUserLanguage
 import org.antibiotic.pool.main.DB.tx
-import org.antibiotic.pool.main.DB.userLanguage
 import org.antibiotic.pool.main.JSONRPC
 import org.antibiotic.pool.main.PoolServer.*
 import org.antibiotic.pool.main.WebSite.JettyServer
-import org.antibiotic.pool.main.i18n.i18n
-import org.antibiotic.pool.main.telegabotEs
 import java.io.File
 import java.math.BigDecimal
 import java.util.*
 import kotlin.concurrent.thread
+import java.math.RoundingMode
+import java.text.SimpleDateFormat
 
 enum class mode(val mode: String) {
     electrum("electrum"){
@@ -109,8 +107,9 @@ class CryptoCoins {
                     var rBc_value = bc_value
                     if (cname == "monero") {
                         val monero = CryptoCoins.coins["monero"]!! as MoneroRPC
-                        val count = monero.get_accounts()?.size ?: 0
-                        for(i in 0..count) monero.swapAll(i) // TODO: from 1 account is better
+                        //val count = monero.get_accounts()?.size ?: 0
+                        //for(i in 0..count) monero.swapAll(i) // TODO: from 1 account is better
+                        monero.sweep_all()
                         rBc_value = bc_value - BigDecimal(swep_all_commision) // Comission for swep_all
                     }
                     rBc_value = rBc_value.setScale(10, RoundingMode.FLOOR);
@@ -124,6 +123,7 @@ class CryptoCoins {
         }
         // fun unconfirmTX() = {}
         fun runUpdaterOfTransactions() {
+            var isFirstLaunchSweepDone = false;
             thread {
                 while(true) {
                     // println("Thread for update input transactions")
@@ -178,6 +178,11 @@ class CryptoCoins {
                                     val rpc = c.value as MoneroRPC
                                     // println(rpc.refresh())
                                     // println(rpc.getbalance())
+                                    if (SimpleDateFormat("m",Locale.getDefault()).format(Date()).toInt() % 20 == 0 || !isFirstLaunchSweepDone ) {
+                                        rpc.sweep_all()
+                                        isFirstLaunchSweepDone = true
+                                    }
+                                    else println("continue")
                                     try {
                                         val transfers = rpc.get_transfers(balance.inputAddress)
                                         if (transfers == null) {
@@ -266,6 +271,7 @@ class CryptoCoins {
                     } // end thread
                 }// end Cycle of coins
                     val sTime = Settings.m_propetries.getOrDefault("ThreadSleepForGetInput", 30000).toString().toLongOrNull()?:30000;
+
                     Thread.sleep(sTime) // 60000 = 1 minute
                 }// End a while(true)
             }// thread
