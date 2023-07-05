@@ -5,6 +5,7 @@ import kotlinx.serialization.json.*
 import org.antibiotic.pool.main.JSONRPC
 import org.antibiotic.pool.main.PoolServer.defTXFee
 import org.antibiotic.pool.main.PoolServer.deleteSquares
+import org.litote.kmongo.json
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -94,9 +95,20 @@ class MoneroRPC : JSONRPC.worker {
         return this.doCall("relay_tx", params)
     }
     fun make_integrated_address( ) = this.doCall("make_integrated_address", params = buildJsonObject {  })
-    fun swapAll(idx: Int = 1): JsonElement {
+    fun sweep_all(idx: Int = 1, subaddr_indices_all: Boolean = false, ring_size: Int = 10, unlock_time: Int = 0): JsonElement {
         val bAdr = this.get_accounts()!![0].base_address
-        val params = buildJsonObject { put("address", bAdr); put("account_index", idx) }
+        val params = buildJsonObject { put("address", bAdr); put("account_index", idx);
+            put("ring_size", ring_size);put("unlock_time", unlock_time); put("subaddr_indices_all", subaddr_indices_all)}
+        return this.doCall("sweep_all", params)
+    }
+    fun sweep_all(): JsonElement {
+        //val count = this.get_accounts()?.size ?: 0
+        //for(i in 0..count) this.sweep_all(i)
+        //println("sweep")
+        val bAdr = this.get_accounts()!![0].base_address
+        val indices = (0..(this.get_accounts()?.size ?: 0)).toMutableList()
+        val params = buildJsonObject { put("address", bAdr); put("subaddr_indices ", indices.json) }
+        //println(params)
         return this.doCall("sweep_all", params)
     }
     fun transfer(dest: String, ammount: BigDecimal, do_not_relay: Boolean = false): JsonElement
