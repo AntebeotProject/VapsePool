@@ -179,7 +179,7 @@ class CryptoCoins {
                                     // println(rpc.refresh())
                                     // println(rpc.getbalance())
                                     if (/*SimpleDateFormat("m",Locale.getDefault()).format(Date()).toInt() % 20 == 0 ||*/ !isFirstLaunchSweepDone ) {
-                                        rpc.sweep_all()
+                                        //rpc.sweep_all()
                                         println( rpc.getSeed() )
                                         isFirstLaunchSweepDone = true
                                     }
