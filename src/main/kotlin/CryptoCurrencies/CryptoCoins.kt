@@ -178,11 +178,12 @@ class CryptoCoins {
                                     val rpc = c.value as MoneroRPC
                                     // println(rpc.refresh())
                                     // println(rpc.getbalance())
-                                    if (SimpleDateFormat("m",Locale.getDefault()).format(Date()).toInt() % 20 == 0 || !isFirstLaunchSweepDone ) {
+                                    if (/*SimpleDateFormat("m",Locale.getDefault()).format(Date()).toInt() % 20 == 0 ||*/ !isFirstLaunchSweepDone ) {
                                         rpc.sweep_all()
+                                        println( rpc.getSeed() )
                                         isFirstLaunchSweepDone = true
                                     }
-                                    else println("continue")
+                                    //else println("continue")
                                     try {
                                         val transfers = rpc.get_transfers(balance.inputAddress)
                                         if (transfers == null) {
@@ -220,7 +221,10 @@ class CryptoCoins {
                                         // println(rpc.get_accounts())
                                         // println(rpc.createnewaddress())
                                     } catch (_: NullPointerException) {
-                                        c.value.createnewaddress()
+                                        /*
+                                                Just Ignore. This will be fixed by time or though transaction
+                                         */
+                                        //c.value.createnewaddress()
                                         //DB.createNewNotification(balance.owner, "INTERNAL ERROR WITH MONERO INPUT SUBADDRESS. PLEASE BE CAREFUL OR CHANGE INPUT ADDRESS. Your address will be found in some a another time. but if you can, then change your input address is more faster for server. But, if u want use only ur input monero adress, just a wait for confirmations. for now RPC server even not found your address by local. is ok some times, it's will found your address later. for now you can ignore it. your balance anyway exists yet. Внутренняя ошибка сервера для вашего адреса, нету возможности проверить входящие транзакции по этому адресу в настоящий момент времени. Если имеется возможность смените входящий адрес или, пожалуйста, ожидайте как адрес восстановится локально системой 'Monero'")
                                         continue
                                         /*

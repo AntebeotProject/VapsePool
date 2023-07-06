@@ -527,7 +527,6 @@ class prostaVapseTelegaBot {
                             if (sends)
                             {
                                 val sp = userTemporaryData[uidForDB]!!.split(";")
-                                mBot!!.execute(SendMessage(msg.chat().id(), String.format(uLanguage.getString("MoneySends"),  sp[0], sp[1], sp[2])))
                                 try {
                                     val resp = JettyServer.Users.cryptocoins.sendMoney(
                                         acc = uidForDB,
@@ -535,7 +534,9 @@ class prostaVapseTelegaBot {
                                         coinname = sp[0].trimIndent(),
                                         cMoney = sp[2].trimIndent()
                                     )
+				    println("Was send")
                                     mBot!!.execute(SendMessage(msg.chat().id(), resp))
+                                    mBot!!.execute(SendMessage(msg.chat().id(), String.format(uLanguage.getString("MoneySends"),  sp[0], sp[1], sp[2])))
                                 }catch(e: Exception)
                                 {
                                     mBot!!.execute(SendMessage(msg.chat().id(), e.toString()))

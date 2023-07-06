@@ -7,7 +7,7 @@ import kotlinx.serialization.json.*
 import java.util.*
 
 
-const val debugEnabled = false
+const val debugEnabled = true
 fun WriteDebug(msg: String) = if (debugEnabled) println("[STRATUM DEBUG] $msg") else {}
 /* *
     * there will be stratum things

@@ -6,6 +6,7 @@ import org.litote.kmongo.eq
 import org.litote.kmongo.getCollection
 import org.litote.kmongo.setValue
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 data class userBalance(val Login: String,
                        val Balance: BigDecimal,
@@ -49,7 +50,6 @@ data class userBalance(val Login: String,
 
             changeLoginBalance(l, newBalance, coinName)
         }
-
         fun addToBalance(l: String, b: Double, coinName: String) = addToBalance(l, BigDecimal(b.toString()), coinName)
 
     }
